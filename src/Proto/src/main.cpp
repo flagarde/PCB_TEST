@@ -13,6 +13,9 @@
 #include "TTree.h"
 #include "RAWData.h"
 
+
+std::map<int,int>IPtoChamber{{14,0},{15,0}};
+
 RAWDataTriggered data;
 RAWDataNotTriggered noise;
 TTree* dataTree=nullptr;
@@ -89,7 +92,7 @@ int readstream(int32_t _fdIn)
 		        std::cout<<green << "    >>>  " << _channels[i]<<normal << std::endl;
 		        data.Reset();
 		        data.Reserve(_channels.size());
-		        data.Push_back(_channels[i].channel()+1000*idif,_channels[i].tdcTime()*1.0e-9,triggertime*1.0e-9);
+		        data.Push_back(ibuf[4],_channels[i].channel()+1000*IPtoChamber[(ibuf[5]>>24)&0xFF],_channels[i].tdcTime()*1.0e-9,triggertime*1.0e-9);
 		      }
 		    }
 		    else 
@@ -100,7 +103,7 @@ int readstream(int32_t _fdIn)
 		        std::cout<<yellow << "    >>>  " << _channels[i]<<normal << std::endl;
 		        noise.Reset();
 		        noise.Reserve(_channels.size());
-		        noise.Push_back(_channels[i].channel()+1000*idif,_channels[i].tdcTime()*1.0e-9);
+		        noise.Push_back(ibuf[4],_channels[i].channel()+1000*IPtoChamber[(ibuf[5]>>24)&0xFF],_channels[i].tdcTime()*1.0e-9);
 		      }
 		    }
 		    std::cout<<normal<<std::endl;
@@ -157,6 +160,8 @@ int main(int argc, char *argv[])
   TBranch *bNumberOfHitsNoise = noiseTree->Branch("number_of_hits_without_trigger", &noise.TDCNHits,1000,0);
   TBranch *bTDCChannelNoise = noiseTree->Branch("TDC_channel_without_trigger",  &noise.TDCCh,1000,0);
   TBranch *bTDCTimeStampNoise = noiseTree->Branch("TDC_TimeStamp_without_trigger", &noise.TDCTS,1000,0);
+  TBranch *bWitchSideData = dataTree->Branch("WichSide",  &data.WitchSide,1000,0);
+  TBranch *bWitchSideNoise = noiseTree->Branch("WichSide_without_trigger", &noise.WitchSide,1000,0);
   int32_t _fdIn=::open(filename.c_str(), O_RDONLY | O_NONBLOCK,S_IRWXU);
   if (_fdIn<0)
   {
