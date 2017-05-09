@@ -12,14 +12,25 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "RAWData.h"
+#include "TH1.h"
 
-
+std::array<std::array<int,32>,2>TDCchannelToStrip
+{{
+  {15,15,14,14,13,13,12,12,11,11,10,10, 9, 9, 8, 8, 7, 7, 6, 6, 5, 5, 4, 4, 3, 3, 2, 2, 1, 1, 0, 0},
+  {16,16,17,17,18,18,19,19,20,20,21,21,22,22,23,23,24,24,25,25,26,26,27,27,28,28,29,29,30,30,31,31}
+}};
 std::map<int,int>IPtoChamber{{14,0},{15,0}};
 
 RAWDataTriggered data;
 RAWDataNotTriggered noise;
 TTree* dataTree=nullptr;
 TTree* noiseTree=nullptr;
+TH1F* numbertrigger= new TH1F("number of triggers in event","number of triggers in event",20,0,20);
+TH1F* numbertriggerselected= new TH1F("number of triggers selected in event","number of triggers selected in event",20,0,20);
+TH1F* maxtimee= new TH1F("Max time","Max time",200,0,200);
+
+std::map<int,TH1F*> T1mT2;
+
 
 int readstream(int32_t _fdIn)
 {
@@ -28,6 +39,12 @@ int readstream(int32_t _fdIn)
   levbdim::buffer b(0x100000);
   while (true)
   {
+    std::map<int,std::vector<TdcChannel>> HitsCloseToTrigger;
+    std::map<int,std::vector<TdcChannel>> HitsInMezzanine;
+    std::map<int,std::vector<TdcChannel>> TriggerInMezzanine;
+    TriggerInMezzanine.clear();
+    HitsInMezzanine.clear();
+    HitsCloseToTrigger.clear();
     uint32_t theNumberOfDIF=0;
     int ier=::read(_fdIn,&_event,sizeof(uint32_t));
     if (ier<=0)
@@ -43,8 +60,9 @@ int readstream(int32_t _fdIn)
     else printf("Number of DIF found %d \n",theNumberOfDIF);
     bool hasnoise=false;
     bool hasdata=false;
+    int maxtime=-1;
     for (uint32_t idif=0;idif<theNumberOfDIF;idif++) 
-	  {
+	  { 
 	    uint32_t bsize=0;
 	    ier=::read(_fdIn,&bsize,sizeof(uint32_t));
 	    if (ier<=0)
@@ -68,57 +86,128 @@ int readstream(int32_t _fdIn)
 	    printf("\n channels -> %d \n",nch);
 	    if (nch>0)
 	    {
-	      std::vector<TdcChannel> _channels;
-	      _channels.reserve(nch);
-	      bool hasTrigger=false;
-	      float triggertime=0;
 	      uint8_t* cbuf=( uint8_t*)&ibuf[7];
 	      for (int i=0;i<nch;i++)
 		    {
 		      TdcChannel c(&cbuf[8*i]);
+		      c.setstrip(TDCchannelToStrip[ibuf[4]-1][c.channel()]+100*IPtoChamber[(ibuf[5]>>24)&0xFF]);
+		      c.setside(ibuf[4]%2);
 		      if((int)c.channel()==28)
 		      {
-		        hasTrigger=true;
-		        triggertime=c.tdcTime();
+		        TriggerInMezzanine[((ibuf[5]>>24)&0xFF)*100+ibuf[4]].push_back(c);
 		      }
-		      else _channels.push_back(c);
-		      //std::cout << "    >>>  " << c << std::endl;
+		      else HitsInMezzanine[((ibuf[5]>>24)&0xFF)*100+ibuf[4]].push_back(c);
+		      if(c.tdcTime()>maxtime)maxtime=c.tdcTime();
 		    }
-		    if(hasTrigger==true)
-		    {
-		      hasdata=true;
-		      for(unsigned int i=0;i!=_channels.size();++i) 
+		  }
+		}
+		std::map<int,std::vector<TdcChannel>> SelectedTriggerInMezzanine;
+		int totalTrigger=0;
+		for(std::map<int,std::vector<TdcChannel>>::iterator it=TriggerInMezzanine.begin();it!=TriggerInMezzanine.end();++it)
+		{
+		  totalTrigger+=(it->second).size();
+		  if((it->second).size()!=0)
+		  {
+		      if((it->second).size()==1&&(it->second)[0].tdcTime()>=3*2e7)SelectedTriggerInMezzanine[it->first].push_back((it->second)[0]);
+	        for(unsigned int y=0;y!=(it->second).size()-1;++y)
 		      {
-		        std::cout<<green << "    >>>  " << _channels[i]<<normal << std::endl;
+		        if(std::fabs((it->second)[y+1].tdcTime()-(it->second)[y].tdcTime())>=6*2e7) 
+		        {
+		          if(y==0&&(it->second)[y].tdcTime()>=3*2e7)SelectedTriggerInMezzanine[it->first].push_back((it->second)[y]);
+		          else SelectedTriggerInMezzanine[it->first].push_back((it->second)[y]);
+		        }
+		        if (y==(it->second).size()-2&&fabs((it->second)[(it->second).size()-1].tdcTime()-maxtime)>=3*2e7)
+		        {
+		          SelectedTriggerInMezzanine[it->first].push_back((it->second)[(it->second).size()-1]);
+		        }
+		        else y++;
+		      }
+		  }
+		}
+		numbertrigger->Fill(totalTrigger);
+		maxtimee->Fill(maxtime*1e-9);
+		int selectedtotalTrigger=0;
+		for(std::map<int,std::vector<TdcChannel>>::iterator it=SelectedTriggerInMezzanine.begin();it!=SelectedTriggerInMezzanine.end();++it)
+		{
+		  selectedtotalTrigger+=(it->second).size();
+		}
+		numbertriggerselected->Fill(selectedtotalTrigger);
+	  if(selectedtotalTrigger!=0)
+		{
+		  for(std::map<int,std::vector<TdcChannel>>::iterator it=HitsInMezzanine.begin();it!=HitsInMezzanine.end();++it)
+		  {
+		    for(unsigned int i=0;i!=(it->second).size();++i) 
+		    {
+		      if(SelectedTriggerInMezzanine.find(it->first)!=SelectedTriggerInMezzanine.end())
+		      {
+		        for(unsigned int j=0;j!=SelectedTriggerInMezzanine[it->first].size();++j) 
+		        {
+		          data.Reset();
+		          data.OneEvent();
+		          if(fabs(SelectedTriggerInMezzanine[it->first][j].tdcTime()-(it->second)[i].tdcTime())<=3*2e7)
+		          {
+		            std::cout<<green<< "    >>>  " << (it->second)[i]<<normal << std::endl;
+		            data.Push_back((int)((it->second)[i].strip()),float(((it->second)[i].tdcTime())*1.0e-9),float((SelectedTriggerInMezzanine[it->first][j].tdcTime())*1.0e-9));
+		            (it->second)[i].settimefromtrigger((((it->second)[i].tdcTime())-SelectedTriggerInMezzanine[it->first][j].tdcTime())*1.0e-9);
+		            HitsCloseToTrigger[IPtoChamber[it->first/100]].push_back((it->second)[i]);
+		          }
+		          dataTree->Fill();
+		        }
+		        std::cout<<std::endl;
+		      }
+		      else 
+		      {
 		        data.Reset();
-		        data.Reserve(_channels.size());
-		        data.Push_back(ibuf[4],_channels[i].channel()+1000*IPtoChamber[(ibuf[5]>>24)&0xFF],_channels[i].tdcTime()*1.0e-9,triggertime*1.0e-9);
+		        data.OneEvent();
+		        for(std::map<int,std::vector<TdcChannel>>::iterator it=HitsInMezzanine.begin();it!=HitsInMezzanine.end();++it)
+		        {
+		          for(unsigned int i=0;i!=(it->second).size();++i) 
+		          {
+		            std::cout<<green<< "    >>>  " << (it->second)[i]<<normal << std::endl;
+		            data.Push_back((int)((it->second)[i].strip()),float(((it->second)[i].tdcTime())*1.0e-9),float(0.));
+		            (it->second)[i].settimefromtrigger((((it->second)[i].tdcTime())-0.)*1.0e-9);
+		            HitsCloseToTrigger[IPtoChamber[it->first/100]].push_back((it->second)[i]);
+		          }
+		        }
+		        dataTree->Fill();
 		      }
 		    }
-		    else 
+		  }
+		}
+		else 
+		{
+		  noise.Reset();
+		  noise.OneEvent();
+		  for(std::map<int,std::vector<TdcChannel>>::iterator it=HitsInMezzanine.begin();it!=HitsInMezzanine.end();++it)
+		  {
+		    for(unsigned int i=0;i!=(it->second).size();++i) 
 		    {
-		      hasnoise=true;
-		      for(unsigned int i=0;i!=_channels.size();++i) 
-		      {
-		        std::cout<<yellow << "    >>>  " << _channels[i]<<normal << std::endl;
-		        noise.Reset();
-		        noise.Reserve(_channels.size());
-		        noise.Push_back(ibuf[4],_channels[i].channel()+1000*IPtoChamber[(ibuf[5]>>24)&0xFF],_channels[i].tdcTime()*1.0e-9);
-		      }
+		      std::cout<<yellow << "    >>>  " << (it->second)[i]<<normal << std::endl;
+		      noise.Push_back((int)((it->second)[i].strip()),float(((it->second)[i].tdcTime())*1.0e-9));
 		    }
-		    std::cout<<normal<<std::endl;
-	    }
-	  } // end loop on DIF
-    if(hasdata==true)
-    {
-      data.OneEvent();
-      dataTree->Fill();
-    }
-    if(hasnoise==true)
-    {
-      noise.OneEvent();
+		  }
       noiseTree->Fill();
+		}
+    std::cout<<normal<<std::endl;
+    std::cout<<std::endl;
+    for(std::map<int,std::vector<TdcChannel>>::iterator it=HitsCloseToTrigger.begin();it!=HitsCloseToTrigger.end();++it)
+    {
+      std::cout<<blue<<"Hits close to trigger in detector and touch in both sides"<<it->first<<" : "<<normal<<std::endl;
+      for(unsigned g=0;g!=it->second.size();++g)
+      {
+        for(unsigned h=g;h!=it->second.size();++h)
+        {
+          if(it->second[h].strip()==it->second[g].strip()&&it->second[h].side()!=it->second[g].side())
+          {
+            std::cout<<blue<< "****** " << (it->second)[g]<<normal << std::endl;
+            std::cout<<blue<< "****** " << (it->second)[h]<<normal << std::endl;
+            std::cout<<red<<(it->second)[h].timefromtrigger()-(it->second)[g].timefromtrigger()<<normal<<std::endl;
+            T1mT2[it->first]->Fill((it->second)[h].timefromtrigger()-(it->second)[g].timefromtrigger());
+          }
+        }
+      }
     }
+    HitsCloseToTrigger.clear();
   }
 }
 
@@ -130,7 +219,7 @@ int main(int argc, char *argv[])
     std::exit(2);
   }
   std::string filename=argv[1];
-  std::size_t found = filename.find(".");
+  std::size_t found = filename.rfind(".");
   std::string filena=filename;
   filena=filena.erase(found);
   TFile file((filena+".root").c_str(),"RECREATE",filena.c_str(),9);
@@ -151,16 +240,20 @@ int main(int argc, char *argv[])
     std::cout << red << "Impossible to create TTree RAWData" << normal<< std::endl;
     std::exit(1);
   }
+  for(std::map<int,int>::iterator it=IPtoChamber.begin();it!=IPtoChamber.end();++it)
+  {
+    if(T1mT2.find(it->second)==T1mT2.end()) T1mT2[it->second]=new TH1F("t1-t2","t1-t2",2000,0,2000);
+  }
   TBranch *bEventNumberData = dataTree->Branch("EventNumber",  &data.iEvent,1000,0);
   TBranch *bNumberOfHitsData = dataTree->Branch("number_of_hits", &data.TDCNHits,1000,0);
   TBranch *bTDCChannelData = dataTree->Branch("TDC_channel",  &data.TDCCh,1000,0);
   TBranch *bTDCTimeStampData = dataTree->Branch("TDC_TimeStamp", &data.TDCTS,1000,0);
   TBranch *bTDCTimeStampDataReal = dataTree->Branch("TDC_TimeStampReal", &data.TDCTSReal,1000,0);
+  TBranch *bWitchSideData = dataTree->Branch("WichSide",  &data.WitchSide,1000,0);
   TBranch *bEventNumberNoise = noiseTree->Branch("EventNumber_without_trigger",  &noise.iEvent,1000,0);
   TBranch *bNumberOfHitsNoise = noiseTree->Branch("number_of_hits_without_trigger", &noise.TDCNHits,1000,0);
   TBranch *bTDCChannelNoise = noiseTree->Branch("TDC_channel_without_trigger",  &noise.TDCCh,1000,0);
   TBranch *bTDCTimeStampNoise = noiseTree->Branch("TDC_TimeStamp_without_trigger", &noise.TDCTS,1000,0);
-  TBranch *bWitchSideData = dataTree->Branch("WichSide",  &data.WitchSide,1000,0);
   TBranch *bWitchSideNoise = noiseTree->Branch("WichSide_without_trigger", &noise.WitchSide,1000,0);
   int32_t _fdIn=::open(filename.c_str(), O_RDONLY | O_NONBLOCK,S_IRWXU);
   if (_fdIn<0)
@@ -171,8 +264,19 @@ int main(int argc, char *argv[])
   int retur=readstream(_fdIn);
   dataTree->Write();
   noiseTree->Write();
-  delete dataTree;
-  delete noiseTree;
+  numbertrigger->Write();
+  numbertriggerselected->Write();
+  maxtimee->Write();
+  for(std::map<int,TH1F*>::iterator it=T1mT2.begin();it!=T1mT2.end();++it)
+  {
+    (it->second)->Write();
+    delete (it->second);
+  }
+  T1mT2.clear();
+  delete numbertrigger;
+  delete numbertriggerselected;
+  delete maxtimee;
+
   //delete bEventNumberData;
   //delete bNumberOfHitsData;
   //delete bTDCChannelData;
@@ -181,6 +285,8 @@ int main(int argc, char *argv[])
   //delete bNumberOfHitsNoise;
   //delete bTDCChannelNoise;
   //delete bTDCTimeStampNoise;
+  //delete dataTree;
+  //delete noiseTree;
   file.Close();
   return retur;
 }

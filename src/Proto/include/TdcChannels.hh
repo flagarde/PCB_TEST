@@ -10,6 +10,12 @@ public:
   inline uint8_t length(){return 8;}
   inline uint64_t coarse(){return ((uint64_t)_fr[6])|((uint64_t)_fr[5]<<8)|((uint64_t)_fr[4]<<16)|((uint64_t)_fr[3]<<24);}
   inline uint8_t fine(){return _fr[7];}
+  inline int side(){return _side;}
+  inline void setside(int i){ _side=i;}
+  inline void settimefromtrigger(double i){_timefromtrigger=i;}
+  inline double timefromtrigger(){return _timefromtrigger;}
+  inline int strip(){return _strip;};
+  inline void  setstrip(int i){_strip=i;}
   #ifdef BCIDFROMCOARSE
   inline uint16_t bcid(){return (uint16_t) (coarse()*2.5/200);}
   #else
@@ -22,6 +28,9 @@ public:
 private:
   uint8_t* _fr;
   bool _used;
+  int _side;
+  int _strip;
+  double _timefromtrigger;
 };
 
 std::ostream& operator<<(std::ostream& flux, TdcChannel& c)
