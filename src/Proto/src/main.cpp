@@ -12,14 +12,19 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "RAWData.h"
-#include "TH1.h"
+#include "TH1F.h"
+#include "TH2F.h"
 
+const float vincopper=2.*29.979245800/3; //cm.ns-1
+const unsigned int Zone=5;
 std::array<std::array<int,32>,2>TDCchannelToStrip
 {{
   {15,15,14,14,13,13,12,12,11,11,10,10, 9, 9, 8, 8, 7, 7, 6, 6, 5, 5, 4, 4, 3, 3, 2, 2, 1, 1, 0, 0},
   {16,16,17,17,18,18,19,19,20,20,21,21,22,22,23,23,24,24,25,25,26,26,27,27,28,28,29,29,30,30,31,31}
 }};
 std::map<int,int>IPtoChamber{{14,0},{15,0}};
+
+std::map<int,int>ReferenceChannel{{0,5}};
 
 RAWDataTriggered data;
 RAWDataNotTriggered noise;
@@ -30,7 +35,8 @@ TH1F* numbertriggerselected= new TH1F("number of triggers selected in event","nu
 TH1F* maxtimee= new TH1F("Max time","Max time",200,0,200);
 
 std::map<int,TH1F*> T1mT2;
-
+std::map<int,TH1F*> Calib;
+std::map<int,TH2F*> Position;
 
 int readstream(int32_t _fdIn)
 {
@@ -193,16 +199,52 @@ int readstream(int32_t _fdIn)
     for(std::map<int,std::vector<TdcChannel>>::iterator it=HitsCloseToTrigger.begin();it!=HitsCloseToTrigger.end();++it)
     {
       std::cout<<blue<<"Hits close to trigger in detector and touch in both sides"<<it->first<<" : "<<normal<<std::endl;
+      bool referenceistouched=false;
+      std::vector<std::pair<int,float>>T1mT2ReferenceStrip;
+      std::vector<std::pair<int,float>>T1mT2Strip;
       for(unsigned g=0;g!=it->second.size();++g)
       {
         for(unsigned h=g;h!=it->second.size();++h)
         {
           if(it->second[h].strip()==it->second[g].strip()&&it->second[h].side()!=it->second[g].side())
           {
+            if(ReferenceChannel.find(it->first)!=ReferenceChannel.end())
+            {
+              if(ReferenceChannel[it->first]==(it->second)[h].strip()) 
+              {
+                referenceistouched=true;
+                if((it->second)[h].side()==1)
+                {
+                  T1mT2ReferenceStrip.push_back(std::pair<int,float>((it->second)[h].strip(),(it->second)[h].timefromtrigger()));
+                }
+                else T1mT2ReferenceStrip.push_back(std::pair<int,float>((it->second)[g].strip(),(it->second)[g].timefromtrigger()));
+              }
+              else if (fabs((it->second)[h].strip()-(it->second)[g].strip())<=Zone)
+              {
+                if((it->second)[h].side()==1)
+                {
+                  T1mT2ReferenceStrip.push_back(std::pair<int,float>((it->second)[h].strip(),(it->second)[h].timefromtrigger()));
+                }
+                else T1mT2ReferenceStrip.push_back(std::pair<int,float>((it->second)[g].strip(),(it->second)[g].timefromtrigger()));
+              }
+            }
             std::cout<<blue<< "****** " << (it->second)[g]<<normal << std::endl;
             std::cout<<blue<< "****** " << (it->second)[h]<<normal << std::endl;
             std::cout<<red<<(it->second)[h].timefromtrigger()-(it->second)[g].timefromtrigger()<<normal<<std::endl;
-            T1mT2[it->first]->Fill((it->second)[h].timefromtrigger()-(it->second)[g].timefromtrigger());
+            float diff=(it->second)[h].timefromtrigger()-(it->second)[g].timefromtrigger();
+            if((it->second)[h].side()==1) diff=-diff;
+            T1mT2[(it->first*100+(it->second)[h].strip())]->Fill(diff);
+            Position[it->first]->Fill((it->second)[h].strip(),(100-vincopper*diff)*1.0/2);
+          }
+        }
+      }
+      if(referenceistouched==true)
+      {
+        for(unsigned g=0;g!=T1mT2ReferenceStrip.size();++g)
+        {
+          for(unsigned h=0;h!=T1mT2Strip.size();++h)
+          {
+            Calib[(it->first*100+T1mT2Strip[h].first)]->Fill(T1mT2Strip[h].second-T1mT2ReferenceStrip[g].second);
           }
         }
       }
@@ -242,7 +284,39 @@ int main(int argc, char *argv[])
   }
   for(std::map<int,int>::iterator it=IPtoChamber.begin();it!=IPtoChamber.end();++it)
   {
-    if(T1mT2.find(it->second)==T1mT2.end()) T1mT2[it->second]=new TH1F("t1-t2","t1-t2",2000,0,2000);
+    if(Position.find(it->second)==Position.end())
+    {
+      std::ostringstream ostr;
+      ostr<<"Position_hits_Chamber"<<it->second;
+      Position[it->second]=new TH2F((ostr.str()).c_str(),(ostr.str()).c_str(),32,0,32,1000,-500,500);
+    }
+    if(T1mT2.find(it->second)==T1mT2.end())
+    {
+      for(unsigned int i=0;i!=32;++i)
+      {
+         std::ostringstream ostr;
+         ostr<<"T_{1}-T_{2}_Chamber"<<it->second<<"_Channel"<<i;
+         T1mT2[it->second*100+i]=new TH1F((ostr.str()).c_str(),(ostr.str()).c_str(),2000,0,2000);
+      }
+    }
+    if(Calib.find(it->second)==Calib.end())
+    {
+      if(ReferenceChannel.find(it->second)!=ReferenceChannel.end()) 
+      {
+        int before=ReferenceChannel[it->second]-Zone;
+        int after =ReferenceChannel[it->second]+Zone;
+        std::cout<<red<<"tttttttttttttttttttttttttttttttttttttttttttt "<<before<<"   "<<after<<normal<<std::endl;
+        if (before<0) before=0;
+        if (after>32) after=31;
+        for(unsigned int i=before;i!=after+1;++i)
+        {
+         if(i==ReferenceChannel[it->second]) continue;
+         std::ostringstream ostr;
+         ostr<<"Calib_Chamber"<<it->second<<"_Channel"<<i<<"_Reference_Channel"<<ReferenceChannel[it->second];
+         Calib[it->second*100+i]=new TH1F((ostr.str()).c_str(),(ostr.str()).c_str(),2000,0,2000);
+        }
+      }
+    }
   }
   TBranch *bEventNumberData = dataTree->Branch("EventNumber",  &data.iEvent,1000,0);
   TBranch *bNumberOfHitsData = dataTree->Branch("number_of_hits", &data.TDCNHits,1000,0);
@@ -266,13 +340,34 @@ int main(int argc, char *argv[])
   noiseTree->Write();
   numbertrigger->Write();
   numbertriggerselected->Write();
-  maxtimee->Write();
+  TDirectory *cdtof = file.mkdir("T1mT2");
+  cdtof->cd();    // make the "tof" directory the current directory
   for(std::map<int,TH1F*>::iterator it=T1mT2.begin();it!=T1mT2.end();++it)
   {
     (it->second)->Write();
     delete (it->second);
   }
   T1mT2.clear();
+  file.cd();
+  TDirectory *cdtof2 = file.mkdir("Hits position");
+  cdtof2->cd();    // make the "tof" directory the current directory
+  for(std::map<int,TH2F*>::iterator it=Position.begin();it!=Position.end();++it)
+  {
+    (it->second)->Write();
+    delete (it->second);
+  }
+  Position.clear();
+  file.cd();
+  TDirectory *cdtof3 = file.mkdir("Calib");
+  cdtof3->cd();    // make the "tof" directory the current directory
+  for(std::map<int,TH1F*>::iterator it=Calib.begin();it!=Calib.end();++it)
+  {
+    (it->second)->Write();
+    delete (it->second);
+  }
+  Calib.clear();
+  file.cd();
+  maxtimee->Write();
   delete numbertrigger;
   delete numbertriggerselected;
   delete maxtimee;
