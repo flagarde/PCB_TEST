@@ -4,11 +4,13 @@
 #include "TH1F.h"
 #include "TH2F.h"
 #include "GG_counter.h"
+#include <cstdint>
 class ReadoutProcessor
 {
 public:
-  ReadoutProcessor() {}
+  ReadoutProcessor(int NbrEventToProcess):numbereventtoprocess(NbrEventToProcess){}
   void init();
+  int readstream(int32_t _fdIn);
   void processReadout(TdcChannelBuffer &tdcBuf);
   void processTrigger(TdcChannel* begin,TdcChannel* end);
   void processMezzanine(TdcChannel* begin,TdcChannel* end);
@@ -20,5 +22,6 @@ private:
   TH1F* _maxBCID_histozoom=NULL;
   TH1F* _triggerPerReadout=NULL;
   ChamberCounters _counters;
+  int numbereventtoprocess;
 };
 #endif 

@@ -1,12 +1,10 @@
 #ifndef _levbdim_buffer_h
 #define _levbdim_buffer_h
-
-#include <stdint.h>
+#include <cstdint>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <zlib.h>
-#include <iostream>
 namespace levbdim {
   /**
     \class buffer
@@ -103,7 +101,6 @@ namespace levbdim {
       unsigned char obuf[0x20000];
       unsigned long ldest=0x20000;
       int rc=::compress(obuf,&ldest, (unsigned char*) payload(),payloadSize());
-      //std::cout<<_psize<<" "<<ldest<<std::endl;
       memcpy(payload(),obuf,ldest);
       _psize=ldest;
     }
@@ -113,7 +110,6 @@ namespace levbdim {
       unsigned char obuf[0x20000];
       unsigned long ldest=0x20000;
       int rc=::uncompress(obuf,&ldest, (unsigned char*) payload(),payloadSize());
-      //std::cout<<_psize<<" "<<ldest<<std::endl;
       memcpy(payload(),obuf,ldest);
       _psize=ldest;
     }

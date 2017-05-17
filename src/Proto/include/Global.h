@@ -11,5 +11,4 @@ static std::map<int,int>IPtoChamber{{15,1},{14,1},{13,2},{12,2}};
 static unsigned int triggerChannel=16;
 static double vitesse=2.0/3*29.979245800; //2/3 de la vitesse de la lumiere
 static double longueur=100;
-static int numbereventtoprocess=0;
 #endif

@@ -2,7 +2,8 @@
 #include <fcntl.h>
 #include "Colors.h"
 #include "TROOT.h"
-#include "readstream.h"
+//#include "readstream.h"
+#include "ReadoutProcessor.h"
 #include "TFile.h"
 int main(int argc, char *argv[])
 {
@@ -13,7 +14,10 @@ int main(int argc, char *argv[])
     std::exit(2);
   }
   std::string filename=argv[1];
+  int numbereventtoprocess=-1;
   if(argc>2) numbereventtoprocess=std::stoi(argv[2]);
+  ReadoutProcessor Pr(numbereventtoprocess);
+  std::cout<<red<<"I will process "<<numbereventtoprocess<<" event(s)"<<normal<<std::endl;
   std::size_t found = filename.rfind(".");
   std::string filena=filename;
   filena=filena.erase(found);
@@ -29,9 +33,8 @@ int main(int argc, char *argv[])
     perror("Can't open file :");
     return 1;
   }
-  ReadoutProcessor Pr;
   Pr.init();
-  int retour=readstream(_fdIn,Pr);
+  int retour=Pr.readstream(_fdIn);
   Pr.finish();
   file.Close();
   return retour;
