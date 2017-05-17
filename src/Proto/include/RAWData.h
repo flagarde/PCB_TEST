@@ -2,11 +2,11 @@
 #define RAWDATA_h
 #include<vector>
 #include<array>
-
-class RAWDataTriggered
+#include "Colors.h"
+class RAWData
 {
   public:
-    RAWDataTriggered()
+    RAWData()
     {
       TDCCh = new std::vector<int>;   // List of hits and their channels
       TDCTS = new std::vector<float>; // List of the corresponding timestamps
@@ -18,8 +18,9 @@ class RAWDataTriggered
       WitchSide->clear();
       iEvent=0;
       TDCNHits=0;
+      iNoise=0;
     }
-    ~RAWDataTriggered()
+    ~RAWData()
     {
       delete TDCCh;
       delete TDCTS;
@@ -35,7 +36,15 @@ class RAWDataTriggered
     }
     void Push_back(int channel,float timestamp,float timestamptrigger)
     {
-      TDCTS->push_back(timestamp-timestamptrigger);
+      //std::cout<<red<<timestamp<<"  "<<timestamptrigger<<normal<<std::endl;
+      TDCCh->push_back(channel);
+      TDCTSReal->push_back(timestamp);
+      TDCTS->push_back(timestamptrigger);
+      WitchSide->push_back(channel%2);
+      TDCNHits++;
+    }
+    void Push_back(int channel,float timestamp)
+    {
       TDCCh->push_back(channel);
       TDCTSReal->push_back(timestamp);
       WitchSide->push_back(channel%2);
@@ -53,62 +62,16 @@ class RAWDataTriggered
     {
       iEvent++;
     }
+    void OneNoise()
+    {
+      iNoise++;
+    }
     int iEvent;     //Event i
+    int iNoise;
     int TDCNHits;   //Number of hits in event i
     std::vector<int>* TDCCh;      //List of channels giving hits per event
     std::vector<float>* TDCTS;      //List of the corresponding time stamps
     std::vector<float>* TDCTSReal;
-    std::vector<int>* WitchSide;
-};
-
-class RAWDataNotTriggered
-{
-  public:
-    RAWDataNotTriggered()
-    {
-      TDCCh = new std::vector<int>;   // List of hits and their channels
-      TDCTS = new std::vector<float>; // List of the corresponding timestamps
-      WitchSide = new std::vector<int>;
-      TDCCh->clear();
-      TDCTS->clear();
-      WitchSide->clear();
-      iEvent=0;
-      TDCNHits=0;
-    }
-    ~RAWDataNotTriggered()
-    {
-      delete TDCCh;
-      delete TDCTS;
-      delete WitchSide;
-    }
-    void Reserve(int i)
-    {
-      TDCCh->reserve(i);
-      TDCTS->reserve(i);
-      WitchSide->reserve(i);
-    }
-    void Push_back(int channel,float timestamp)
-    {
-      TDCCh->push_back(channel);
-      TDCTS->push_back(timestamp);
-      WitchSide->push_back(channel%2);
-      TDCNHits++;
-    }
-    void Reset()
-    {
-      TDCCh->clear();
-      TDCTS->clear();
-      WitchSide->clear();
-      TDCNHits=0;
-    }
-    void OneEvent()
-    {
-      iEvent++;
-    }
-    int iEvent;     //Event i
-    int TDCNHits;   //Number of hits in event i
-    std::vector<int>* TDCCh;      //List of channels giving hits per event
-    std::vector<float>* TDCTS;      //List of the corresponding time stamps
     std::vector<int>* WitchSide;
 };
 #endif

@@ -35,16 +35,16 @@ include_directories(include)
 file(COPY ./include/ DESTINATION ${PROJECT_INCLUDE_DIR})
 
 # -------------------------------------------------
-#AUX_SOURCE_DIRECTORY( ./src library_sources )
-#LIST( REMOVE_ITEM library_sources ./src/main.cpp )
+AUX_SOURCE_DIRECTORY( ./src library_sources )
+LIST( REMOVE_ITEM library_sources ./src/main.cpp )
 
-#ADD_LIBRARY( Protoo STATIC ${library_sources} )
-#TARGET_LINK_LIBRARIES( Protoo ${CMAKE_DL_LIBS} ${ZLIB_LIBRARIES} ${ROOT_LIBRARIES})
-#INSTALL( TARGETS Protoo LIBRARY DESTINATION ${LIBRARY_OUTPUT_PATH} ARCHIVE DESTINATION ${LIBRARY_OUTPUT_PATH})
+ADD_LIBRARY( Protoo STATIC ${library_sources} )
+TARGET_LINK_LIBRARIES( Protoo ${CMAKE_DL_LIBS} ${ZLIB_LIBRARIES} ${ROOT_LIBRARIES})
+INSTALL( TARGETS Protoo LIBRARY DESTINATION ${LIBRARY_OUTPUT_PATH} ARCHIVE DESTINATION ${LIBRARY_OUTPUT_PATH})
 # ----- Marlin executable ----------------------------------------------------
 ADD_EXECUTABLE( Read ./src/main.cpp)
 # avoid name conflict between Marlin library and Marlin application
-TARGET_LINK_LIBRARIES( Read #Protoo 
+TARGET_LINK_LIBRARIES( Read Protoo
 ${ROOT_LIBRARIES} ${ZLIB_LIBRARIES})
 INSTALL( TARGETS Read DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 # ----------------------------------------------------------------------------    
