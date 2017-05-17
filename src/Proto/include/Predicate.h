@@ -12,13 +12,12 @@ private:
   int _highbcid;
 };
 
-class TdcChannelMezzaninePredicate
+class TdcMezzaninePredicate
 {
 public:
-  TdcChannelMezzaninePredicate(int chamber, int mezzanine) : _chamber(chamber), _mezzanine(mezzanine) {}
-  bool operator()(TdcChannel& c) {return c.mezzanine()==_mezzanine && c.chamber()==_chamber;}
+  TdcMezzaninePredicate(int mezzanine) : _mezzanine(mezzanine) {}
+  bool operator()(TdcChannel& c) {return c.mezzanine()==_mezzanine;}
 private:
-  int _chamber;
   int _mezzanine;
 };
 #endif

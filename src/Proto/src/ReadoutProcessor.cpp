@@ -112,7 +112,7 @@ void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
 #ifdef LAURENT_STYLE
       if (d.second.size()>1)
 	{
-	  TdcChannel* rem=std::remove_if(tdcBuf.begin(), tdcBuf.end(), TdcChannelMezzaninePredicate(IPtoChamber[d.first],d.first) );
+	  TdcChannel* rem=std::remove_if(tdcBuf.begin(), tdcBuf.end(), TdcMezzaninePredicate(d.first) );
 	  tdcBuf.setEnd(rem);
 	}
 #endif
@@ -138,7 +138,7 @@ void ReadoutProcessor::processTrigger(TdcChannel* begin,TdcChannel* end)
   TdcChannel* mezzEnd=nullptr;
   for(std::map<int,int>::iterator it=IPtoChamber.begin();it!=IPtoChamber.end();++it)
   {
-    mezzEnd=std::partition(mezzStart,end,TdcChannelMezzaninePredicate(it->second,it->first));
+    mezzEnd=std::partition(mezzStart,end,TdcMezzaninePredicate(it->first));
 	  processMezzanine(mezzStart,mezzEnd);
 	  mezzStart=mezzEnd;
   }
