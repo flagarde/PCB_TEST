@@ -80,6 +80,22 @@ void ReadoutProcessor::init()
   _triggerPerReadoutPerMezzanine=new TH2F("triggerPerReadoutPerMezzanine","number of triggers per readout per mezzanine",50,0,50,4,12,16);
   _triggerPerReadoutPerMezzanine->GetXaxis()->SetTitle("Number of trigger in readout");
   _triggerPerReadoutPerMezzanine->GetYaxis()->SetTitle("Mezzanine");
+  data.Reserve(1000);
+  dataTree=new TTree("RAWData","RAWData"); 
+  noiseTree=new TTree("RAWNoise","RAWNoise"); 
+  bEventNumber = dataTree->Branch("EventNumber",  &data.iEvent,50000,0);
+  bNumberOfHits = dataTree->Branch("number_of_hits", &data.TDCNHits,50000,0);
+  bTDCChannel = dataTree->Branch("TDC_channel",  &data.TDCCh,50000,0);
+  bTDCTimeStamp = dataTree->Branch("TDC_TimeStamp", &data.TDCTS,50000,0);
+  bTDCTimeStampReal = dataTree->Branch("TDC_TimeStampReal", &data.TDCTSReal,50000,0);
+  bWitchSide = dataTree->Branch("WichSide",  &data.WitchSide,50000,0);
+  bMezzanine = dataTree->Branch("Mezzanine",  &data.Mezzanine,50000,0);
+  bEventNumber2 = noiseTree->Branch("EventNumber",  &data.iNoise,50000,0);
+  bNumberOfHits2 = noiseTree->Branch("number_of_hits", &data.TDCNHits,50000,0);
+  bTDCChannel2 = noiseTree->Branch("TDC_channel",  &data.TDCCh,50000,0);
+  bTDCTimeStampReal2 = noiseTree->Branch("TDC_TimeStampReal",&data.TDCTSReal,50000,0);
+  bWitchSide2 = noiseTree->Branch("WichSide",  &data.WitchSide,50000,0);
+  bMezzanine2 = noiseTree->Branch("Mezzanine",  &data.Mezzanine,50000,0);
 }
 
 void ReadoutProcessor::finish()
@@ -90,6 +106,8 @@ void ReadoutProcessor::finish()
   _triggerPerReadoutPerMezzanine->Write();
   std::string labels[3]={"ALL", "CHAMBER", "MEZZANINE"};
   _counters.write(labels);
+  dataTree->Write();
+  noiseTree->Write();
 }
 
 void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
@@ -128,12 +146,12 @@ void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
     processTrigger(eventStart,eventEnd);
     eventStart=eventEnd;
   }
-  processNoise(eventStart,tdcBuf.end());
+  if(BCIDwithTrigger.size()==0)processNoise(eventStart,tdcBuf.end());
 }
 
 
 void ReadoutProcessor::processTrigger(TdcChannel* begin,TdcChannel* end)
-{
+{ 
   TdcChannel* mezzStart=begin;
   TdcChannel* mezzEnd=nullptr;
   for(std::map<int,int>::iterator it=IPtoChamber.begin();it!=IPtoChamber.end();++it)
@@ -148,21 +166,39 @@ void ReadoutProcessor::processTrigger(TdcChannel* begin,TdcChannel* end)
 
 void ReadoutProcessor::processNoise(TdcChannel* begin,TdcChannel* end)
 {
+  data.Reset();
+  for (TdcChannel* it=begin; it != end; ++it)
+  {
+    data.Push_back(it->side(),it->strip(),it->mezzanine(),it->tdcTime());
+  }
+  data.OneNoise();
+  noiseTree->Fill();
 }
 
 bool isTrigger(TdcChannel& c) {return c.channel()==triggerChannel;}
 
 void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 {
+  data.Reset();
   int trigCount=std::count_if(begin,end,isTrigger);
   if (trigCount != 1) return;
   //std::cout << " trigCount pour nhit = " << int(end-begin) << std::endl;
   TdcChannel *trigger=std::find_if(begin,end,isTrigger);
   unsigned int valeur[2]={(unsigned int)trigger->chamber(),(unsigned int)trigger->mezzanine()};
+  for (TdcChannel* it=begin; it != end; ++it) 
+  {
+    if(it->channel()!=triggerChannel)
+    {
+      std::cout<<std::setprecision (std::numeric_limits<double>::digits10+1)<<it->tdcTime()-trigger->tdcTime()<<std::endl;
+      data.Push_back(it->side(),it->strip(),it->mezzanine(),it->tdcTime(),trigger->tdcTime());
+    }
+  }
   std::cout<<trigger->chamber()<<std::endl;
   if (int(end-begin)>1) //at least one hit more than the trigger
   {
       _counters.add(1,valeur);
   }
   else _counters.add(0,valeur);
+  data.OneEvent();
+  dataTree->Fill();
 }

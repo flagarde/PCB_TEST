@@ -5,6 +5,9 @@
 #include "TH2F.h"
 #include "GG_counter.h"
 #include <cstdint>
+#include "TBranch.h"
+#include "TTree.h"
+#include "RAWData.h"
 class ReadoutProcessor
 {
 public:
@@ -22,6 +25,22 @@ private:
   TH1F* _maxBCID_histozoom=nullptr;
   TH1F* _triggerPerReadout=nullptr;
   TH2F* _triggerPerReadoutPerMezzanine=nullptr;
+  RAWData data;
+  TTree* dataTree=nullptr;
+  TTree* noiseTree=nullptr; 
+  TBranch *bEventNumber = nullptr;
+  TBranch *bNumberOfHits = nullptr;
+  TBranch *bTDCChannel =nullptr;
+  TBranch *bTDCTimeStamp = nullptr;
+  TBranch *bTDCTimeStampReal = nullptr;
+  TBranch *bWitchSide = nullptr;
+  TBranch *bMezzanine = nullptr;
+  TBranch *bEventNumber2 = nullptr;
+  TBranch *bNumberOfHits2 = nullptr;
+  TBranch *bTDCChannel2 =nullptr;
+  TBranch *bTDCTimeStampReal2 = nullptr;
+  TBranch *bWitchSide2 = nullptr;
+  TBranch *bMezzanine2 = nullptr;
   ChamberCounters _counters;
   int numbereventtoprocess;
 };
