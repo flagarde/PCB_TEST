@@ -159,10 +159,11 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   //std::cout << " trigCount pour nhit = " << int(end-begin) << std::endl;
   TdcChannel *trigger=std::find_if(begin,end,isTrigger);
   unsigned int valeur[2]={(unsigned int)trigger->chamber(),(unsigned int)trigger->mezzanine()};
-  std::cout<<trigger->chamber()<<std::endl;
+  //std::cout<<trigger->chamber()<<std::endl;
+  int to_add=0;
   if (int(end-begin)>1) //at least one hit more than the trigger
   {
-      _counters.add(1,valeur);
+    to_add=1;
   }
-  else _counters.add(0,valeur);
+  _counters.add(to_add,valeur);
 }
