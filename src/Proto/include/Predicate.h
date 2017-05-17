@@ -4,7 +4,8 @@ class TdcChannelBcidpredicate
 {
 public:
   TdcChannelBcidpredicate(int bcid, int lowShift, int highShift) : _trigBCID(bcid), _lowbcid(bcid+lowShift),   _highbcid(bcid+highShift ){}
-  bool operator()(TdcChannel& c) {uint16_t bcid=c.bcid(); return ((bcid>=_lowbcid && bcid <=_highbcid)||(bcid==_trigBCID && c.channel()==triggerChannel));} 
+  bool operator()(TdcChannel& c) {uint16_t bcid=c.bcid(); return ((bcid>=_lowbcid && bcid <=_highbcid)
+								  ||(c.channel()==triggerChannel && (bcid==_trigBCID || bcid==_trigBCID+1 || bcid+1==_trigBCID) ));} 
 private:
   int _trigBCID;
   int _lowbcid;
