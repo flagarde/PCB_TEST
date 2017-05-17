@@ -4,6 +4,8 @@
 #include "Global.h"
 #include "Predicate.h"
 #include "buffer.h"
+
+
 int ReadoutProcessor::readstream(int32_t _fdIn)
 {
   if (_fdIn<=0) return 0;
@@ -73,6 +75,9 @@ void ReadoutProcessor::init()
   _maxBCID_histo->GetXaxis()->SetCanExtend(true);
   _maxBCID_histozoom= new TH1F("MAX_BCID_zoom","Maximum BCID",200,0,200);
   _triggerPerReadout=new TH1F("triggerPerReadout","number of triggers per readout",50,0,50);
+  _triggerPerReadoutPerMezzanine=new TH2F("triggerPerReadoutPerMezzanine","number of triggers per readout per mezzanine",50,0,50,4,12,16);
+  _triggerPerReadoutPerMezzanine->GetXaxis()->SetTitle("Number of trigger in readout");
+  _triggerPerReadoutPerMezzanine->GetYaxis()->SetTitle("Mezzanine");
 }
 
 void ReadoutProcessor::finish()
@@ -80,6 +85,7 @@ void ReadoutProcessor::finish()
   _maxBCID_histo->Write();
   _maxBCID_histozoom->Write();
   _triggerPerReadout->Write();
+  _triggerPerReadoutPerMezzanine->Write();
   std::string labels[3]={"ALL", "CHAMBER", "MEZZANINE"};
   _counters.write(labels);
 }
@@ -88,15 +94,20 @@ void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
 {
   _maxBCID=0;
   std::set<uint16_t> BCIDwithTrigger;
+  std::map<int,std::vector<uint16_t> > BCIDwithTriggerPerMezzanine;
   for (TdcChannel* it=tdcBuf.begin(); it != tdcBuf.end(); ++it)
   {
     uint16_t bcid=it->bcid();
     if (_maxBCID<bcid) _maxBCID=bcid;
-    if (it->channel()==triggerChannel) BCIDwithTrigger.insert(bcid); 
+    if (it->channel()==triggerChannel) { BCIDwithTrigger.insert(bcid);  BCIDwithTriggerPerMezzanine[it->mezzanine()].push_back(bcid);}
   }
   _maxBCID_histo->Fill(_maxBCID);
   _maxBCID_histozoom->Fill(_maxBCID);
   _triggerPerReadout->Fill(BCIDwithTrigger.size());
+  for (auto d:BCIDwithTriggerPerMezzanine)
+    {
+      _triggerPerReadoutPerMezzanine->Fill(d.second.size(),d.first);
+    }
   //eventually here put a filter on the  BCIDwithTrigger set (like remove first ones, last ones, close ones)
 
   TdcChannel* eventStart=tdcBuf.begin();

@@ -21,6 +21,7 @@ private:
   TH1F* _maxBCID_histo=nullptr;
   TH1F* _maxBCID_histozoom=nullptr;
   TH1F* _triggerPerReadout=nullptr;
+  TH2F* _triggerPerReadoutPerMezzanine=nullptr;
   ChamberCounters _counters;
   int numbereventtoprocess;
 };
