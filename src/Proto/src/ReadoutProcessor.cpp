@@ -6,6 +6,8 @@
 #include "buffer.h"
 
 
+#define LAURENT_STYLE
+
 int ReadoutProcessor::readstream(int32_t _fdIn)
 {
   if (_fdIn<=0) return 0;
@@ -107,6 +109,13 @@ void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
   for (auto d:BCIDwithTriggerPerMezzanine)
     {
       _triggerPerReadoutPerMezzanine->Fill(d.second.size(),d.first);
+#ifdef LAURENT_STYLE
+      if (d.second.size()>1)
+	{
+	  TdcChannel* rem=std::remove_if(tdcBuf.begin(), tdcBuf.end(), TdcChannelMezzaninePredicate(IPtoChamber[d.first],d.first) );
+	  tdcBuf.setEnd(rem);
+	}
+#endif
     }
   //eventually here put a filter on the  BCIDwithTrigger set (like remove first ones, last ones, close ones)
 

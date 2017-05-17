@@ -15,6 +15,7 @@ public:
   TdcChannel* end() {return _end;}
   void clear() {_end=_Tdcptr;}
   uint32_t nTdcChannel() {return _end-_Tdcptr;}
+  void setEnd(TdcChannel* end) {_end=end;}
 private:
   char* _ptr;
   TdcChannel* _Tdcptr;
