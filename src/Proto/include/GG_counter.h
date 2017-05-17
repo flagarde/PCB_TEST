@@ -81,13 +81,16 @@ class SingleMapCounter : public ASCIIpersistance
 };
 
 
-class EffCounter : public ASCIIpersistance
+class TDC_EffCounter : public ASCIIpersistance
 {
  public:
- EffCounter() : m_positive(0), m_event(0), m_currentEventSeen(false) {;}
+ TDC_EffCounter() : m_positive(0), m_event(0), m_ntriggerSeenInThisEvent(0), m_maxtriggerToSeeInThisEvent(0) {;}
 
-  void add(unsigned int val=1, unsigned int *unused=NULL) {if (! m_currentEventSeen) {m_positive+=val; m_currentEventSeen=true;} }
-  void newSet() {if (m_currentEventSeen ) {++m_event;} m_currentEventSeen=false;}
+  void add(unsigned int val=1, unsigned int *unused=NULL) {m_ntriggerSeenInThisEvent+=val; ++m_maxtriggerToSeeInThisEvent; }
+  void newSet() {
+    if (m_maxtriggerToSeeInThisEvent>0) ++m_event; m_maxtriggerToSeeInThisEvent=0;
+    if (m_ntriggerSeenInThisEvent>0) ++m_positive; m_ntriggerSeenInThisEvent=0;
+  }
   
   unsigned int sumcount() const {return m_positive;}
   unsigned int flagcount() const {return m_event;}
@@ -102,12 +105,13 @@ class EffCounter : public ASCIIpersistance
 
   static const unsigned int printIndentLevel=0;
 
-  EffCounter& counterAtLevel(unsigned int level, unsigned int *) {return *this;} 
+  TDC_EffCounter& counterAtLevel(unsigned int level, unsigned int *) {return *this;} 
 
  private:
   unsigned int m_positive;
   unsigned int m_event;
-  bool m_currentEventSeen;
+  unsigned int m_ntriggerSeenInThisEvent;
+  unsigned int m_maxtriggerToSeeInThisEvent;
 };
 
 
@@ -161,8 +165,8 @@ class MappedCounters : public std::map<unsigned int,COUNTER>, public COUNTERBASE
   
 }; 
 
-typedef MappedCounters<EffCounter,EffCounter> MezzanineCounters;
-typedef MappedCounters<MezzanineCounters,EffCounter> ChamberCounters;
+typedef MappedCounters<TDC_EffCounter,TDC_EffCounter> MezzanineCounters;
+typedef MappedCounters<MezzanineCounters,TDC_EffCounter> ChamberCounters;
 
 
 #endif
