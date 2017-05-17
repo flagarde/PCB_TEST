@@ -18,9 +18,9 @@ public:
   void finish();
 private:
   uint16_t _maxBCID;
-  TH1F* _maxBCID_histo=NULL;
-  TH1F* _maxBCID_histozoom=NULL;
-  TH1F* _triggerPerReadout=NULL;
+  TH1F* _maxBCID_histo=nullptr;
+  TH1F* _maxBCID_histozoom=nullptr;
+  TH1F* _triggerPerReadout=nullptr;
   ChamberCounters _counters;
   int numbereventtoprocess;
 };

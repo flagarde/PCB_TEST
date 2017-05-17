@@ -20,15 +20,14 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
 	  {
 	    printf("Cannot read anymore %d \n ",ier); return 0;
 	  }
-    //else printf("Event read %d \n",_event);
+    else printf("Event read %d \n",_event);
     if(numbereventtoprocess==_event)return 0;
     ier=::read(_fdIn,&theNumberOfDIF,sizeof(uint32_t));
     if (ier<=0)
 	  {
 	    printf("Cannot read anymore number of DIF %d \n ",ier); return 0;
 	  }
-    //else
-    //printf("Number of DIF found %d \n",theNumberOfDIF);
+    //else printf("Number of DIF found %d \n",theNumberOfDIF);
     for (uint32_t idif=0;idif<theNumberOfDIF;idif++) 
 	  {
 	    uint32_t bsize=0;
@@ -117,16 +116,13 @@ void ReadoutProcessor::processTrigger(TdcChannel* begin,TdcChannel* end)
 {
   TdcChannel* mezzStart=begin;
   TdcChannel* mezzEnd=nullptr;
-  for (int chamber=1; chamber <=2; ++chamber)
+  for(std::map<int,int>::iterator it=IPtoChamber.begin();it!=IPtoChamber.end();++it)
   {
-    for (int mezz=0; mezz <2; ++mezz)
-    {
-	    mezzEnd=std::partition(mezzStart,end,TdcChannelMezzaninePredicate(chamber,mezz));
-	    processMezzanine(mezzStart,mezzEnd);
-	    mezzStart=mezzEnd;
-    }
+    mezzEnd=std::partition(mezzStart,end,TdcChannelMezzaninePredicate(it->second,it->first));
+	  processMezzanine(mezzStart,mezzEnd);
+	  mezzStart=mezzEnd;
   }
-  if (nullptr != mezzEnd && end != mezzEnd) std::cout << "WARNING WARNING mess here" << std::endl;
+  //if (nullptr != mezzEnd && end != mezzEnd) std::cout << "WARNING WARNING mess here" << std::endl;
   _counters.newSet();
 }
 
@@ -143,6 +139,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   //std::cout << " trigCount pour nhit = " << int(end-begin) << std::endl;
   TdcChannel *trigger=std::find_if(begin,end,isTrigger);
   unsigned int valeur[2]={(unsigned int)trigger->chamber(),(unsigned int)trigger->mezzanine()};
+  std::cout<<trigger->chamber()<<std::endl;
   if (int(end-begin)>1) //at least one hit more than the trigger
   {
       _counters.add(1,valeur);
