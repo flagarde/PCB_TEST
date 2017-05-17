@@ -4,10 +4,11 @@
 #include <iomanip>
 #include <limits>
 #include "Global.h"
+#include <string.h>
 class TdcChannel
 {
 public:
-  TdcChannel(uint8_t*  b) :_fr(b),_used(false) {;}
+  TdcChannel(uint8_t*  b) :_used(false) { memcpy(_fr,b,8);}
   inline uint8_t channel() {return  (_fr[0]&0XFF);}
   inline uint8_t length(){return 8;}
   inline uint64_t coarse(){return ((uint64_t)_fr[6])|((uint64_t)_fr[5]<<8)|((uint64_t)_fr[4]<<16)|((uint64_t)_fr[3]<<24);}
@@ -33,7 +34,7 @@ public:
   inline bool used(){return _used;}
   inline void setUsed(bool t){_used=t;}
 private:
-  uint8_t* _fr;
+  uint8_t _fr[8];
   bool _used;
   int _strip;
   int _mezzanine;
