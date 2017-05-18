@@ -162,7 +162,7 @@ void ReadoutProcessor::finish()
   }
   _folder->mkdir("T1-T2");
   _folder->cd("T1-T2");
-  TF1 *gauss = new TF1("gauss", "gaus", 0.0, 1.0);
+  TF1 *gauss = new TF1("gauss", "gaus");
   TCanvasDivided a(1);
   a.setName("Test_*");
   for(std::map<int,TH1F*>::iterator it=_T1mT2Ch.begin();it!=_T1mT2Ch.end();++it)
