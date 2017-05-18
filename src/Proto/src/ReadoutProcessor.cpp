@@ -89,7 +89,7 @@ void ReadoutProcessor::init()
   _triggerPerReadoutPerMezzanine=new TH2F("triggerPerReadoutPerMezzanine","number of triggers per readout per mezzanine",50,0,50,4,12,16);
   _triggerPerReadoutPerMezzanine->GetXaxis()->SetTitle("Number of trigger in readout");
   _triggerPerReadoutPerMezzanine->GetYaxis()->SetTitle("Mezzanine");
-  noisehitspersecond=new TProfile("Hits_noise_rate","Hits noise rate",20,0,20);
+  _noisehitspersecond=new TProfile("Hits_noise_rate","Hits noise rate",20,0,20);
   _data.Reserve(1000);
   _dataTree=new TTree("RAWData","RAWData"); 
   _noiseTree=new TTree("RAWNoise","RAWNoise"); 
@@ -129,7 +129,7 @@ void ReadoutProcessor::finish()
   _triggerPerReadoutPerMezzanine->Write();
   std::string labels[3]={"ALL", "CHAMBER", "MEZZANINE"};
   _counters.write(labels);
-  noisehitspersecond->Write();
+  _noisehitspersecond->Write();
   _dataTree->Write();
   _noiseTree->Write();
   folder->cd();
@@ -325,7 +325,7 @@ void ReadoutProcessor::processNoise(TdcChannel* begin,TdcChannel* end)
   }
   for(std::map<int,int>::iterator it=noisehits.begin();it!=noisehits.end();++it)
   {
-    noisehitspersecond->Fill(it->first,it->second/(_maxBCID*2e-7));
+    _noisehitspersecond->Fill(it->first,it->second/(_maxBCID*2e-7));
   }
   _data.OneNoise();
   _noiseTree->Fill();
