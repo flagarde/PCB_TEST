@@ -45,6 +45,7 @@ private:
   TBranch *_bWitchSide2 = nullptr;
   TBranch *_bMezzanine2 = nullptr;
   ChamberCounters _counters;
+  TDC_ChamberCounters _tdc_counters;  
   int32_t _numbereventtoprocess;
   int32_t _totalevent{0};
   TFile* _folder=nullptr;

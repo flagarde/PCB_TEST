@@ -1,9 +1,82 @@
 #ifndef GG_counter_HH
 #define GG_counter_HH
 
+#include <set>
+
 #include <map>
 #include <iostream>
 #include <string>
+
+
+class TDC_counterForEff
+{
+ public:
+ TDC_counterForEff() : m_npositive(0), m_ntrigger(0) {}
+  void NewEvent() {m_BCIDseenInTrigger.clear(); m_BCIDseenInStrip.clear();}
+  void YouAreConcernedByATrigger(uint16_t bcid, unsigned int *unused=NULL) {if (not dejaVu(m_BCIDseenInTrigger,bcid)) ++m_ntrigger; /*std::cout << " TRIGGER " << bcid << " "; write();*/}
+  void YouHaveAHit(uint16_t bcid, unsigned int *unused=NULL) {if (not dejaVu(m_BCIDseenInStrip,bcid)) ++m_npositive; /*std::cout << " HIT " << bcid << " "; write();*/}
+
+  unsigned int npositive() const {return m_npositive;}
+  unsigned int ntrigger()  const {return m_ntrigger;}
+  
+  void write(std::string* labels=NULL,std::ostream& oflux=std::cout) const { oflux <<  (labels==NULL ? std::string("") : (*labels))  << " : " <<  m_npositive << " for " << m_ntrigger << ". Eff= " << (100.0*m_npositive)/m_ntrigger << " %" << std::endl;}
+
+  bool operator==(const TDC_counterForEff& other) const {return npositive()==other.npositive() && ntrigger()==other.ntrigger();}
+  bool operator!=(const TDC_counterForEff& other) const {return ! ((*this)==other);}
+
+  static const unsigned int printIndentLevel=0;
+
+  TDC_counterForEff& counterAtLevel(unsigned int level, unsigned int *) {return *this;} 
+
+ private:
+  unsigned int m_npositive;
+  unsigned int m_ntrigger;
+  std::set<uint16_t> m_BCIDseenInTrigger;
+  std::set<uint16_t> m_BCIDseenInStrip;
+  bool dejaVu(std::set<uint16_t> &SetOfBCID,uint16_t bcid)
+  {
+    if (SetOfBCID.insert(bcid).second==false) return true; //the bcid was already in the set
+    return (SetOfBCID.count(bcid+1)==1 || SetOfBCID.count(bcid-1)==1);
+  }
+};
+
+
+
+//COUNTER should derive form COUNTERBASE
+template <class COUNTER, class COUNTERBASE=TDC_counterForEff>
+class TDC_MappedCounters : public std::map<unsigned int,COUNTER>, public COUNTERBASE
+{
+ public:
+ void NewEvent() {COUNTERBASE::NewEvent(); for (typename std::map<unsigned int,COUNTER>::iterator it=this->begin(); it!= this->end(); ++it) it->second.NewEvent(); }
+ void YouAreConcernedByATrigger(uint16_t bcid, unsigned int *keys) {COUNTERBASE::YouAreConcernedByATrigger(bcid); (*this)[keys[0]].YouAreConcernedByATrigger(bcid,keys+1);}
+ void YouHaveAHit(uint16_t bcid, unsigned int *keys) {COUNTERBASE::YouHaveAHit(bcid); (*this)[keys[0]].YouHaveAHit(bcid,keys+1); }
+
+ 
+ COUNTERBASE& counterAtLevel(unsigned int level, unsigned int *keys) 
+ {
+   if (level>=printIndentLevel) return COUNTERBASE::counterAtLevel(level,keys);
+   return (*this)[keys[0]].counterAtLevel(level,keys+1);
+ }
+ 
+ void write(std::string* labels,std::ostream& oflux=std::cout) 
+ {
+   COUNTERBASE::write(labels,oflux); 
+   for (typename std::map<unsigned int,COUNTER>::iterator it=this->begin(); it!= this->end(); ++it) {printIndent(oflux); oflux << it->first << " "; it->second.write(labels+1,oflux);}
+ }
+
+
+ const std::map<unsigned int,COUNTER>& the_map() const {return *this;}
+ bool operator==(const TDC_MappedCounters<COUNTER,COUNTERBASE>& other) const {return  COUNTERBASE::operator==(other) && the_map()==other.the_map();}
+ bool operator!=(const TDC_MappedCounters<COUNTER,COUNTERBASE>& other) const {return ! ((*this)==other);}
+ 
+ static const unsigned int printIndentLevel=COUNTER::printIndentLevel+1;
+ private:
+ static void printIndent(std::ostream& oflux) { for (unsigned int i=printIndentLevel; i<5;  ++i) oflux << "  ";}
+  
+}; 
+
+
+
 
 class SingleCounter 
 {
@@ -128,4 +201,9 @@ class MappedCounters : public std::map<unsigned int,COUNTER>, public COUNTERBASE
 
 typedef MappedCounters<TDC_EffCounter,TDC_EffCounter> MezzanineCounters;
 typedef MappedCounters<MezzanineCounters,TDC_EffCounter> ChamberCounters;
+
+
+typedef TDC_MappedCounters<TDC_counterForEff> TDC_MezzanineCounters;
+typedef TDC_MappedCounters<TDC_MezzanineCounters> TDC_ChamberCounters;
+
 #endif

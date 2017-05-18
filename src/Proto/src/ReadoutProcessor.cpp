@@ -129,6 +129,7 @@ void ReadoutProcessor::finish()
   _triggerPerReadoutPerMezzanine->Write();
   std::string labels[3]={"ALL", "CHAMBER", "MEZZANINE"};
   _counters.write(labels);
+  _tdc_counters.write(labels);
   _noisehitspersecond->Write();
   _dataTree->Write();
   _noiseTree->Write();
@@ -273,6 +274,7 @@ void ReadoutProcessor::processTrigger(TdcChannel* begin,TdcChannel* end)
 { 
   TdcChannel* mezzStart=begin;
   TdcChannel* mezzEnd=nullptr;
+  _tdc_counters.NewEvent();
   for(std::map<int,int>::iterator it=IPtoChamber.begin();it!=IPtoChamber.end();++it)
   {
     mezzEnd=std::partition(mezzStart,end,TdcMezzaninePredicate(it->first));
@@ -309,8 +311,10 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   int trigCount=std::count_if(begin,end,isTrigger);
   if (trigCount != 1) return;
   //std::cout << " trigCount pour nhit = " << int(end-begin) << std::endl;
-  TdcChannel *trigger=std::find_if(begin,end,isTrigger);
+  TdcChannel triggerObj=*(std::find_if(begin,end,isTrigger));
+  TdcChannel *trigger=&triggerObj;
   unsigned int valeur[2]={(unsigned int)trigger->chamber(),(unsigned int)trigger->mezzanine()};
+  _tdc_counters.YouAreConcernedByATrigger(trigger->bcid(),valeur);
   //std::cout<<trigger->chamber()<<std::endl;
   for (TdcChannel* it=begin; it != end; ++it) 
   {
@@ -328,7 +332,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   if (int(end-begin)>1) //at least one hit more than the trigger
   {
     TdcChannel* endTrigWindow=std::remove_if(begin,end,TdcOutofTriggerTimePredicate(trigger->tdcTime(),-900,-861));
-    if (endTrigWindow!=begin) to_add=1;  
+    if (endTrigWindow!=begin) {to_add=1; _tdc_counters.YouHaveAHit(trigger->bcid(),valeur);}  
     for(TdcChannel* it=begin; it != end; ++it)
     {
       if(it->channel()==triggerChannel) continue;
