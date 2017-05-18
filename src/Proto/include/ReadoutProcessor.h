@@ -13,7 +13,7 @@
 class ReadoutProcessor
 {
 public:
-  ReadoutProcessor(int NbrEventToProcess,TFile* fol):_numbereventtoprocess(NbrEventToProcess),folder(fol){}
+  ReadoutProcessor(int NbrEventToProcess,TFile* fol):_numbereventtoprocess(NbrEventToProcess),_folder(fol){}
   void init();
   int readstream(int32_t _fdIn);
   void processReadout(TdcChannelBuffer &tdcBuf);
@@ -47,7 +47,7 @@ private:
   ChamberCounters _counters;
   int32_t _numbereventtoprocess;
   int32_t _totalevent{0};
-  TFile* folder=nullptr;
+  TFile* _folder=nullptr;
   std::map<int,TH1F*> _Multiplicity;
   std::map<int,TH2F*> _T1mT2;
   std::map<int,TH1F*> _T1mT2Ch;
