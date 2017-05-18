@@ -113,13 +113,17 @@ void ReadoutProcessor::finish()
 void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
 {
   _maxBCID=0;
-  std::set<uint16_t> BCIDwithTrigger;
+  std::set<std::pair<uint16_t,double>> BCIDwithTrigger;
   std::map<int,std::vector<uint16_t> > BCIDwithTriggerPerMezzanine;
   for (TdcChannel* it=tdcBuf.begin(); it != tdcBuf.end(); ++it)
   {
     uint16_t bcid=it->bcid();
     if (_maxBCID<bcid) _maxBCID=bcid;
-    if (it->channel()==triggerChannel) { BCIDwithTrigger.insert(bcid);  BCIDwithTriggerPerMezzanine[it->mezzanine()].push_back(bcid);}
+    if (it->channel()==triggerChannel) 
+    { 
+      BCIDwithTrigger.insert(std::pair<uint16_t,double>(bcid,it->tdcTime()));  
+      BCIDwithTriggerPerMezzanine[it->mezzanine()].push_back(bcid);
+    }
   }
   _maxBCID_histo->Fill(_maxBCID);
   _maxBCID_histozoom->Fill(_maxBCID);
@@ -140,9 +144,9 @@ void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
   TdcChannel* eventStart=tdcBuf.begin();
   TdcChannel* eventEnd=nullptr;
   //std::cout << "Nombre de triggers = " << BCIDwithTrigger.size() << std::endl;
-  for (std::set<uint16_t>::iterator it=BCIDwithTrigger.begin(); it !=BCIDwithTrigger.end(); ++it)
+  for (std::set<std::pair<uint16_t,double>>::iterator it=BCIDwithTrigger.begin(); it !=BCIDwithTrigger.end(); ++it)
   {
-    eventEnd=std::partition(eventStart,tdcBuf.end(),TdcChannelBcidpredicate(*it,-6,-3));
+    eventEnd=std::partition(eventStart,tdcBuf.end(),TdcChannelBcidpredicate((*it).first,(*it).second,-6,-3));
     processTrigger(eventStart,eventEnd);
     eventStart=eventEnd;
   }
