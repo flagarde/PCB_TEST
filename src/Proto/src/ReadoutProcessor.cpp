@@ -6,7 +6,7 @@
 #include "buffer.h"
 
 
-#define LAURENT_STYLE
+//#define LAURENT_STYLE
 
 int ReadoutProcessor::readstream(int32_t _fdIn)
 {
