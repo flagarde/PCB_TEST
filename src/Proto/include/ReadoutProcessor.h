@@ -29,7 +29,7 @@ private:
   TH2F* _triggerPerReadoutPerMezzanine=nullptr;
   TProfile* noisehitspersecond=nullptr;
   RAWData _data;
-  TTree* dataTree=nullptr;
+  TTree* _dataTree=nullptr;
   TTree* noiseTree=nullptr; 
   TBranch *bEventNumber = nullptr;
   TBranch *bNumberOfHits = nullptr;

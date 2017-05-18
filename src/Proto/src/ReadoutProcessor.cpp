@@ -91,15 +91,15 @@ void ReadoutProcessor::init()
   _triggerPerReadoutPerMezzanine->GetYaxis()->SetTitle("Mezzanine");
   noisehitspersecond=new TProfile("Hits_noise_rate","Hits noise rate",20,0,20);
   _data.Reserve(1000);
-  dataTree=new TTree("RAWData","RAWData"); 
+  _dataTree=new TTree("RAWData","RAWData"); 
   noiseTree=new TTree("RAWNoise","RAWNoise"); 
-  bEventNumber = dataTree->Branch("EventNumber",  &_data.iEvent,50000,0);
-  bNumberOfHits = dataTree->Branch("number_of_hits", &_data.TDCNHits,50000,0);
-  bTDCChannel = dataTree->Branch("TDC_channel",  &_data.TDCCh,50000,0);
-  bTDCTimeStamp = dataTree->Branch("TDC_TimeStamp", &_data.TDCTS,50000,0);
-  bTDCTimeStampReal = dataTree->Branch("TDC_TimeStampReal", &_data.TDCTSReal,50000,0);
-  bWitchSide = dataTree->Branch("WichSide",  &_data.WitchSide,50000,0);
-  bMezzanine = dataTree->Branch("Mezzanine",  &_data.Mezzanine,50000,0);
+  bEventNumber = _dataTree->Branch("EventNumber",  &_data.iEvent,50000,0);
+  bNumberOfHits = _dataTree->Branch("number_of_hits", &_data.TDCNHits,50000,0);
+  bTDCChannel = _dataTree->Branch("TDC_channel",  &_data.TDCCh,50000,0);
+  bTDCTimeStamp = _dataTree->Branch("TDC_TimeStamp", &_data.TDCTS,50000,0);
+  bTDCTimeStampReal = _dataTree->Branch("TDC_TimeStampReal", &_data.TDCTSReal,50000,0);
+  bWitchSide = _dataTree->Branch("WichSide",  &_data.WitchSide,50000,0);
+  bMezzanine = _dataTree->Branch("Mezzanine",  &_data.Mezzanine,50000,0);
   bEventNumber2 = noiseTree->Branch("EventNumber",  &_data.iNoise,50000,0);
   bNumberOfHits2 = noiseTree->Branch("number_of_hits", &_data.TDCNHits,50000,0);
   bTDCChannel2 = noiseTree->Branch("TDC_channel",  &_data.TDCCh,50000,0);
@@ -130,7 +130,7 @@ void ReadoutProcessor::finish()
   std::string labels[3]={"ALL", "CHAMBER", "MEZZANINE"};
   _counters.write(labels);
   noisehitspersecond->Write();
-  dataTree->Write();
+  _dataTree->Write();
   noiseTree->Write();
   folder->cd();
   for(std::map<int,TH1F*>::iterator it=_Multiplicity.begin();it!=_Multiplicity.end();++it)
@@ -353,7 +353,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   }
   //std::cout<<trigger->chamber()<<std::endl;
   _data.OneEvent();
-  dataTree->Fill();
+  _dataTree->Fill();
   int to_add=0;
   if (int(end-begin)>1) //at least one hit more than the trigger
   {
