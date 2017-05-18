@@ -44,7 +44,6 @@ class RAWData
       TDCCh->push_back(channel);
       TDCTSReal->push_back(timestamp);
       TDCTS->push_back(float(timestamp-timestamptrigger));
-      std::cout<<std::setprecision (std::numeric_limits<double>::digits10+1)<<blue<<timestamp-timestamptrigger<<normal<<std::endl;
       WitchSide->push_back(side);
       Mezzanine->push_back(mezzanine);
       TDCNHits++;

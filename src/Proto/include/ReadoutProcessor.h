@@ -42,6 +42,7 @@ private:
   TBranch *bWitchSide2 = nullptr;
   TBranch *bMezzanine2 = nullptr;
   ChamberCounters _counters;
-  int numbereventtoprocess;
+  int32_t numbereventtoprocess;
+  int32_t totalevent{0};
 };
 #endif 

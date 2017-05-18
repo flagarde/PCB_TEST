@@ -20,16 +20,19 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
     tdcBuf.clear();
     uint32_t theNumberOfDIF=0;
     int ier=::read(_fdIn,&_event,sizeof(uint32_t));
+    totalevent+=1;
     if (ier<=0)
 	  {
-	    printf("Cannot read anymore %d \n ",ier); return 0;
+	    printf("Cannot read anymore %d \n",ier); 
+	    return 0;
 	  }
-    else printf("Event read %d \n",_event);
-    if(numbereventtoprocess==_event)return 0;
+    else if(totalevent%10000==0) printf("Event read %d \n",totalevent);
+    if(numbereventtoprocess==totalevent)return 0;
     ier=::read(_fdIn,&theNumberOfDIF,sizeof(uint32_t));
     if (ier<=0)
 	  {
-	    printf("Cannot read anymore number of DIF %d \n ",ier); return 0;
+	    printf("Cannot read anymore number of DIF %d \n ",ier); 
+	    return 0;
 	  }
     //else printf("Number of DIF found %d \n",theNumberOfDIF);
     for (uint32_t idif=0;idif<theNumberOfDIF;idif++) 
@@ -38,12 +41,14 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
 	    ier=::read(_fdIn,&bsize,sizeof(uint32_t));
 	    if (ier<=0)
 	    {
-	      printf("Cannot read anymore  DIF Size %d \n ",ier);return 0;
+	      printf("Cannot read anymore  DIF Size %d \n ",ier);
+	      return 0;
 	    }
 	    ier=::read(_fdIn,b.ptr(),bsize);
 	    if (ier<=0)
 	    {
-	      printf("Cannot read anymore Read data %d \n ",ier);return 0;
+	      printf("Cannot read anymore Read data %d \n ",ier);
+	      return 0;
 	    }
 	    b.setPayloadSize(bsize-(3*sizeof(uint32_t)+sizeof(uint64_t)));
 	    b.uncompress();
@@ -129,16 +134,16 @@ void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
   _maxBCID_histozoom->Fill(_maxBCID);
   _triggerPerReadout->Fill(BCIDwithTrigger.size());
   for (auto d:BCIDwithTriggerPerMezzanine)
-    {
-      _triggerPerReadoutPerMezzanine->Fill(d.second.size(),d.first);
-#ifdef LAURENT_STYLE
-      if (d.second.size()>1)
-	{
-	  TdcChannel* rem=std::remove_if(tdcBuf.begin(), tdcBuf.end(), TdcMezzaninePredicate(d.first) );
-	  tdcBuf.setEnd(rem);
-	}
-#endif
-    }
+  {
+    _triggerPerReadoutPerMezzanine->Fill(d.second.size(),d.first);
+    #ifdef LAURENT_STYLE
+    if (d.second.size()>1)
+	  {
+	    TdcChannel* rem=std::remove_if(tdcBuf.begin(), tdcBuf.end(), TdcMezzaninePredicate(d.first) );
+	    tdcBuf.setEnd(rem);
+	  }
+    #endif
+  }
   //eventually here put a filter on the  BCIDwithTrigger set (like remove first ones, last ones, close ones)
 
   TdcChannel* eventStart=tdcBuf.begin();
@@ -194,11 +199,11 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   {
     if(it->channel()!=triggerChannel)
     {
-      std::cout<<std::setprecision (std::numeric_limits<double>::digits10+1)<<it->tdcTime()-trigger->tdcTime()<<std::endl;
+      //std::cout<<std::setprecision (std::numeric_limits<double>::digits10+1)<<it->tdcTime()-trigger->tdcTime()<<std::endl;
       data.Push_back(it->side(),it->strip(),it->mezzanine(),it->tdcTime(),trigger->tdcTime());
     }
   }
-  std::cout<<trigger->chamber()<<std::endl;
+  //std::cout<<trigger->chamber()<<std::endl;
   data.OneEvent();
   dataTree->Fill();
 
