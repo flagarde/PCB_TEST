@@ -162,7 +162,7 @@ void ReadoutProcessor::finish()
   _folder->mkdir("T1-T2");
   _folder->cd("T1-T2");
   TF1 *gauss = new TF1("gauss", "gaus", 0.0, 1.0);
-  TCanvasDivided a(2);
+  TCanvasDivided a(1);
   a.setName("Test_*");
   for(std::map<int,TH1F*>::iterator it=_T1mT2Ch.begin();it!=_T1mT2Ch.end();++it)
   { 
@@ -197,6 +197,7 @@ void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
    _maxBCID=0;
   std::set<std::pair<uint16_t,double>> BCIDwithTrigger;
   std::map<int,std::vector<uint16_t> > BCIDwithTriggerPerMezzanine;
+  std::map<int,std::vector<TdcChannel>> BCIDwithTriggerPerChamber;
   for (TdcChannel* it=tdcBuf.begin(); it != tdcBuf.end(); ++it)
   {
     uint16_t bcid=it->bcid();
@@ -205,6 +206,33 @@ void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
     { 
       BCIDwithTrigger.insert(std::pair<uint16_t,double>(bcid,it->tdcTime()));  
       BCIDwithTriggerPerMezzanine[it->mezzanine()].push_back(bcid);
+      BCIDwithTriggerPerChamber[IPtoChamber[it->mezzanine()]].push_back(*it);
+    }
+  }
+  for(std::map<int,std::vector<TdcChannel>>::iterator it=BCIDwithTriggerPerChamber.begin();it!=BCIDwithTriggerPerChamber.end();++it)
+  {
+    std::pair<std::multimap<int,int>::iterator, std::multimap<int,int>::iterator> ret;
+    ret=ChambertoIP.equal_range(it->first);
+    if(it->second.size()>2)
+    {
+      TdcChannel* iter=tdcBuf.end();
+      for(std::multimap<int,int>::iterator itt=ret.first; itt!=ret.second; ++itt)
+      {
+        TdcChannel* rem=std::remove_if(tdcBuf.begin(), iter, TdcMezzaninePredicate(itt->second) );
+	      tdcBuf.setEnd(rem);
+	      iter=rem;
+	    }
+    }
+    else
+    {
+      if(fabs(it->second[0].bcid()-it->second[1].bcid())<2&&(it->second[0].mezzanine()!=it->second[1].mezzanine()))continue;
+      TdcChannel* iter=tdcBuf.end();
+      for(std::multimap<int,int>::iterator itt=ret.first; itt!=ret.second; ++itt)
+      {
+        TdcChannel* rem=std::remove_if(tdcBuf.begin(), iter, TdcMezzaninePredicate(itt->second));
+	      tdcBuf.setEnd(rem);
+	      iter=rem;
+	    }
     }
   }
   _maxBCID_histo->Fill(_maxBCID);
@@ -213,14 +241,13 @@ void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
   for (std::map<int,std::vector<uint16_t>>::iterator it =BCIDwithTriggerPerMezzanine.begin();it!=BCIDwithTriggerPerMezzanine.end();++it)
   {
     _triggerPerReadoutPerMezzanine->Fill(it->second.size(),it->first);
-    #ifdef LAURENT_STYLE
-    int othermezzanine=0;
+    /*#ifdef LAURENT_STYLE
     if (it->second.size()>1)
 	  {
 	      TdcChannel* rem=std::remove_if(tdcBuf.begin(), tdcBuf.end(), TdcMezzaninePredicate(it->first) );
 	      tdcBuf.setEnd(rem);
 	  }
-    #endif
+    #endif*/
   }
   //eventually here put a filter on the  BCIDwithTrigger set (like remove first ones, last ones, close ones)
 
