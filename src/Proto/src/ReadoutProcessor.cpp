@@ -79,7 +79,11 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
 void ReadoutProcessor::init()
 {
   _maxBCID_histo= new TH1F("MAX_BCID","Maximum BCID",200,0,200);
-  //_maxBCID_histo->GetXaxis()->SetCanExtend(true);
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,0,0)
+  _maxBCID_histo->GetXaxis()->SetCanExtend(true);
+#else
+  _maxBCID_histo->SetBit(TH1::kCanRebin);
+#endif
   _maxBCID_histozoom= new TH1F("MAX_BCID_zoom","Maximum BCID",200,0,200);
   _triggerPerReadout=new TH1F("triggerPerReadout","number of triggers per readout",50,0,50);
   _triggerPerReadoutPerMezzanine=new TH2F("triggerPerReadoutPerMezzanine","number of triggers per readout per mezzanine",50,0,50,4,12,16);
