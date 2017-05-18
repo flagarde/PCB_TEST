@@ -27,7 +27,7 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
 	    return 0;
 	  }
     else if(totalevent%10000==0) printf("Event read %d \n",totalevent);
-    if(numbereventtoprocess==totalevent)return 0;
+    if(numbereventtoprocess<=totalevent)return 2;
     ier=::read(_fdIn,&theNumberOfDIF,sizeof(uint32_t));
     if (ier<=0)
 	  {
