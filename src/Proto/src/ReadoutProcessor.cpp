@@ -195,23 +195,28 @@ void ReadoutProcessor::finish()
   }
 }
 
+void ReadoutProcessor::fillTriggerBCIDInfo(TdcChannelBuffer &tdcBuf)
+{
+  _maxBCID=0;
+  _BCIDwithTrigger.clear();
+  _BCIDwithTriggerPerMezzanine.clear();
+  _BCIDwithTriggerPerChamber.clear();
+  for (TdcChannel* it=tdcBuf.begin(); it != tdcBuf.end(); ++it)
+    {
+      uint16_t bcid=it->bcid();
+      if (_maxBCID<bcid) _maxBCID=bcid;
+      if (it->channel()==triggerChannel) 
+	{ 
+	  _BCIDwithTrigger.insert(std::pair<uint16_t,double>(bcid,it->tdcTime()));  
+	  _BCIDwithTriggerPerMezzanine[it->mezzanine()].push_back(bcid);
+	  _BCIDwithTriggerPerChamber[IPtoChamber[it->mezzanine()]].push_back(*it);
+	}
+    }
+}
+
 void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
 {
-   _maxBCID=0;
-   _BCIDwithTrigger.clear();
-   _BCIDwithTriggerPerMezzanine.clear();
-   _BCIDwithTriggerPerChamber.clear();
-  for (TdcChannel* it=tdcBuf.begin(); it != tdcBuf.end(); ++it)
-  {
-    uint16_t bcid=it->bcid();
-    if (_maxBCID<bcid) _maxBCID=bcid;
-    if (it->channel()==triggerChannel) 
-    { 
-      _BCIDwithTrigger.insert(std::pair<uint16_t,double>(bcid,it->tdcTime()));  
-      _BCIDwithTriggerPerMezzanine[it->mezzanine()].push_back(bcid);
-      _BCIDwithTriggerPerChamber[IPtoChamber[it->mezzanine()]].push_back(*it);
-    }
-  }
+  fillTriggerBCIDInfo(tdcBuf);
   for(std::map<int,std::vector<TdcChannel>>::iterator it=_BCIDwithTriggerPerChamber.begin();it!=_BCIDwithTriggerPerChamber.end();++it)
   {
     std::pair<std::multimap<int,int>::iterator, std::multimap<int,int>::iterator> ret;

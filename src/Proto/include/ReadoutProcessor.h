@@ -63,6 +63,6 @@ private:
   std::map<int,std::vector<uint16_t> > _BCIDwithTriggerPerMezzanine;
   std::map<int,std::vector<TdcChannel>> _BCIDwithTriggerPerChamber;
 
-
+  void fillTriggerBCIDInfo(TdcChannelBuffer &tdcBuf);
 };
 #endif 
