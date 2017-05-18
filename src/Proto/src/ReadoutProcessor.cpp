@@ -287,7 +287,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
       for(TdcChannel* itt=begin; itt != end; ++itt)
       {
         if(it->channel()==triggerChannel) continue;
-        if(it->channel()==itt->channel())
+        if(it->strip()==itt->strip())
         {
           if(_T1mT2Ch.find(it->strip())==_T1mT2Ch.end())
           {
