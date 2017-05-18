@@ -6,7 +6,7 @@
 #include "buffer.h"
 #include "TF1.h"
 #include "Plots.h"
-#define LAURENT_STYLE
+//#define LAURENT_STYLE
 int ReadoutProcessor::readstream(int32_t _fdIn)
 {
   if (_fdIn<=0) return 0;
@@ -26,7 +26,7 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
 	    return 0;
 	  }
     else if(_totalevent%10000==0) printf("Event read %d \n",_totalevent);
-    if(_numbereventtoprocess>=_totalevent)return 2;
+    if(_numbereventtoprocess<=_totalevent)return 2;
     ier=::read(_fdIn,&theNumberOfDIF,sizeof(uint32_t));
     if (ier<=0)
 	  {
@@ -242,13 +242,13 @@ void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
   for (std::map<int,std::vector<uint16_t>>::iterator it =BCIDwithTriggerPerMezzanine.begin();it!=BCIDwithTriggerPerMezzanine.end();++it)
   {
     _triggerPerReadoutPerMezzanine->Fill(it->second.size(),it->first);
-    /*#ifdef LAURENT_STYLE
+    #ifdef LAURENT_STYLE
     if (it->second.size()>1)
 	  {
 	      TdcChannel* rem=std::remove_if(tdcBuf.begin(), tdcBuf.end(), TdcMezzaninePredicate(it->first) );
 	      tdcBuf.setEnd(rem);
 	  }
-    #endif*/
+    #endif
   }
   //eventually here put a filter on the  BCIDwithTrigger set (like remove first ones, last ones, close ones)
 
