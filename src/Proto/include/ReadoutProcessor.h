@@ -30,7 +30,7 @@ private:
   TProfile* noisehitspersecond=nullptr;
   RAWData _data;
   TTree* _dataTree=nullptr;
-  TTree* noiseTree=nullptr; 
+  TTree* _noiseTree=nullptr; 
   TBranch *bEventNumber = nullptr;
   TBranch *bNumberOfHits = nullptr;
   TBranch *bTDCChannel =nullptr;

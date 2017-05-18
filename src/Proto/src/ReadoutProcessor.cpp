@@ -92,7 +92,7 @@ void ReadoutProcessor::init()
   noisehitspersecond=new TProfile("Hits_noise_rate","Hits noise rate",20,0,20);
   _data.Reserve(1000);
   _dataTree=new TTree("RAWData","RAWData"); 
-  noiseTree=new TTree("RAWNoise","RAWNoise"); 
+  _noiseTree=new TTree("RAWNoise","RAWNoise"); 
   bEventNumber = _dataTree->Branch("EventNumber",  &_data.iEvent,50000,0);
   bNumberOfHits = _dataTree->Branch("number_of_hits", &_data.TDCNHits,50000,0);
   bTDCChannel = _dataTree->Branch("TDC_channel",  &_data.TDCCh,50000,0);
@@ -100,12 +100,12 @@ void ReadoutProcessor::init()
   bTDCTimeStampReal = _dataTree->Branch("TDC_TimeStampReal", &_data.TDCTSReal,50000,0);
   bWitchSide = _dataTree->Branch("WichSide",  &_data.WitchSide,50000,0);
   bMezzanine = _dataTree->Branch("Mezzanine",  &_data.Mezzanine,50000,0);
-  bEventNumber2 = noiseTree->Branch("EventNumber",  &_data.iNoise,50000,0);
-  bNumberOfHits2 = noiseTree->Branch("number_of_hits", &_data.TDCNHits,50000,0);
-  bTDCChannel2 = noiseTree->Branch("TDC_channel",  &_data.TDCCh,50000,0);
-  bTDCTimeStampReal2 = noiseTree->Branch("TDC_TimeStampReal",&_data.TDCTSReal,50000,0);
-  bWitchSide2 = noiseTree->Branch("WichSide",  &_data.WitchSide,50000,0);
-  bMezzanine2 = noiseTree->Branch("Mezzanine",  &_data.Mezzanine,50000,0);
+  bEventNumber2 = _noiseTree->Branch("EventNumber",  &_data.iNoise,50000,0);
+  bNumberOfHits2 = _noiseTree->Branch("number_of_hits", &_data.TDCNHits,50000,0);
+  bTDCChannel2 = _noiseTree->Branch("TDC_channel",  &_data.TDCCh,50000,0);
+  bTDCTimeStampReal2 = _noiseTree->Branch("TDC_TimeStampReal",&_data.TDCTSReal,50000,0);
+  bWitchSide2 = _noiseTree->Branch("WichSide",  &_data.WitchSide,50000,0);
+  bMezzanine2 = _noiseTree->Branch("Mezzanine",  &_data.Mezzanine,50000,0);
   for(std::map<int,int>::iterator it=IPtoChamber.begin();it!=IPtoChamber.end();++it)
   {
     if(_T1mT2.find(it->second)==_T1mT2.end())
@@ -131,7 +131,7 @@ void ReadoutProcessor::finish()
   _counters.write(labels);
   noisehitspersecond->Write();
   _dataTree->Write();
-  noiseTree->Write();
+  _noiseTree->Write();
   folder->cd();
   for(std::map<int,TH1F*>::iterator it=_Multiplicity.begin();it!=_Multiplicity.end();++it)
   {
@@ -328,7 +328,7 @@ void ReadoutProcessor::processNoise(TdcChannel* begin,TdcChannel* end)
     noisehitspersecond->Fill(it->first,it->second/(_maxBCID*2e-7));
   }
   _data.OneNoise();
-  noiseTree->Fill();
+  _noiseTree->Fill();
 }
 
 bool isTrigger(TdcChannel& c) {return c.channel()==triggerChannel;}
