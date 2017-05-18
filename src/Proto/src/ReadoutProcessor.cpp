@@ -6,8 +6,8 @@
 #include "buffer.h"
 #include "TF1.h"
 #include "TCanvas.h"
-//#define LAURENT_STYLE
-
+#define LAURENT_STYLE
+#define FRANCOIS_STYLE
 int ReadoutProcessor::readstream(int32_t _fdIn)
 {
   if (_fdIn<=0) return 0;
@@ -228,7 +228,7 @@ void ReadoutProcessor::finish()
 
 void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
 {
-  _maxBCID=0;
+   _maxBCID=0;
   std::set<std::pair<uint16_t,double>> BCIDwithTrigger;
   std::map<int,std::vector<uint16_t> > BCIDwithTriggerPerMezzanine;
   for (TdcChannel* it=tdcBuf.begin(); it != tdcBuf.end(); ++it)
@@ -244,15 +244,40 @@ void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
   _maxBCID_histo->Fill(_maxBCID);
   _maxBCID_histozoom->Fill(_maxBCID);
   _triggerPerReadout->Fill(BCIDwithTrigger.size());
-  for (auto d:BCIDwithTriggerPerMezzanine)
+  for (std::map<int,std::vector<uint16_t>>::iterator it =BCIDwithTriggerPerMezzanine.begin();it!=BCIDwithTriggerPerMezzanine.end();++it)
   {
-    _triggerPerReadoutPerMezzanine->Fill(d.second.size(),d.first);
+    _triggerPerReadoutPerMezzanine->Fill(it->second.size(),it->first);
     #ifdef LAURENT_STYLE
-    if (d.second.size()>1)
+    int othermezzanine=0;
+    if (it->second.size()>1)
 	  {
-	    TdcChannel* rem=std::remove_if(tdcBuf.begin(), tdcBuf.end(), TdcMezzaninePredicate(d.first) );
+	    #ifdef FRANCOIS_STYLE
+	    for(std::map<int,int>::iterator it=IPtoChamber.begin();it!=IPtoChamber.end();++it)
+	    {
+	      if(IPtoChamber[it->first]!=IPtoChamber[it->first])continue;
+	      othermezzanine=it->first;
+	    #endif
+	      TdcChannel* rem=std::remove_if(tdcBuf.begin(), tdcBuf.end(), TdcMezzaninePredicate(it->first) );
+	      tdcBuf.setEnd(rem);
+	      #ifdef FRANCOIS_STYLE
+	    }
+	  }
+	  // une seul mezzanine sur les deux a un trigger....
+	  if(BCIDwithTriggerPerMezzanine.find(othermezzanine)==BCIDwithTriggerPerMezzanine.end())
+	  {
+	    TdcChannel* rem=std::remove_if(tdcBuf.begin(), tdcBuf.end(), TdcMezzaninePredicate(it->first) );
 	    tdcBuf.setEnd(rem);
 	  }
+	  else
+	  {
+	    // les trigger sont espace de plus d'un cup de clock.....
+	    if(fabs(it->second[0]-BCIDwithTriggerPerMezzanine[othermezzanine][0])<2) continue;
+	    TdcChannel* rem=std::remove_if(tdcBuf.begin(), tdcBuf.end(), TdcMezzaninePredicate(it->first) );
+	    tdcBuf.setEnd(rem);
+	    TdcChannel* rem2=std::remove_if(tdcBuf.begin(), tdcBuf.end(), TdcMezzaninePredicate(othermezzanine) );
+	    tdcBuf.setEnd(rem2);
+	  }
+	  #endif
     #endif
   }
   //eventually here put a filter on the  BCIDwithTrigger set (like remove first ones, last ones, close ones)
