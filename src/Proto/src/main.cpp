@@ -43,7 +43,6 @@ int main(int argc, char *argv[])
   std::string filename=argv[1];
   int numbereventtoprocess=-1;
   if(argc>2) numbereventtoprocess=int32_t(std::stoi(argv[2]));
-  ReadoutProcessor Pr(numbereventtoprocess);
   if(numbereventtoprocess!=-1)std::cout<<yellow<<"I will process "<<numbereventtoprocess<<" event(s)"<<normal<<std::endl;
   std::size_t found = filename.rfind(".");
   std::string filena=filename;
@@ -53,16 +52,15 @@ int main(int argc, char *argv[])
   std::string nbrRun = filena.substr(found+1);  
   found = filena.rfind("/");
   std::string path ="./";  
-  //std::cout<<path<<"  "<<nbrRun<<std::endl;
   if(found!=std::string::npos)path=filena.substr(0,found+1);
- std::cout<<path<<"  "<<nbrRun<<std::endl; 
-std::vector<std::string> FilesTopProcess;
+  std::vector<std::string> FilesTopProcess;
   getdir(path,FilesTopProcess,nbrRun);
   if (file.IsOpen() != true) 
   {
     std::cout << red << "Impossible to open " << filena<< normal << std::endl;
     std::exit(1);
   }
+  ReadoutProcessor Pr(numbereventtoprocess,&file);
   Pr.init();
   int retour=0;
   for(unsigned int i=0;i!=FilesTopProcess.size();++i)

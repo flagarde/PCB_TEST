@@ -85,6 +85,7 @@ void ReadoutProcessor::init()
   _triggerPerReadoutPerMezzanine=new TH2F("triggerPerReadoutPerMezzanine","number of triggers per readout per mezzanine",50,0,50,4,12,16);
   _triggerPerReadoutPerMezzanine->GetXaxis()->SetTitle("Number of trigger in readout");
   _triggerPerReadoutPerMezzanine->GetYaxis()->SetTitle("Mezzanine");
+  noisehitspersecond=new TProfile("Hits_noise_rate","Hits noise rate",20,0,20);
   data.Reserve(1000);
   dataTree=new TTree("RAWData","RAWData"); 
   noiseTree=new TTree("RAWNoise","RAWNoise"); 
@@ -101,6 +102,19 @@ void ReadoutProcessor::init()
   bTDCTimeStampReal2 = noiseTree->Branch("TDC_TimeStampReal",&data.TDCTSReal,50000,0);
   bWitchSide2 = noiseTree->Branch("WichSide",  &data.WitchSide,50000,0);
   bMezzanine2 = noiseTree->Branch("Mezzanine",  &data.Mezzanine,50000,0);
+  for(std::map<int,int>::iterator it=IPtoChamber.begin();it!=IPtoChamber.end();++it)
+  {
+    if(_T1mT2.find(it->second)==_T1mT2.end())
+    {
+      _T1mT2[it->second]=new TH2F(("T1-T2_th2_"+std::to_string(it->second)).c_str(),("T1-T2_th2_"+std::to_string(it->second)).c_str(),32,0,32,1000,-500,500);
+      _Position[it->second]=new TH2F(("Position_"+std::to_string(it->second)).c_str(),("Position_"+std::to_string(it->second)).c_str(),32,0,32,2000,-1000,1000); 
+      _Longueur[it->second]=new TH2F(("Longueur_"+std::to_string(it->second)).c_str(),("Longueur_"+std::to_string(it->second)).c_str(),32,0,32,20000,-10000,10000);
+      _T1mT2Chamber[it->second]=new TH1F(("T1-T2_"+std::to_string(it->second)).c_str(),("T1-T2_"+std::to_string(it->second)).c_str(),1000,-500,500);
+      _Multiplicity[it->second]=new TH1F(("Multiplicity_"+std::to_string(it->second)).c_str(),("Multiplicity_"+std::to_string(it->second)).c_str(),300,0,300);
+      _NbrCluster[it->second]=new TH1F(("NbrCluster_"+std::to_string(it->second)).c_str(),("NbrCluster_"+std::to_string(it->second)).c_str(),300,0,300);
+      _MultiCluster[it->second]=new TH1F(("MultiCluster_"+std::to_string(it->second)).c_str(),("MultiCluster_"+std::to_string(it->second)).c_str(),300,0,300);
+    }
+  }
 }
 
 void ReadoutProcessor::finish()
@@ -111,8 +125,54 @@ void ReadoutProcessor::finish()
   _triggerPerReadoutPerMezzanine->Write();
   std::string labels[3]={"ALL", "CHAMBER", "MEZZANINE"};
   _counters.write(labels);
+  noisehitspersecond->Write();
   dataTree->Write();
   noiseTree->Write();
+  folder->cd();
+  for(std::map<int,TH1F*>::iterator it=_Multiplicity.begin();it!=_Multiplicity.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  } 
+  for(std::map<int,TH2F*>::iterator it=_Longueur.begin();it!=_Longueur.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
+  for(std::map<int,TH2F*>::iterator it=_Position.begin();it!=_Position.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
+  folder->mkdir("Clusters");
+  folder->cd("Clusters");
+  for(std::map<int,TH1F*>::iterator it=_NbrCluster.begin();it!=_NbrCluster.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
+  for(std::map<int,TH1F*>::iterator it=_MultiCluster.begin();it!=_MultiCluster.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
+  folder->mkdir("T1-T2");
+  folder->cd("T1-T2");
+  for(std::map<int,TH1F*>::iterator it=_T1mT2Ch.begin();it!=_T1mT2Ch.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
+  for(std::map<int,TH1F*>::iterator it=_T1mT2Chamber.begin();it!=_T1mT2Chamber.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
+  for(std::map<int,TH2F*>::iterator it=_T1mT2.begin();it!=_T1mT2.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
 }
 
 void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
@@ -175,10 +235,17 @@ void ReadoutProcessor::processTrigger(TdcChannel* begin,TdcChannel* end)
 
 void ReadoutProcessor::processNoise(TdcChannel* begin,TdcChannel* end)
 {
+  std::map<int,int>noisehits;
   data.Reset();
   for (TdcChannel* it=begin; it != end; ++it)
   {
     data.Push_back(it->side(),it->strip(),it->mezzanine(),it->tdcTime());
+    noisehits[it->mezzanine()]++;
+    noisehits[IPtoChamber[it->mezzanine()]]++;
+  }
+  for(std::map<int,int>::iterator it=noisehits.begin();it!=noisehits.end();++it)
+  {
+    noisehitspersecond->Fill(it->first,it->second/(_maxBCID*2e-7));
   }
   data.OneNoise();
   noiseTree->Fill();
@@ -201,17 +268,48 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
     {
       //std::cout<<std::setprecision (std::numeric_limits<double>::digits10+1)<<it->tdcTime()-trigger->tdcTime()<<std::endl;
       data.Push_back(it->side(),it->strip(),it->mezzanine(),it->tdcTime(),trigger->tdcTime());
+      it->settdcTrigger(trigger->tdcTime());
     }
   }
   //std::cout<<trigger->chamber()<<std::endl;
   data.OneEvent();
   dataTree->Fill();
-
   int to_add=0;
   if (int(end-begin)>1) //at least one hit more than the trigger
   {
     TdcChannel* endTrigWindow=std::remove_if(begin,end,TdcOutofTriggerTimePredicate(trigger->tdcTime(),-900,-861));
-    if (endTrigWindow!=begin) to_add=1;
+    if (endTrigWindow!=begin) to_add=1;  
+    for(TdcChannel* it=begin; it != end; ++it)
+    {
+      if(_T1mT2Ch.find(it->strip())==_T1mT2Ch.end())
+      {
+        _T1mT2Ch[it->strip()]=new TH1F(("T1-T2_"+std::to_string(it->strip())).c_str(),("T1-T2_"+std::to_string(it->strip())).c_str(),1000,-500,500);
+      }
+      if(it->channel()==triggerChannel) continue;
+      TdcChannel* beginpp=it;
+      beginpp++;
+      for(TdcChannel* itt=begin; itt != end; ++itt)
+      {
+        if(it->channel()==triggerChannel) continue;
+        double diff=it->getTimeFromTrigger()-itt->getTimeFromTrigger();
+        if((it->side()+1)==itt->side())
+	      {
+	        _T1mT2[it->chamber()]->Fill(it->strip()%100,diff);
+	        _Position[it->chamber()]->Fill(it->strip()%100,(diff*vitesse+longueur)/2);
+	        _Longueur[it->chamber()]->Fill(it->strip()%100,(it->getTimeFromTrigger()+itt->getTimeFromTrigger()));
+	        _T1mT2Ch[it->strip()]->Fill(diff);
+	        _T1mT2Chamber[it->chamber()]->Fill(diff);
+	      }
+	      else if (it->side()==(itt->side()+1))
+	      {
+	        _T1mT2[it->chamber()]->Fill(it->strip()%100,-diff);
+	        _T1mT2Ch[it->strip()]->Fill(-diff);
+	        _T1mT2Chamber[it->strip()/100]->Fill(-diff);
+	        _Position[it->chamber()]->Fill(it->strip()%100,float((-diff*vitesse+longueur)/2));
+	        _Longueur[it->chamber()]->Fill(it->strip()%100,float(((itt->getTimeFromTrigger()+it->getTimeFromTrigger()))));
+	      }
+      }
+    }
   }
   _counters.add(to_add,valeur);
 }

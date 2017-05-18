@@ -8,10 +8,12 @@
 #include "TBranch.h"
 #include "TTree.h"
 #include "RAWData.h"
+#include "TProfile.h"
+#include "TFile.h"
 class ReadoutProcessor
 {
 public:
-  ReadoutProcessor(int NbrEventToProcess):numbereventtoprocess(NbrEventToProcess){}
+  ReadoutProcessor(int NbrEventToProcess,TFile* fol):numbereventtoprocess(NbrEventToProcess),folder(fol){}
   void init();
   int readstream(int32_t _fdIn);
   void processReadout(TdcChannelBuffer &tdcBuf);
@@ -25,6 +27,7 @@ private:
   TH1F* _maxBCID_histozoom=nullptr;
   TH1F* _triggerPerReadout=nullptr;
   TH2F* _triggerPerReadoutPerMezzanine=nullptr;
+  TProfile* noisehitspersecond=nullptr;
   RAWData data;
   TTree* dataTree=nullptr;
   TTree* noiseTree=nullptr; 
@@ -44,5 +47,14 @@ private:
   ChamberCounters _counters;
   int32_t numbereventtoprocess;
   int32_t totalevent{0};
+  TFile* folder=nullptr;
+  std::map<int,TH1F*> _Multiplicity;
+  std::map<int,TH2F*> _T1mT2;
+  std::map<int,TH1F*> _T1mT2Ch;
+  std::map<int,TH1F*> _T1mT2Chamber;
+  std::map<int,TH2F*> _Position;
+  std::map<int,TH2F*> _Longueur;
+  std::map<int,TH1F*> _NbrCluster;
+  std::map<int,TH1F*> _MultiCluster;
 };
 #endif 

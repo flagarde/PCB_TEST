@@ -14,8 +14,8 @@ public:
   inline uint64_t coarse(){return ((uint64_t)_fr[6])|((uint64_t)_fr[5]<<8)|((uint64_t)_fr[4]<<16)|((uint64_t)_fr[3]<<24);}
   inline uint8_t fine(){return _fr[7];}
   inline int side(){return (_fr[0]&0XFF)%2;}
-  inline void settimefromtrigger(double i){_timefromtrigger=i;}
-  inline double timefromtrigger(){return _timefromtrigger;}
+  inline void settdcTrigger(double i){_tdcTrigger=i;}
+  inline double getTimeFromTrigger(){return tdcTime()-_tdcTrigger;}
   inline int strip(){return _strip;};
   inline void  setstrip(uint8_t mezzanine,uint8_t IP)
   {
@@ -38,7 +38,7 @@ private:
   bool _used;
   int _strip;
   int _mezzanine;
-  double _timefromtrigger;
+  double _tdcTrigger;
 };
 
 static std::ostream& operator<<(std::ostream& flux, TdcChannel& c)
