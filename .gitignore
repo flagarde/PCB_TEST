@@ -1,5 +1,6 @@
 /bin
 /build
+*.save 
 
 # Compiled Object files
 *.slo
