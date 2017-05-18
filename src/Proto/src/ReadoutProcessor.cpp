@@ -129,7 +129,7 @@ void ReadoutProcessor::finish()
   dataTree->Write();
   noiseTree->Write();
   folder->cd();
-  /*for(std::map<int,TH1F*>::iterator it=_Multiplicity.begin();it!=_Multiplicity.end();++it)
+  for(std::map<int,TH1F*>::iterator it=_Multiplicity.begin();it!=_Multiplicity.end();++it)
   {
     it->second->Write();
     delete it->second;
@@ -223,7 +223,7 @@ void ReadoutProcessor::finish()
   {
     it->second->Write();
     delete it->second;
-  }*/
+  }
 }
 
 void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
