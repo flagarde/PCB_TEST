@@ -169,6 +169,7 @@ void ReadoutProcessor::finish()
   { 
     if(it->second->GetEntries()!=0)
     {
+      gauss->SetParameters(it->second->GetMean(),it->second->GetRMS());
       it->second->Fit("gauss","Q");
       TF1 *fit1 = (TF1*)it->second->GetFunction("gaus");
       if(fit1!=nullptr)
