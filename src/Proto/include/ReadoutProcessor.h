@@ -57,5 +57,12 @@ private:
   std::map<int,TH2F*> _Longueur;
   std::map<int,TH1F*> _NbrCluster;
   std::map<int,TH1F*> _MultiCluster;
+
+  //processReadoutHelper
+  std::set<std::pair<uint16_t,double>> _BCIDwithTrigger;
+  std::map<int,std::vector<uint16_t> > _BCIDwithTriggerPerMezzanine;
+  std::map<int,std::vector<TdcChannel>> _BCIDwithTriggerPerChamber;
+
+
 };
 #endif 

@@ -198,21 +198,21 @@ void ReadoutProcessor::finish()
 void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
 {
    _maxBCID=0;
-  std::set<std::pair<uint16_t,double>> BCIDwithTrigger;
-  std::map<int,std::vector<uint16_t> > BCIDwithTriggerPerMezzanine;
-  std::map<int,std::vector<TdcChannel>> BCIDwithTriggerPerChamber;
+   _BCIDwithTrigger.clear();
+   _BCIDwithTriggerPerMezzanine.clear();
+   _BCIDwithTriggerPerChamber.clear();
   for (TdcChannel* it=tdcBuf.begin(); it != tdcBuf.end(); ++it)
   {
     uint16_t bcid=it->bcid();
     if (_maxBCID<bcid) _maxBCID=bcid;
     if (it->channel()==triggerChannel) 
     { 
-      BCIDwithTrigger.insert(std::pair<uint16_t,double>(bcid,it->tdcTime()));  
-      BCIDwithTriggerPerMezzanine[it->mezzanine()].push_back(bcid);
-      BCIDwithTriggerPerChamber[IPtoChamber[it->mezzanine()]].push_back(*it);
+      _BCIDwithTrigger.insert(std::pair<uint16_t,double>(bcid,it->tdcTime()));  
+      _BCIDwithTriggerPerMezzanine[it->mezzanine()].push_back(bcid);
+      _BCIDwithTriggerPerChamber[IPtoChamber[it->mezzanine()]].push_back(*it);
     }
   }
-  for(std::map<int,std::vector<TdcChannel>>::iterator it=BCIDwithTriggerPerChamber.begin();it!=BCIDwithTriggerPerChamber.end();++it)
+  for(std::map<int,std::vector<TdcChannel>>::iterator it=_BCIDwithTriggerPerChamber.begin();it!=_BCIDwithTriggerPerChamber.end();++it)
   {
     std::pair<std::multimap<int,int>::iterator, std::multimap<int,int>::iterator> ret;
     ret=ChambertoIP.equal_range(it->first);
@@ -243,8 +243,8 @@ void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
   }
   _maxBCID_histo->Fill(_maxBCID);
   _maxBCID_histozoom->Fill(_maxBCID);
-  _triggerPerReadout->Fill(BCIDwithTrigger.size());
-  for (std::map<int,std::vector<uint16_t>>::iterator it =BCIDwithTriggerPerMezzanine.begin();it!=BCIDwithTriggerPerMezzanine.end();++it)
+  _triggerPerReadout->Fill(_BCIDwithTrigger.size());
+  for (std::map<int,std::vector<uint16_t>>::iterator it =_BCIDwithTriggerPerMezzanine.begin();it!=_BCIDwithTriggerPerMezzanine.end();++it)
   {
     _triggerPerReadoutPerMezzanine->Fill(it->second.size(),it->first);
     #ifdef LAURENT_STYLE
@@ -260,13 +260,13 @@ void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
   TdcChannel* eventStart=tdcBuf.begin();
   TdcChannel* eventEnd=nullptr;
   //std::cout << "Nombre de triggers = " << BCIDwithTrigger.size() << std::endl;
-  for (std::set<std::pair<uint16_t,double>>::iterator it=BCIDwithTrigger.begin(); it !=BCIDwithTrigger.end(); ++it)
+  for (std::set<std::pair<uint16_t,double>>::iterator it=_BCIDwithTrigger.begin(); it !=_BCIDwithTrigger.end(); ++it)
   {
     eventEnd=std::partition(eventStart,tdcBuf.end(),TdcChannelBcidpredicate((*it).first,(*it).second,-6,-3));
     processTrigger(eventStart,eventEnd);
     eventStart=eventEnd;
   }
-  if(BCIDwithTrigger.size()==0)processNoise(eventStart,tdcBuf.end());
+  if(_BCIDwithTrigger.size()==0)processNoise(eventStart,tdcBuf.end());
 }
 
 
