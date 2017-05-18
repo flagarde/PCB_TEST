@@ -167,6 +167,4 @@ class MappedCounters : public std::map<unsigned int,COUNTER>, public COUNTERBASE
 
 typedef MappedCounters<TDC_EffCounter,TDC_EffCounter> MezzanineCounters;
 typedef MappedCounters<MezzanineCounters,TDC_EffCounter> ChamberCounters;
-
-
 #endif
