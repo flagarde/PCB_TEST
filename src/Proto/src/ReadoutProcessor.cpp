@@ -93,19 +93,19 @@ void ReadoutProcessor::init()
   _data.Reserve(1000);
   _dataTree=new TTree("RAWData","RAWData"); 
   _noiseTree=new TTree("RAWNoise","RAWNoise"); 
-  bEventNumber = _dataTree->Branch("EventNumber",  &_data.iEvent,50000,0);
-  bNumberOfHits = _dataTree->Branch("number_of_hits", &_data.TDCNHits,50000,0);
-  bTDCChannel = _dataTree->Branch("TDC_channel",  &_data.TDCCh,50000,0);
-  bTDCTimeStamp = _dataTree->Branch("TDC_TimeStamp", &_data.TDCTS,50000,0);
-  bTDCTimeStampReal = _dataTree->Branch("TDC_TimeStampReal", &_data.TDCTSReal,50000,0);
-  bWitchSide = _dataTree->Branch("WichSide",  &_data.WitchSide,50000,0);
-  bMezzanine = _dataTree->Branch("Mezzanine",  &_data.Mezzanine,50000,0);
-  bEventNumber2 = _noiseTree->Branch("EventNumber",  &_data.iNoise,50000,0);
-  bNumberOfHits2 = _noiseTree->Branch("number_of_hits", &_data.TDCNHits,50000,0);
-  bTDCChannel2 = _noiseTree->Branch("TDC_channel",  &_data.TDCCh,50000,0);
-  bTDCTimeStampReal2 = _noiseTree->Branch("TDC_TimeStampReal",&_data.TDCTSReal,50000,0);
-  bWitchSide2 = _noiseTree->Branch("WichSide",  &_data.WitchSide,50000,0);
-  bMezzanine2 = _noiseTree->Branch("Mezzanine",  &_data.Mezzanine,50000,0);
+  _bEventNumber = _dataTree->Branch("EventNumber",  &_data.iEvent,50000,0);
+  _bNumberOfHits = _dataTree->Branch("number_of_hits", &_data.TDCNHits,50000,0);
+  _bTDCChannel = _dataTree->Branch("TDC_channel",  &_data.TDCCh,50000,0);
+  _bTDCTimeStamp = _dataTree->Branch("TDC_TimeStamp", &_data.TDCTS,50000,0);
+  _bTDCTimeStampReal = _dataTree->Branch("TDC_TimeStampReal", &_data.TDCTSReal,50000,0);
+  _bWitchSide = _dataTree->Branch("WichSide",  &_data.WitchSide,50000,0);
+  _bMezzanine = _dataTree->Branch("Mezzanine",  &_data.Mezzanine,50000,0);
+  _bEventNumber2 = _noiseTree->Branch("EventNumber",  &_data.iNoise,50000,0);
+  _bNumberOfHits2 = _noiseTree->Branch("number_of_hits", &_data.TDCNHits,50000,0);
+  _bTDCChannel2 = _noiseTree->Branch("TDC_channel",  &_data.TDCCh,50000,0);
+  _bTDCTimeStampReal2 = _noiseTree->Branch("TDC_TimeStampReal",&_data.TDCTSReal,50000,0);
+  _bWitchSide2 = _noiseTree->Branch("WichSide",  &_data.WitchSide,50000,0);
+  _bMezzanine2 = _noiseTree->Branch("Mezzanine",  &_data.Mezzanine,50000,0);
   for(std::map<int,int>::iterator it=IPtoChamber.begin();it!=IPtoChamber.end();++it)
   {
     if(_T1mT2.find(it->second)==_T1mT2.end())
