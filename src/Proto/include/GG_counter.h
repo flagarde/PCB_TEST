@@ -4,9 +4,8 @@
 #include <map>
 #include <iostream>
 #include <string>
-#include "ASCIIpersistance.h"
 
-class SingleCounter : public ASCIIpersistance
+class SingleCounter 
 {
  public:
  SingleCounter() : m_count(0), m_flagcount(0), m_flag(false) {;}
@@ -18,9 +17,6 @@ class SingleCounter : public ASCIIpersistance
   unsigned int flagcount() const {return m_flagcount;}
 
   void write(std::string* labels=NULL,std::ostream& oflux=std::cout) const { oflux <<  (labels==NULL ? std::string("") : (*labels))  << " : " <<  m_count << " for " << m_flagcount << std::endl;}
-
-  bool ASCIIwrite(std::ostream& oflux=std::cout) const { oflux << m_count << " " << m_flagcount<< " " ; return oflux.good();}
-  bool ASCIIread(std::istream& iflux=std::cin) {iflux >> m_count >> m_flagcount; return iflux.good();}
 
   bool operator==(const SingleCounter& other) const {return sumcount()==other.sumcount() && flagcount()==other.flagcount();}
   bool operator!=(const SingleCounter& other) const {return ! ((*this)==other);}
@@ -36,7 +32,7 @@ class SingleCounter : public ASCIIpersistance
 };
 
 
-class SingleMapCounter : public ASCIIpersistance
+class SingleMapCounter 
 {
  public:
  SingleMapCounter() : m_valdistribution() {}
@@ -53,21 +49,6 @@ class SingleMapCounter : public ASCIIpersistance
     oflux << std::endl;
   }
 
-  bool ASCIIwrite(std::ostream& oflux=std::cout) const
-  {
-    oflux <<  m_valdistribution.size() << " ";
-    for (std::map<unsigned int,unsigned int>::const_iterator it=m_valdistribution.begin(); it != m_valdistribution.end(); ++it)
-      oflux << it->first << " " << it->second << " ";
-    return oflux.good();
-  }
-  bool ASCIIread(std::istream& iflux=std::cin)
-  {
-    m_valdistribution.clear();
-    unsigned int mapsize,key,val;
-    iflux >> mapsize;
-    for (unsigned int i=0; i<mapsize; ++i) {iflux >> key >> val; m_valdistribution[key]=val;} 
-    return iflux.good();
-  }
   
   bool operator==(const SingleMapCounter& other) const {return m_valdistribution==other.distribution();}
   bool operator!=(const SingleMapCounter& other) const {return ! ((*this)==other);}
@@ -81,7 +62,7 @@ class SingleMapCounter : public ASCIIpersistance
 };
 
 
-class TDC_EffCounter : public ASCIIpersistance
+class TDC_EffCounter 
 {
  public:
  TDC_EffCounter() : m_positive(0), m_event(0), m_ntriggerSeenInThisEvent(0), m_maxtriggerToSeeInThisEvent(0) {;}
@@ -97,8 +78,6 @@ class TDC_EffCounter : public ASCIIpersistance
 
   void write(std::string* labels=NULL,std::ostream& oflux=std::cout) const { oflux <<  (labels==NULL ? std::string("") : (*labels))  << " : " <<  m_positive << " for " << m_event << ". Eff= " << (100.0*m_positive)/m_event << " %" << std::endl;}
 
-  bool ASCIIwrite(std::ostream& oflux=std::cout) const { oflux << m_positive << " " << m_event<< " " ; return oflux.good();}
-  bool ASCIIread(std::istream& iflux=std::cin) {iflux >> m_positive >> m_event; return iflux.good();}
 
   bool operator==(const SingleCounter& other) const {return sumcount()==other.sumcount() && flagcount()==other.flagcount();}
   bool operator!=(const SingleCounter& other) const {return ! ((*this)==other);}
@@ -136,24 +115,6 @@ class MappedCounters : public std::map<unsigned int,COUNTER>, public COUNTERBASE
     for (typename std::map<unsigned int,COUNTER>::iterator it=this->begin(); it!= this->end(); ++it) {printIndent(oflux); oflux << it->first << " "; it->second.write(labels+1,oflux);}
   }
 
-  bool ASCIIwrite(std::ostream& oflux=std::cout) const
-  { 
-    COUNTERBASE::ASCIIwrite(oflux);  
-    oflux << this->size() << " ";
-    for (typename std::map<unsigned int,COUNTER>::const_iterator it=this->begin(); it!= this->end(); ++it) 
-      { oflux << it->first << " "; it->second.ASCIIwrite(oflux); }
-    return oflux.good();
-  }
-  bool ASCIIread(std::istream& iflux=std::cin)
-  {
-    this->clear();
-    COUNTERBASE::ASCIIread(iflux);
-    unsigned int mapsize;
-    iflux >> mapsize;
-    for (unsigned int i=0; i<mapsize; ++i)
-      { unsigned int aKey; iflux >> aKey; (*this)[aKey].ASCIIread(iflux); }
-    return iflux.good();
-  }
 
   const std::map<unsigned int,COUNTER>& the_map() const {return *this;}
   bool operator==(const MappedCounters<COUNTER>& other) const {return  COUNTERBASE::operator==(other) && the_map()==other.the_map();}
