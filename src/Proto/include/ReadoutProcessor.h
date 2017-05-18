@@ -13,7 +13,7 @@
 class ReadoutProcessor
 {
 public:
-  ReadoutProcessor(int NbrEventToProcess,TFile* fol):numbereventtoprocess(NbrEventToProcess),folder(fol){}
+  ReadoutProcessor(int NbrEventToProcess,TFile* fol):_numbereventtoprocess(NbrEventToProcess),folder(fol){}
   void init();
   int readstream(int32_t _fdIn);
   void processReadout(TdcChannelBuffer &tdcBuf);
@@ -45,7 +45,7 @@ private:
   TBranch *_bWitchSide2 = nullptr;
   TBranch *_bMezzanine2 = nullptr;
   ChamberCounters _counters;
-  int32_t numbereventtoprocess;
+  int32_t _numbereventtoprocess;
   int32_t totalevent{0};
   TFile* folder=nullptr;
   std::map<int,TH1F*> _Multiplicity;
