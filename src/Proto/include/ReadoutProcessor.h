@@ -64,5 +64,7 @@ private:
   std::map<int,std::vector<TdcChannel>> _BCIDwithTriggerPerChamber;
 
   void fillTriggerBCIDInfo(TdcChannelBuffer &tdcBuf);
+  void removeDataForChamberWithMoreThanOneTrigger(TdcChannelBuffer &tdcBuf);
+  void removeDataForMezzanineWithMoreThanOneTrigger(TdcChannelBuffer &tdcBuf);
 };
 #endif 

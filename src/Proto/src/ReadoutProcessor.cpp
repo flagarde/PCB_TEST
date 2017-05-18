@@ -212,55 +212,65 @@ void ReadoutProcessor::fillTriggerBCIDInfo(TdcChannelBuffer &tdcBuf)
 	  _BCIDwithTriggerPerChamber[IPtoChamber[it->mezzanine()]].push_back(*it);
 	}
     }
+  _maxBCID_histo->Fill(_maxBCID);
+  _maxBCID_histozoom->Fill(_maxBCID);
+  _triggerPerReadout->Fill(_BCIDwithTrigger.size());
+  for (std::map<int,std::vector<uint16_t>>::iterator it =_BCIDwithTriggerPerMezzanine.begin();it!=_BCIDwithTriggerPerMezzanine.end();++it)
+    _triggerPerReadoutPerMezzanine->Fill(it->second.size(),it->first);
+}
+
+void ReadoutProcessor::removeDataForChamberWithMoreThanOneTrigger(TdcChannelBuffer &tdcBuf)
+{
+  for(std::map<int,std::vector<TdcChannel>>::iterator it=_BCIDwithTriggerPerChamber.begin();it!=_BCIDwithTriggerPerChamber.end();++it)
+    {
+      std::pair<std::multimap<int,int>::iterator, std::multimap<int,int>::iterator> ret;
+      ret=ChambertoIP.equal_range(it->first);
+      if(it->second.size()>2)
+	{
+	  TdcChannel* iter=tdcBuf.end();
+	  for(unsigned int i=0;i!=it->second.size();++i)
+	    {
+	      for(std::multimap<int,int>::iterator itt=ret.first; itt!=ret.second; ++itt)
+		{
+		  TdcChannel* rem=std::remove_if(tdcBuf.begin(), iter, TdcMezzaninePredicate(itt->second) );
+		  tdcBuf.setEnd(rem);
+		  iter=rem;
+		}
+	    }
+	}
+      else
+	{
+	  if(fabs(it->second[0].bcid()-it->second[1].bcid())<2&&(it->second[0].mezzanine()!=it->second[1].mezzanine()))continue;
+	  TdcChannel* iter=tdcBuf.end();
+	  for(std::multimap<int,int>::iterator itt=ret.first; itt!=ret.second; ++itt)
+	    {
+	      TdcChannel* rem=std::remove_if(tdcBuf.begin(), iter, TdcMezzaninePredicate(itt->second));
+	      tdcBuf.setEnd(rem);
+	      iter=rem;
+	    }
+	}
+    }
+}
+
+void ReadoutProcessor::removeDataForMezzanineWithMoreThanOneTrigger(TdcChannelBuffer &tdcBuf)
+{
+  for (std::map<int,std::vector<uint16_t>>::iterator it =_BCIDwithTriggerPerMezzanine.begin();it!=_BCIDwithTriggerPerMezzanine.end();++it)
+    if (it->second.size()>1)
+      {
+	TdcChannel* rem=std::remove_if(tdcBuf.begin(), tdcBuf.end(), TdcMezzaninePredicate(it->first) );
+	tdcBuf.setEnd(rem);
+      }
 }
 
 void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
 {
   fillTriggerBCIDInfo(tdcBuf);
-  for(std::map<int,std::vector<TdcChannel>>::iterator it=_BCIDwithTriggerPerChamber.begin();it!=_BCIDwithTriggerPerChamber.end();++it)
-  {
-    std::pair<std::multimap<int,int>::iterator, std::multimap<int,int>::iterator> ret;
-    ret=ChambertoIP.equal_range(it->first);
-    if(it->second.size()>2)
-    {
-      TdcChannel* iter=tdcBuf.end();
-      for(unsigned int i=0;i!=it->second.size();++i)
-      {
-        for(std::multimap<int,int>::iterator itt=ret.first; itt!=ret.second; ++itt)
-        {
-          TdcChannel* rem=std::remove_if(tdcBuf.begin(), iter, TdcMezzaninePredicate(itt->second) );
-	        tdcBuf.setEnd(rem);
-	        iter=rem;
-	      }
-	    }
-    }
-    else
-    {
-      if(fabs(it->second[0].bcid()-it->second[1].bcid())<2&&(it->second[0].mezzanine()!=it->second[1].mezzanine()))continue;
-      TdcChannel* iter=tdcBuf.end();
-      for(std::multimap<int,int>::iterator itt=ret.first; itt!=ret.second; ++itt)
-      {
-        TdcChannel* rem=std::remove_if(tdcBuf.begin(), iter, TdcMezzaninePredicate(itt->second));
-	      tdcBuf.setEnd(rem);
-	      iter=rem;
-	    }
-    }
-  }
-  _maxBCID_histo->Fill(_maxBCID);
-  _maxBCID_histozoom->Fill(_maxBCID);
-  _triggerPerReadout->Fill(_BCIDwithTrigger.size());
-  for (std::map<int,std::vector<uint16_t>>::iterator it =_BCIDwithTriggerPerMezzanine.begin();it!=_BCIDwithTriggerPerMezzanine.end();++it)
-  {
-    _triggerPerReadoutPerMezzanine->Fill(it->second.size(),it->first);
-    #ifdef LAURENT_STYLE
-    if (it->second.size()>1)
-	  {
-	      TdcChannel* rem=std::remove_if(tdcBuf.begin(), tdcBuf.end(), TdcMezzaninePredicate(it->first) );
-	      tdcBuf.setEnd(rem);
-	  }
-    #endif
-  }
   //eventually here put a filter on the  BCIDwithTrigger set (like remove first ones, last ones, close ones)
+  removeDataForChamberWithMoreThanOneTrigger(tdcBuf);
+#ifdef LAURENT_STYLE
+  removeDataForMezzanineWithMoreThanOneTrigger(tdcBuf);
+#endif
+  
 
   TdcChannel* eventStart=tdcBuf.begin();
   TdcChannel* eventEnd=nullptr;
