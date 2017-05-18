@@ -70,6 +70,7 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
 		    }
 	    }
 	  } // end loop on DIF
+	  if(tdcBuf.nTdcChannel()>nbrTotalHitsMax) return 0;
     processReadout(tdcBuf);
   }
 } 

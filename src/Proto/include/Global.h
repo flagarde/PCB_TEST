@@ -12,4 +12,5 @@ static std::multimap<int,int>ChambertoIP{{1,15},{1,14},{2,13},{2,12}};
 static unsigned int const triggerChannel=16;
 static double const vitesse=2.0/3*29.979245800; //2/3 de la vitesse de la lumiere
 static double const longueur=100;
+static int const nbrTotalHitsMax=1000;
 #endif
