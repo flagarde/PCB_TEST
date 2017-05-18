@@ -27,7 +27,7 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
 	    return 0;
 	  }
     else if(totalevent%10000==0) printf("Event read %d \n",totalevent);
-    if(numbereventtoprocess<=totalevent)return 2;
+    if(numbereventtoprocess>=totalevent)return 2;
     ier=::read(_fdIn,&theNumberOfDIF,sizeof(uint32_t));
     if (ier<=0)
 	  {
@@ -129,7 +129,7 @@ void ReadoutProcessor::finish()
   dataTree->Write();
   noiseTree->Write();
   folder->cd();
-  for(std::map<int,TH1F*>::iterator it=_Multiplicity.begin();it!=_Multiplicity.end();++it)
+  /*for(std::map<int,TH1F*>::iterator it=_Multiplicity.begin();it!=_Multiplicity.end();++it)
   {
     it->second->Write();
     delete it->second;
@@ -223,7 +223,7 @@ void ReadoutProcessor::finish()
   {
     it->second->Write();
     delete it->second;
-  }
+  }*/
 }
 
 void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
