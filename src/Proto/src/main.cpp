@@ -2,7 +2,6 @@
 #include <fcntl.h>
 #include "Colors.h"
 #include "TROOT.h"
-//#include "readstream.h"
 #include "ReadoutProcessor.h"
 #include "TFile.h"
 #include <sys/types.h>
@@ -23,7 +22,11 @@ int getdir (std::string dir, std::vector<std::string> &files,std::string nbrRunT
     std::string name=std::string(dirp->d_name);
     std::size_t found = name.rfind("_");
     std::string nbrRun = name.substr(found+1);
-    if(nbrRun==nbrRunToProcess+".dat") files.push_back(name);
+    if(nbrRun==nbrRunToProcess+".dat") 
+    {
+	files.push_back(name);
+	std::cout<<green<<"I will process "<<name<<normal<<std::endl;
+    }
   }
   closedir(dp);
   return 0;
@@ -50,8 +53,10 @@ int main(int argc, char *argv[])
   std::string nbrRun = filena.substr(found+1);  
   found = filena.rfind("/");
   std::string path ="./";  
+  //std::cout<<path<<"  "<<nbrRun<<std::endl;
   if(found!=std::string::npos)path=filena.substr(0,found+1);
-  std::vector<std::string> FilesTopProcess;
+ std::cout<<path<<"  "<<nbrRun<<std::endl; 
+std::vector<std::string> FilesTopProcess;
   getdir(path,FilesTopProcess,nbrRun);
   if (file.IsOpen() != true) 
   {
@@ -62,7 +67,7 @@ int main(int argc, char *argv[])
   int retour=0;
   for(unsigned int i=0;i!=FilesTopProcess.size();++i)
   {
-    int32_t _fdIn= ::open(FilesTopProcess[i].c_str(), O_RDONLY | O_NONBLOCK,S_IRWXU);
+    int32_t _fdIn= ::open((path+FilesTopProcess[i]).c_str(), O_RDONLY | O_NONBLOCK,S_IRWXU);
     if (_fdIn<0)
     {
       perror("Can't open file :");
