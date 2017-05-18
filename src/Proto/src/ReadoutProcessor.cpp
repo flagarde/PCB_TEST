@@ -26,7 +26,7 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
 	    return 0;
 	  }
     else if(_totalevent%10000==0) printf("Event read %d \n",_totalevent);
-    if(_numbereventtoprocess<=_totalevent)return 2;
+    if(_numbereventtoprocess<=_totalevent&&_numbereventtoprocess!=-1)return 2;
     ier=::read(_fdIn,&theNumberOfDIF,sizeof(uint32_t));
     if (ier<=0)
 	  {
@@ -112,7 +112,7 @@ void ReadoutProcessor::init()
     {
       _T1mT2[it->second]=new TH2F(("T1-T2_th2_"+std::to_string(it->second)).c_str(),("T1-T2_th2_"+std::to_string(it->second)).c_str(),32,0,32,1000,-500,500);
       _Position[it->second]=new TH2F(("Position_"+std::to_string(it->second)).c_str(),("Position_"+std::to_string(it->second)).c_str(),32,0,32,2000,-1000,1000); 
-      _Longueur[it->second]=new TH2F(("Longueur_"+std::to_string(it->second)).c_str(),("Longueur_"+std::to_string(it->second)).c_str(),32,0,32,20000,-10000,10000);
+      _Longueur[it->second]=new TH2F(("Longueur_"+std::to_string(it->second)).c_str(),("Longueur_"+std::to_string(it->second)).c_str(),32,0,32,2000,-1000,1000);
       _T1mT2Chamber[it->second]=new TH1F(("T1-T2_"+std::to_string(it->second)).c_str(),("T1-T2_"+std::to_string(it->second)).c_str(),1000,-500,500);
       _Multiplicity[it->second]=new TH1F(("Multiplicity_"+std::to_string(it->second)).c_str(),("Multiplicity_"+std::to_string(it->second)).c_str(),300,0,300);
       _NbrCluster[it->second]=new TH1F(("NbrCluster_"+std::to_string(it->second)).c_str(),("NbrCluster_"+std::to_string(it->second)).c_str(),300,0,300);
@@ -218,11 +218,14 @@ void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
     if(it->second.size()>2)
     {
       TdcChannel* iter=tdcBuf.end();
-      for(std::multimap<int,int>::iterator itt=ret.first; itt!=ret.second; ++itt)
+      for(unsigned int i=0;i!=it->second.size();++i)
       {
-        TdcChannel* rem=std::remove_if(tdcBuf.begin(), iter, TdcMezzaninePredicate(itt->second) );
-	      tdcBuf.setEnd(rem);
-	      iter=rem;
+        for(std::multimap<int,int>::iterator itt=ret.first; itt!=ret.second; ++itt)
+        {
+          TdcChannel* rem=std::remove_if(tdcBuf.begin(), iter, TdcMezzaninePredicate(itt->second) );
+	        tdcBuf.setEnd(rem);
+	        iter=rem;
+	      }
 	    }
     }
     else
