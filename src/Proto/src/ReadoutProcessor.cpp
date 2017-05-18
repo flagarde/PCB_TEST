@@ -281,32 +281,35 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
     if (endTrigWindow!=begin) to_add=1;  
     for(TdcChannel* it=begin; it != end; ++it)
     {
-      if(_T1mT2Ch.find(it->strip())==_T1mT2Ch.end())
-      {
-        _T1mT2Ch[it->strip()]=new TH1F(("T1-T2_"+std::to_string(it->strip())).c_str(),("T1-T2_"+std::to_string(it->strip())).c_str(),1000,-500,500);
-      }
       if(it->channel()==triggerChannel) continue;
       TdcChannel* beginpp=it;
       beginpp++;
       for(TdcChannel* itt=begin; itt != end; ++itt)
       {
         if(it->channel()==triggerChannel) continue;
-        double diff=it->getTimeFromTrigger()-itt->getTimeFromTrigger();
-        if((it->side()+1)==itt->side())
-	      {
-	        _T1mT2[it->chamber()]->Fill(it->strip()%100,diff);
-	        _Position[it->chamber()]->Fill(it->strip()%100,(diff*vitesse+longueur)/2);
-	        _Longueur[it->chamber()]->Fill(it->strip()%100,(it->getTimeFromTrigger()+itt->getTimeFromTrigger()));
-	        _T1mT2Ch[it->strip()]->Fill(diff);
-	        _T1mT2Chamber[it->chamber()]->Fill(diff);
-	      }
-	      else if (it->side()==(itt->side()+1))
-	      {
-	        _T1mT2[it->chamber()]->Fill(it->strip()%100,-diff);
-	        _T1mT2Ch[it->strip()]->Fill(-diff);
-	        _T1mT2Chamber[it->strip()/100]->Fill(-diff);
-	        _Position[it->chamber()]->Fill(it->strip()%100,float((-diff*vitesse+longueur)/2));
-	        _Longueur[it->chamber()]->Fill(it->strip()%100,float(((itt->getTimeFromTrigger()+it->getTimeFromTrigger()))));
+        if(it->channel()==itt->channel())
+        {
+          if(_T1mT2Ch.find(it->strip())==_T1mT2Ch.end())
+          {
+            _T1mT2Ch[it->strip()]=new TH1F(("T1-T2_"+std::to_string(it->strip())).c_str(),("T1-T2_"+std::to_string(it->strip())).c_str(),1000,-500,500);
+          }
+          double diff=it->getTimeFromTrigger()-itt->getTimeFromTrigger();
+          if((it->side()+1)==itt->side())
+	        {
+	          _T1mT2[it->chamber()]->Fill(it->strip()%100,diff);
+	          _Position[it->chamber()]->Fill(it->strip()%100,(diff*vitesse+longueur)/2);
+	          _Longueur[it->chamber()]->Fill(it->strip()%100,(it->getTimeFromTrigger()+itt->getTimeFromTrigger()));
+	          _T1mT2Ch[it->strip()]->Fill(diff);
+	          _T1mT2Chamber[it->chamber()]->Fill(diff);
+	        }
+	        else if (it->side()==(itt->side()+1))
+	        {
+	          _T1mT2[it->chamber()]->Fill(it->strip()%100,-diff);
+	          _T1mT2Ch[it->strip()]->Fill(-diff);
+	          _T1mT2Chamber[it->strip()/100]->Fill(-diff);
+	          _Position[it->chamber()]->Fill(it->strip()%100,float((-diff*vitesse+longueur)/2));
+	          _Longueur[it->chamber()]->Fill(it->strip()%100,float(((itt->getTimeFromTrigger()+it->getTimeFromTrigger()))));
+	        }
 	      }
       }
     }
