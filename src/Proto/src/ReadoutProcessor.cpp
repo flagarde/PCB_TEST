@@ -20,14 +20,14 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
     tdcBuf.clear();
     uint32_t theNumberOfDIF=0;
     int ier=::read(_fdIn,&_event,sizeof(uint32_t));
-    totalevent+=1;
+    _totalevent+=1;
     if (ier<=0)
 	  {
 	    printf("Cannot read anymore %d \n",ier); 
 	    return 0;
 	  }
-    else if(totalevent%10000==0) printf("Event read %d \n",totalevent);
-    if(_numbereventtoprocess>=totalevent)return 2;
+    else if(_totalevent%10000==0) printf("Event read %d \n",_totalevent);
+    if(_numbereventtoprocess>=_totalevent)return 2;
     ier=::read(_fdIn,&theNumberOfDIF,sizeof(uint32_t));
     if (ier<=0)
 	  {

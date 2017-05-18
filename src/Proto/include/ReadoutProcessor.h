@@ -46,7 +46,7 @@ private:
   TBranch *_bMezzanine2 = nullptr;
   ChamberCounters _counters;
   int32_t _numbereventtoprocess;
-  int32_t totalevent{0};
+  int32_t _totalevent{0};
   TFile* folder=nullptr;
   std::map<int,TH1F*> _Multiplicity;
   std::map<int,TH2F*> _T1mT2;
