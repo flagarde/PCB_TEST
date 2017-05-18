@@ -5,7 +5,7 @@
 #include "Predicate.h"
 #include "buffer.h"
 #include "TF1.h"
-#include "TCanvas.h"
+#include "Plots.h"
 #define LAURENT_STYLE
 int ReadoutProcessor::readstream(int32_t _fdIn)
 {
@@ -162,20 +162,13 @@ void ReadoutProcessor::finish()
   _folder->mkdir("T1-T2");
   _folder->cd("T1-T2");
   TF1 *gauss = new TF1("gauss", "gaus", 0.0, 1.0);
+  TCanvasDivided a(2);
+  a.setName("Test_*");
   for(std::map<int,TH1F*>::iterator it=_T1mT2Ch.begin();it!=_T1mT2Ch.end();++it)
-  {
-    static TCanvas* can=nullptr;
-    static int counter=1;
-    if(counter%17==0||counter==1)
-    {
-      can=new TCanvas(("T1-T2_"+std::to_string(counter/17)).c_str(),("T1-T2_"+std::to_string(counter/17)).c_str());
-      can->Divide(4,4);
-    }
-    can->cd(counter%17);
-    it->second->Draw();
+  { 
     if(it->second->GetEntries()!=0)
     {
-      it->second->Fit("gauss");
+      it->second->Fit("gauss","Q");
       TF1 *fit1 = (TF1*)it->second->GetFunction("gaus");
       if(fit1!=nullptr)
       {
@@ -183,42 +176,12 @@ void ReadoutProcessor::finish()
         fit1->Draw("same");
       }
     }
-    counter++;
-    if(counter%17==0||it==((--_T1mT2Ch.end())))
-    {
-      can->Write();
-      delete can;
-    }
+    a.add(it->second);
     it->second->Write();
-    delete it->second;
   }
+  a.write(_folder);
   for(std::map<int,TH1F*>::iterator it=_T1mT2Chamber.begin();it!=_T1mT2Chamber.end();++it)
   {
-    static TCanvas* can=nullptr;
-    static int counter=1;
-    if(counter%17==0||counter==1)
-    {
-      can=new TCanvas(("T1-T2_Chamber_"+std::to_string(counter/17)).c_str(),("T1-T2_Chamber_"+std::to_string(counter/17)).c_str());
-      can->Divide(4,4);
-    }
-    can->cd(counter%17);
-    it->second->Draw();
-    if(it->second->GetEntries()!=0)
-    {
-      it->second->Fit("gauss");
-      TF1 *fit1 = (TF1*)it->second->GetFunction("gaus");
-      if(fit1!=nullptr)
-      {
-        fit1->SetLineColor(kRed);
-        fit1->Draw("same");
-      }
-    }
-    counter++;
-    if(counter%17==0||it==((--_T1mT2Ch.end())))
-    {
-      can->Write();
-      delete can;
-    }
     it->second->Write();
     delete it->second;
   }
