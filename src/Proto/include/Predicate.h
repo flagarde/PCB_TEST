@@ -20,4 +20,15 @@ public:
 private:
   int _mezzanine;
 };
+
+class TdcOutofTriggerTimePredicate
+{
+ public:
+   TdcOutofTriggerTimePredicate(double trigTime,double shiftLowSide, double shiftUpSide) : _lowSide(trigTime+shiftLowSide), _highSide(trigTime+shiftUpSide) {}
+  bool operator()(TdcChannel& c) {double t=c.tdcTime(); return t<_lowSide || t>_highSide;}
+ private:
+  double _lowSide;
+  double _highSide;
+};
+
 #endif

@@ -163,7 +163,8 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   int to_add=0;
   if (int(end-begin)>1) //at least one hit more than the trigger
   {
-    to_add=1;
+    TdcChannel* endTrigWindow=std::remove_if(begin,end,TdcOutofTriggerTimePredicate(trigger->tdcTime(),-900,-861));
+    if (endTrigWindow!=begin) to_add=1;
   }
   _counters.add(to_add,valeur);
 }
