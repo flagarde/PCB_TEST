@@ -311,18 +311,17 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   int trigCount=std::count_if(begin,end,isTrigger);
   if (trigCount != 1) return;
   //std::cout << " trigCount pour nhit = " << int(end-begin) << std::endl;
-  TdcChannel triggerObj=*(std::find_if(begin,end,isTrigger));
-  TdcChannel *trigger=&triggerObj;
-  unsigned int valeur[2]={(unsigned int)trigger->chamber(),(unsigned int)trigger->mezzanine()};
-  _tdc_counters.YouAreConcernedByATrigger(trigger->bcid(),valeur);
-  //std::cout<<trigger->chamber()<<std::endl;
+  TdcChannel trigger(*(std::find_if(begin,end,isTrigger)));
+  unsigned int valeur[2]={(unsigned int)trigger.chamber(),(unsigned int)trigger.mezzanine()};
+  _tdc_counters.YouAreConcernedByATrigger(trigger.bcid(),valeur);
+  //std::cout<<trigger.chamber()<<std::endl;
   for (TdcChannel* it=begin; it != end; ++it) 
   {
     if(it->channel()!=triggerChannel)
     {
       //std::cout<<std::setprecision (std::numeric_limits<double>::digits10+1)<<it->tdcTime()-trigger->tdcTime()<<std::endl;
-      _data.Push_back(it->side(),it->strip(),it->mezzanine(),it->tdcTime(),trigger->tdcTime());
-      it->settdcTrigger(trigger->tdcTime());
+      _data.Push_back(it->side(),it->strip(),it->mezzanine(),it->tdcTime(),trigger.tdcTime());
+      it->settdcTrigger(trigger.tdcTime());
     }
   }
   //std::cout<<trigger->chamber()<<std::endl;
@@ -331,8 +330,8 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   int to_add=0;
   if (int(end-begin)>1) //at least one hit more than the trigger
   {
-    TdcChannel* endTrigWindow=std::remove_if(begin,end,TdcOutofTriggerTimePredicate(trigger->tdcTime(),-900,-861));
-    if (endTrigWindow!=begin) {to_add=1; _tdc_counters.YouHaveAHit(trigger->bcid(),valeur);}  
+    TdcChannel* endTrigWindow=std::remove_if(begin,end,TdcOutofTriggerTimePredicate(trigger.tdcTime(),-900,-861));
+    if (endTrigWindow!=begin) {to_add=1; _tdc_counters.YouHaveAHit(trigger.bcid(),valeur);}  
     for(TdcChannel* it=begin; it != end; ++it)
     {
       if(it->channel()==triggerChannel) continue;
