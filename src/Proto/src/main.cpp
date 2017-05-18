@@ -75,6 +75,12 @@ int main(int argc, char *argv[])
     }
     else std::cout<<green<<"Opening "<<FilesTopProcess[i]<<normal<<std::endl;
     retour=Pr.readstream(_fdIn);
+    if(retour==15)
+    {
+      Pr.finish();
+      file.Close();
+      return 0;
+    }
   }
   Pr.finish();
   file.Close();
