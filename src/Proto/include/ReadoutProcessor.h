@@ -4,12 +4,14 @@
 #include "TH1F.h"
 #include "TH2F.h"
 #include "GG_counter.h"
+#include "TdcChamberEfficiency.hh"
 #include <cstdint>
 #include "TBranch.h"
 #include "TTree.h"
 #include "RAWData.h"
 #include "TProfile.h"
 #include "TFile.h"
+
 class ReadoutProcessor
 {
 public:
@@ -46,7 +48,8 @@ private:
   TBranch *_bWitchSide2 = nullptr;
   TBranch *_bMezzanine2 = nullptr;
   ChamberCounters _counters;
-  TDC_ChamberCounters _tdc_counters;  
+  TDC_ChamberCounters _tdc_counters;
+  TdcMultiChamberEfficiency _chamberEfficiency;
   int32_t _numbereventtoprocess;
   int32_t _totalevent{0};
   TFile* _folder=nullptr;

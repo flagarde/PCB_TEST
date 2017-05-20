@@ -120,6 +120,9 @@ void ReadoutProcessor::init()
       _MultiCluster[it->second]=new TH1F(("MultiCluster_"+std::to_string(it->second)).c_str(),("MultiCluster_"+std::to_string(it->second)).c_str(),300,0,300);
     }
   }
+  // could try to do something complicated with ChambertoIP or IPtoChamber but keep it simple but not portable for now
+  _chamberEfficiency.addChamber(14,15);
+  _chamberEfficiency.addChamber(12,13);
 }
 
 void ReadoutProcessor::finish()
@@ -132,6 +135,7 @@ void ReadoutProcessor::finish()
   std::string labels[3]={"ALL", "CHAMBER", "MEZZANINE"};
   _counters.write(labels);
   _tdc_counters.write(labels);
+  _chamberEfficiency.print();
   _noisehitspersecond->Write();
   _dataTree->Write();
   _noiseTree->Write();
@@ -294,6 +298,7 @@ void ReadoutProcessor::processTrigger(TdcChannel* begin,TdcChannel* end)
   TdcChannel* mezzStart=begin;
   TdcChannel* mezzEnd=nullptr;
   _tdc_counters.NewEvent();
+  _chamberEfficiency.startEvent();
   for(std::map<int,int>::iterator it=IPtoChamber.begin();it!=IPtoChamber.end();++it)
   {
     mezzEnd=std::partition(mezzStart,end,TdcMezzaninePredicate(it->first));
@@ -302,6 +307,7 @@ void ReadoutProcessor::processTrigger(TdcChannel* begin,TdcChannel* end)
   }
   //if (nullptr != mezzEnd && end != mezzEnd) std::cout << "WARNING WARNING mess here" << std::endl;
   _counters.newSet();
+  _chamberEfficiency.endEvent();
 }
 
 void ReadoutProcessor::processNoise(TdcChannel* begin,TdcChannel* end)
@@ -333,6 +339,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   TdcChannel trigger(*(std::find_if(begin,end,isTrigger)));
   unsigned int valeur[2]={(unsigned int)trigger.chamber(),(unsigned int)trigger.mezzanine()};
   _tdc_counters.YouAreConcernedByATrigger(trigger.bcid(),valeur);
+  _chamberEfficiency.setTriggerSeen((unsigned int)trigger.mezzanine());
   //std::cout<<trigger.chamber()<<std::endl;
   for (TdcChannel* it=begin; it != end; ++it) 
   {
@@ -352,7 +359,12 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   {
     TdcChannel* endTrigWindow=std::remove_if(begin,end,TdcOutofTriggerTimePredicate(trigger.tdcTime(),-900,-861));
     //TdcChannel* endTrigWindow=std::remove_if(begin,end,TdcOutofTriggerTimePredicate(trigger.tdcTime(),-625,-575));
-    if (endTrigWindow!=begin) {to_add=1; _tdc_counters.YouHaveAHit(trigger.bcid(),valeur);}  
+    if (endTrigWindow!=begin) {to_add=1; _tdc_counters.YouHaveAHit(trigger.bcid(),valeur);}
+    for (TdcChannel* it=begin; it !=endTrigWindow; ++it)
+      {
+	if (it->channel()==triggerChannel) continue;
+	_chamberEfficiency.setHitSeen((unsigned int)it->mezzanine());
+      }
     for(TdcChannel* it=begin; it != end; ++it)
     {
       if(it->channel()==triggerChannel) continue;
