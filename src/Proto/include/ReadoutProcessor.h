@@ -30,6 +30,8 @@ private:
   TH1F* _triggerPerReadout=nullptr;
   TH2F* _triggerPerReadoutPerMezzanine=nullptr;
   TH1F* _triggerTime=nullptr;
+  std::map<unsigned int,TH1F*> _hitTimePair;
+  std::map<unsigned int,TH1F*> _hitTimeImpair;
   TH1F* _nDIFinReadout=nullptr;
   TH1F* _nReadoutperAbsBCID=nullptr;
   std::map<uint64_t,unsigned int> _AbsBCID_Readout_map;

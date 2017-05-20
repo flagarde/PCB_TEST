@@ -117,6 +117,8 @@ void ReadoutProcessor::init()
   _bMezzanine2 = _noiseTree->Branch("Mezzanine",  &_data.Mezzanine,50000,0);
   for(std::map<int,int>::iterator it=IPtoChamber.begin();it!=IPtoChamber.end();++it)
   {
+    _hitTimePair[it->first]=new TH1F(("triggerTimePair_mezz"+std::to_string(it->first)).c_str(),("Time of hits minus triggerTime even strip mezzanine "+std::to_string(it->first)).c_str(),2000,-2000,0);
+    _hitTimeImpair[it->first]=new TH1F(("triggerTimeImpair_mezz"+std::to_string(it->first)).c_str(),("Time of hits minus triggerTime odd strip mezzanine "+std::to_string(it->first)).c_str(),2000,-2000,0);
     if(_T1mT2.find(it->second)==_T1mT2.end())
     {
       _T1mT2[it->second]=new TH2F(("T1-T2_th2_"+std::to_string(it->second)).c_str(),("T1-T2_th2_"+std::to_string(it->second)).c_str(),32,0,32,1000,-500,500);
@@ -144,6 +146,8 @@ void ReadoutProcessor::finish()
   for (auto it=_AbsBCID_Readout_map.begin(); it !=_AbsBCID_Readout_map.end(); ++it)
     _nReadoutperAbsBCID->Fill(it->second);
   _nReadoutperAbsBCID->Write();
+  for (std::map<unsigned int,TH1F*>::iterator it=_hitTimePair.begin();  it != _hitTimePair.end();   ++it) it->second->Write();
+  for (std::map<unsigned int,TH1F*>::iterator it=_hitTimeImpair.begin(); it != _hitTimeImpair.end(); ++it) it->second->Write();
   std::string labels[3]={"ALL", "CHAMBER", "MEZZANINE"};
   _counters.write(labels);
   _tdc_counters.write(labels);
@@ -361,6 +365,8 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
       _data.Push_back(it->side(),it->strip(),it->mezzanine(),it->tdcTime(),trigger.tdcTime());
       it->settdcTrigger(trigger.tdcTime());
       _triggerTime->Fill(it->getTimeFromTrigger());
+      if (it->side()==0) _hitTimePair[it->mezzanine()]->Fill(it->getTimeFromTrigger());
+      else _hitTimeImpair[it->mezzanine()]->Fill(it->getTimeFromTrigger());
     }
   }
   //std::cout<<trigger->chamber()<<std::endl;
