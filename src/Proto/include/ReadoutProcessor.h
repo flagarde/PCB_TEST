@@ -61,6 +61,8 @@ private:
   std::map<int,TH1F*> _Multiplicity;
   std::map<int,TH2F*> _T1mT2;
   std::map<int,TH1F*> _T1mT2Ch;
+  std::map<int,TH1F*> _T1mT0Ch;
+  std::map<int,TH1F*> _T2mT0Ch;
   std::map<int,TH1F*> _T1mT2Chamber;
   std::map<int,TH2F*> _Position;
   std::map<int,TH2F*> _Longueur;
