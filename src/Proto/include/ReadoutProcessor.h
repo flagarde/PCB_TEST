@@ -30,6 +30,9 @@ private:
   TH1F* _triggerPerReadout=nullptr;
   TH2F* _triggerPerReadoutPerMezzanine=nullptr;
   TH1F* _triggerTime=nullptr;
+  TH1F* _nDIFinReadout=nullptr;
+  TH1F* _nReadoutperAbsBCID=nullptr;
+  std::map<uint64_t,unsigned int> _AbsBCID_Readout_map;
   TProfile* _noisehitspersecond=nullptr;
   RAWData _data;
   TTree* _dataTree=nullptr;

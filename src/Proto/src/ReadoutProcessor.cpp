@@ -34,6 +34,8 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
 	    return 0;
 	  }
     //else printf("Number of DIF found %d \n",theNumberOfDIF);
+    unsigned int nDIFwithChannel=0;
+    std::set<uint64_t> absbcidFoundInThisReadout;
     for (uint32_t idif=0;idif<theNumberOfDIF;idif++) 
 	  {
 	    uint32_t bsize=0;
@@ -54,13 +56,15 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
 	    if (b.detectorId() != 110) continue;
 	    uint32_t* ibuf=(uint32_t*) b.payload();
 	    //for (int i=0;i<7;i++)  printf("%d ",ibuf[i]);
-	    //uint64_t absbcid=ibuf[3]; absbcid=(absbcid<<32)|ibuf[2];
+	    uint64_t absbcid=ibuf[3]; absbcid=(absbcid<<32)|ibuf[2];
 	    //printf("\n event number %d, GTC %d, ABSBCID %lu, mezzanine number %u, ",ibuf[0],ibuf[1]&0xFFFF,absbcid,ibuf[4]);
 	    //printf("IP address %u.%u.%u.%u,",ibuf[5]&0xFF,(ibuf[5]>>8)&0xFF,(ibuf[5]>>16)&0xFF,(ibuf[5]>>24)&0xFF);
 	    //uint32_t nch=ibuf[6];
 	    //printf("\n channels -> %d \n",nch);
 	    if (ibuf[6]>0)
 	    {
+	      ++nDIFwithChannel;
+	      absbcidFoundInThisReadout.insert(absbcid);
 	      uint8_t* cbuf=( uint8_t*)&ibuf[7];
 	      for (int i=0;i<ibuf[6];i++)
 		    {
@@ -70,7 +74,9 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
 		    }
 	    }
 	  } // end loop on DIF
-	  if(tdcBuf.nTdcChannel()>nbrTotalHitsMax) return 0;
+    _nDIFinReadout->Fill(nDIFwithChannel);
+    for (auto it=absbcidFoundInThisReadout.begin(); it != absbcidFoundInThisReadout.end(); ++it) _AbsBCID_Readout_map[*it]++;
+    if(tdcBuf.nTdcChannel()>nbrTotalHitsMax) return 0;
     processReadout(tdcBuf);
   }
 } 
@@ -90,6 +96,8 @@ void ReadoutProcessor::init()
   _triggerPerReadoutPerMezzanine->GetXaxis()->SetTitle("Number of trigger in readout");
   _triggerPerReadoutPerMezzanine->GetYaxis()->SetTitle("Mezzanine");
   _triggerTime=new TH1F("triggerTime","Time of hits minus triggerTime",20000,-20000,0);
+  _nDIFinReadout=new TH1F("nDIFinReadout","Number of DIF with channel found in event",10,0,10);
+  _nReadoutperAbsBCID=new TH1F("nReadoutperAbsBCID","Number of readout per absolute BCID",10,0,10);
   _noisehitspersecond=new TProfile("Hits_noise_rate","Hits noise rate",20,0,20);
   _data.Reserve(1000);
   _dataTree=new TTree("RAWData","RAWData"); 
@@ -132,6 +140,10 @@ void ReadoutProcessor::finish()
   _triggerPerReadout->Write();
   _triggerPerReadoutPerMezzanine->Write();
   _triggerTime->Write();
+  _nDIFinReadout->Write();
+  for (auto it=_AbsBCID_Readout_map.begin(); it !=_AbsBCID_Readout_map.end(); ++it)
+    _nReadoutperAbsBCID->Fill(it->second);
+  _nReadoutperAbsBCID->Write();
   std::string labels[3]={"ALL", "CHAMBER", "MEZZANINE"};
   _counters.write(labels);
   _tdc_counters.write(labels);
