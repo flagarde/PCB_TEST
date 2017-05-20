@@ -27,6 +27,7 @@ private:
   TH1F* _maxBCID_histozoom=nullptr;
   TH1F* _triggerPerReadout=nullptr;
   TH2F* _triggerPerReadoutPerMezzanine=nullptr;
+  TH1F* _triggerTime=nullptr;
   TProfile* _noisehitspersecond=nullptr;
   RAWData _data;
   TTree* _dataTree=nullptr;

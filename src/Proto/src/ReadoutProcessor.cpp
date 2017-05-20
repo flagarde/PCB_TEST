@@ -89,6 +89,7 @@ void ReadoutProcessor::init()
   _triggerPerReadoutPerMezzanine=new TH2F("triggerPerReadoutPerMezzanine","number of triggers per readout per mezzanine",50,0,50,4,12,16);
   _triggerPerReadoutPerMezzanine->GetXaxis()->SetTitle("Number of trigger in readout");
   _triggerPerReadoutPerMezzanine->GetYaxis()->SetTitle("Mezzanine");
+  _triggerTime=new TH1F("triggerTime","Time of hits minus triggerTime",20000,-20000,0);
   _noisehitspersecond=new TProfile("Hits_noise_rate","Hits noise rate",20,0,20);
   _data.Reserve(1000);
   _dataTree=new TTree("RAWData","RAWData"); 
@@ -127,6 +128,7 @@ void ReadoutProcessor::finish()
   _maxBCID_histozoom->Write();
   _triggerPerReadout->Write();
   _triggerPerReadoutPerMezzanine->Write();
+  _triggerTime->Write();
   std::string labels[3]={"ALL", "CHAMBER", "MEZZANINE"};
   _counters.write(labels);
   _tdc_counters.write(labels);
@@ -278,6 +280,8 @@ void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
   for (std::set<std::pair<uint16_t,double>>::iterator it=_BCIDwithTrigger.begin(); it !=_BCIDwithTrigger.end(); ++it)
   {
     eventEnd=std::partition(eventStart,tdcBuf.end(),TdcChannelBcidpredicate((*it).first,(*it).second,-6,-3));
+    //eventEnd=std::partition(eventStart,tdcBuf.end(),TdcChannelBcidpredicate((*it).first,(*it).second,-5,-2));
+    //eventEnd=std::partition(eventStart,tdcBuf.end(),TdcChannelBcidpredicate((*it).first,(*it).second,-10,-1));
     processTrigger(eventStart,eventEnd);
     eventStart=eventEnd;
   }
@@ -337,6 +341,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
       //std::cout<<std::setprecision (std::numeric_limits<double>::digits10+1)<<it->tdcTime()-trigger->tdcTime()<<std::endl;
       _data.Push_back(it->side(),it->strip(),it->mezzanine(),it->tdcTime(),trigger.tdcTime());
       it->settdcTrigger(trigger.tdcTime());
+      _triggerTime->Fill(it->getTimeFromTrigger());
     }
   }
   //std::cout<<trigger->chamber()<<std::endl;
@@ -346,6 +351,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   if (int(end-begin)>1) //at least one hit more than the trigger
   {
     TdcChannel* endTrigWindow=std::remove_if(begin,end,TdcOutofTriggerTimePredicate(trigger.tdcTime(),-900,-861));
+    //TdcChannel* endTrigWindow=std::remove_if(begin,end,TdcOutofTriggerTimePredicate(trigger.tdcTime(),-625,-575));
     if (endTrigWindow!=begin) {to_add=1; _tdc_counters.YouHaveAHit(trigger.bcid(),valeur);}  
     for(TdcChannel* it=begin; it != end; ++it)
     {
