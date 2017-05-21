@@ -36,6 +36,7 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
     //else printf("Number of DIF found %d \n",theNumberOfDIF);
     unsigned int nDIFwithChannel=0;
     std::set<uint64_t> absbcidFoundInThisReadout;
+    bool OKprocess=true;
     for (uint32_t idif=0;idif<theNumberOfDIF;idif++) 
 	  {
 	    uint32_t bsize=0;
@@ -70,6 +71,7 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
 		    {
 		      tdcBuf.addChannel(&cbuf[8*i]);
 		      TdcChannel &c=tdcBuf.last();
+                      if (tdcBuf.nTdcChannel()>maxsize) {std::cout << "WARNING TOO BIG EVENT skipping" << std::endl; OKprocess=false; break;}
 		      c.setstrip(ibuf[4],(ibuf[5]>>24)&0xFF);
 		    }
 	    }
@@ -77,7 +79,7 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
     _nDIFinReadout->Fill(nDIFwithChannel);
     for (auto it=absbcidFoundInThisReadout.begin(); it != absbcidFoundInThisReadout.end(); ++it) _AbsBCID_Readout_map[*it]++;
     if(tdcBuf.nTdcChannel()>nbrTotalHitsMax) return 0;
-    processReadout(tdcBuf);
+    if (OKprocess) processReadout(tdcBuf);
   }
 } 
 
