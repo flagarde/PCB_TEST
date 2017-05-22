@@ -423,6 +423,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 	  }
 	  if (it->side()==0) _T1mT0Ch[it->strip()]->Fill(it->getTimeFromTrigger());
 	  else _T2mT0Ch[it->strip()]->Fill(it->getTimeFromTrigger());
+	  _data.Push_back(it->side(),it->strip(),it->mezzanine(),it->tdcTime(),trigger.tdcTime());
 	}
   int to_add=0;
   if (int(end-begin)>1) //at least one hit more than the trigger
@@ -435,7 +436,6 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 	    if (it->channel()==triggerChannel) continue;
 	    _chamberEfficiency.setHitSeen((unsigned int)it->mezzanine());
 	    //std::cout<<std::setprecision (std::numeric_limits<double>::digits10+1)<<it->tdcTime()-trigger->tdcTime()<<std::endl;
-      _data.Push_back(it->side(),it->strip(),it->mezzanine(),it->tdcTime(),trigger.tdcTime());
       mul[it->side()][it->chamber()]++;
 	    all.push_back(it);
 	  }
