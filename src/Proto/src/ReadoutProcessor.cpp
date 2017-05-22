@@ -408,11 +408,11 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 	  if (it->side()==0) _T1mT0Ch[it->strip()]->Fill(it->getTimeFromTrigger());
 	  else _T2mT0Ch[it->strip()]->Fill(it->getTimeFromTrigger());
 	}
-      for(TdcChannel* it=begin; it != end; ++it)
+      for(TdcChannel* it=begin; it != endTrigWindow; ++it)
 	{
 	  TdcChannel* beginpp=it;
 	  beginpp++;
-	  for(TdcChannel* itt=begin; itt != end; ++itt)
+	  for(TdcChannel* itt=begin; itt != endTrigWindow; ++itt)
 	    {
 	      if(it->channel()==triggerChannel) continue;
 	      if(it->strip()==itt->strip())
