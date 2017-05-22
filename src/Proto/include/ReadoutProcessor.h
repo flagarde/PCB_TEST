@@ -11,7 +11,7 @@
 #include "RAWData.h"
 #include "TProfile.h"
 #include "TFile.h"
-
+#include <fstream>
 class ReadoutProcessor
 {
 public:
@@ -74,6 +74,7 @@ private:
   std::map<int,TH1F*> _MultiClusterSide1;
   std::map<int,TH1F*> _NbrClusterBothSide;
   std::map<int,TH1F*> _MultiClusterBothSide;
+  std::ofstream myfile;
   //processReadoutHelper
   std::set<std::pair<uint16_t,double>> _BCIDwithTrigger;
   std::map<int,std::vector<uint16_t> > _BCIDwithTriggerPerMezzanine;
