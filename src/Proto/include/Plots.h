@@ -27,7 +27,6 @@ class TCanvasDivided
       cans.push_back(new TCanvas(parseName(nbr).c_str(),parseName(nbr).c_str()));
       cans[cans.size()-1]->Divide(m_x,m_y);
     }
-    std::cout<<rolling<<std::endl;
     cans[cans.size()-1]->cd(rolling%(m_x*m_y+1));
     ++rolling;
     plot->Draw();
