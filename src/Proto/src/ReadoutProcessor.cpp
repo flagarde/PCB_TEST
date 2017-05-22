@@ -89,6 +89,7 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
 
 void ReadoutProcessor::init()
 {
+   for(unsigned int i=0;i!=3;++i) _ugly[i].reserve(500);
   _myfile.open("Results.txt",std::ios::out|std::ios::app);
   _maxBCID_histo= new TH1F("MAX_BCID","Maximum BCID",200,0,200);
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6,0,0)
@@ -432,13 +433,14 @@ void ReadoutProcessor::processTrigger(TdcChannel* begin,TdcChannel* end)
 void ReadoutProcessor::processNoise(TdcChannel* begin,TdcChannel* end)
 {
   uint16_t _maxBCIDNoise=0;
-  _ugly.clear();
+  for(unsigned int i=0;i!=3;++i)_ugly[i].clear();
   std::map<int,int>noisehits;
   _data.Reset();
   for (TdcChannel* it=begin; it != end; ++it)
   {
     if(_maxBCIDNoise<it->bcid())_maxBCIDNoise=it->bcid();
-    _ugly.push_back(it);
+    _ugly[it->side()].push_back(it);
+    _ugly[2].push_back(it);
     _data.Push_back(it->side(),it->strip(),it->mezzanine(),it->tdcTime());
     noisehits[it->mezzanine()]++;
     noisehits[IPtoChamber[it->mezzanine()]]++;
@@ -455,7 +457,7 @@ void ReadoutProcessor::processNoise(TdcChannel* begin,TdcChannel* end)
     Side.setNeighbourStripDistance(1);
     Side.setSide(i);
     std::vector<std::vector<TdcChannel*>::iterator> clusters;
-    clusterize(_ugly.begin(),_ugly.end(),clusters,Side);
+    clusterize(_ugly[i].begin(),_ugly[i].end(),clusters,Side);
     std::map<int,int> NbrCluster;
     for(unsigned int j=0;j!=clusters.size()-1;++j)
     {
@@ -484,7 +486,7 @@ bool isTrigger(TdcChannel& c) {return c.channel()==triggerChannel;}
 
 void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 {
-  _ugly.clear();
+   for(unsigned int i=0;i!=3;++i)_ugly[i].clear();
   _data.Reset();
   int trigCount=std::count_if(begin,end,isTrigger);
   if (trigCount != 1) return;
@@ -521,7 +523,8 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 	    _chamberEfficiency.setHitSeen((unsigned int)it->mezzanine());
 	    //std::cout<<std::setprecision (std::numeric_limits<double>::digits10+1)<<it->tdcTime()-trigger->tdcTime()<<std::endl;
       mul[it->side()][it->chamber()]++;
-	    _ugly.push_back(it);
+	    _ugly[it->side()].push_back(it);
+	    _ugly[2].push_back(it);
 	  }
     for(TdcChannel* it=begin; it != endTrigWindow; ++it)
 	  {
@@ -573,7 +576,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
     Side.setNeighbourStripDistance(1);
     Side.setSide(i);
     std::vector<std::vector<TdcChannel*>::iterator> clusters;
-    clusterize(_ugly.begin(),_ugly.end(),clusters,Side);
+    clusterize(_ugly[i].begin(),_ugly[i].end(),clusters,Side);
     std::map<int,int> NbrCluster;
     for(unsigned int j=0;j!=clusters.size()-1;++j)
     {

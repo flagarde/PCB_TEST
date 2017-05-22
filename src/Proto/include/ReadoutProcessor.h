@@ -15,10 +15,7 @@
 class ReadoutProcessor
 {
 public:
-  ReadoutProcessor(int NbrEventToProcess,TFile* fol,std::string& nbr):_numbereventtoprocess(NbrEventToProcess),_folder(fol),_nbrRun(nbr)
-  {
-    _ugly.reserve(1000);
-  }
+  ReadoutProcessor(int NbrEventToProcess,TFile* fol,std::string& nbr):_numbereventtoprocess(NbrEventToProcess),_folder(fol),_nbrRun(nbr){}
   void init();
   int readstream(int32_t _fdIn);
   void processReadout(TdcChannelBuffer &tdcBuf);
@@ -84,7 +81,7 @@ private:
   std::map<int,TH1F*> _MultiClusterNoiseSide1;
   std::map<int,TH1F*> _NbrClusterNoiseBothSide;
   std::map<int,TH1F*> _MultiClusterNoiseBothSide;
-  std::vector<TdcChannel*> _ugly;
+  std::array<std::vector<TdcChannel*>,3> _ugly;
   std::ofstream _myfile;
   //processReadoutHelper
   std::set<std::pair<uint16_t,double>> _BCIDwithTrigger;
