@@ -58,7 +58,9 @@ private:
   int32_t _numbereventtoprocess;
   int32_t _totalevent{0};
   TFile* _folder=nullptr;
-  std::map<int,TH1F*> _Multiplicity;
+  std::map<int,TH1F*> _MultiplicitySide0;
+  std::map<int,TH1F*> _MultiplicitySide1;
+  std::map<int,TH1F*> _MultiplicityBothSide;
   std::map<int,TH2F*> _T1mT2;
   std::map<int,TH1F*> _T1mT2Ch;
   std::map<int,TH1F*> _T1mT0Ch;
@@ -66,9 +68,12 @@ private:
   std::map<int,TH1F*> _T1mT2Chamber;
   std::map<int,TH2F*> _Position;
   std::map<int,TH2F*> _Longueur;
-  std::map<int,TH1F*> _NbrCluster;
-  std::map<int,TH1F*> _MultiCluster;
-
+  std::map<int,TH1F*> _NbrClusterSide0;
+  std::map<int,TH1F*> _MultiClusterSide0;
+  std::map<int,TH1F*> _NbrClusterSide1;
+  std::map<int,TH1F*> _MultiClusterSide1;
+  std::map<int,TH1F*> _NbrClusterBothSide;
+  std::map<int,TH1F*> _MultiClusterBothSide;
   //processReadoutHelper
   std::set<std::pair<uint16_t,double>> _BCIDwithTrigger;
   std::map<int,std::vector<uint16_t> > _BCIDwithTriggerPerMezzanine;

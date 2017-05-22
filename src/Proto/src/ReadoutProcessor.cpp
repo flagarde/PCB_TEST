@@ -6,6 +6,8 @@
 #include "buffer.h"
 #include "TF1.h"
 #include "Plots.h"
+#include "Clustering.h"
+#include "RawHit_standard_merge_predicate.h"
 //#define LAURENT_STYLE
 int ReadoutProcessor::readstream(int32_t _fdIn)
 {
@@ -127,9 +129,15 @@ void ReadoutProcessor::init()
       _Position[it->second]=new TH2F(("Position_"+std::to_string(it->second)).c_str(),("Position_"+std::to_string(it->second)).c_str(),32,0,32,2000,-1000,1000); 
       _Longueur[it->second]=new TH2F(("Longueur_"+std::to_string(it->second)).c_str(),("Longueur_"+std::to_string(it->second)).c_str(),32,0,32,2000,-1000,1000);
       _T1mT2Chamber[it->second]=new TH1F(("T1-T2_"+std::to_string(it->second)).c_str(),("T1-T2_"+std::to_string(it->second)).c_str(),1000,-500,500);
-      _Multiplicity[it->second]=new TH1F(("Multiplicity_"+std::to_string(it->second)).c_str(),("Multiplicity_"+std::to_string(it->second)).c_str(),300,0,300);
-      _NbrCluster[it->second]=new TH1F(("NbrCluster_"+std::to_string(it->second)).c_str(),("NbrCluster_"+std::to_string(it->second)).c_str(),300,0,300);
-      _MultiCluster[it->second]=new TH1F(("MultiCluster_"+std::to_string(it->second)).c_str(),("MultiCluster_"+std::to_string(it->second)).c_str(),300,0,300);
+      _MultiplicitySide0[it->second]=new TH1F(("Hit_Multiplicity_Side0"+std::to_string(it->second)).c_str(),("Hit_Multiplicity_Side0"+std::to_string(it->second)).c_str(),300,0,300);
+      _MultiplicitySide1[it->second]=new TH1F(("Hit_Multiplicity_Side1"+std::to_string(it->second)).c_str(),("Hit_Multiplicity_Side1"+std::to_string(it->second)).c_str(),300,0,300);
+      _MultiplicityBothSide[it->second]=new TH1F(("Hit_Multiplicity_BothSide"+std::to_string(it->second)).c_str(),("Hit_Multiplicity_BothSide"+std::to_string(it->second)).c_str(),300,0,300);
+      _NbrClusterSide0[it->second]=new TH1F(("Number_of_Cluster_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_"+std::to_string(it->second)).c_str(),300,0,300);
+      _MultiClusterSide0[it->second]=new TH1F(("Cluster_Multiplicity_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_"+std::to_string(it->second)).c_str(),300,0,300);
+      _NbrClusterSide1[it->second]=new TH1F(("Number_of_Cluster_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_"+std::to_string(it->second)).c_str(),300,0,300);
+      _MultiClusterSide1[it->second]=new TH1F(("Cluster_Multiplicity_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_"+std::to_string(it->second)).c_str(),300,0,300);
+      _NbrClusterBothSide[it->second]=new TH1F(("Number_of_Cluster_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_"+std::to_string(it->second)).c_str(),300,0,300);
+      _MultiClusterBothSide[it->second]=new TH1F(("Cluster_Multiplicity_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_"+std::to_string(it->second)).c_str(),300,0,300);
     }
   }
   // could try to do something complicated with ChambertoIP or IPtoChamber but keep it simple but not portable for now
@@ -158,11 +166,21 @@ void ReadoutProcessor::finish()
   _dataTree->Write();
   _noiseTree->Write();
   _folder->cd();
-  for(std::map<int,TH1F*>::iterator it=_Multiplicity.begin();it!=_Multiplicity.end();++it)
+  for(std::map<int,TH1F*>::iterator it=_MultiplicitySide0.begin();it!=_MultiplicitySide0.end();++it)
   {
     it->second->Write();
     delete it->second;
   } 
+  for(std::map<int,TH1F*>::iterator it=_MultiplicitySide1.begin();it!=_MultiplicitySide1.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  } 
+  for(std::map<int,TH1F*>::iterator it=_MultiplicityBothSide.begin();it!=_MultiplicityBothSide.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
   for(std::map<int,TH2F*>::iterator it=_Longueur.begin();it!=_Longueur.end();++it)
   {
     it->second->Write();
@@ -175,12 +193,32 @@ void ReadoutProcessor::finish()
   }
   _folder->mkdir("Clusters");
   _folder->cd("Clusters");
-  for(std::map<int,TH1F*>::iterator it=_NbrCluster.begin();it!=_NbrCluster.end();++it)
+  for(std::map<int,TH1F*>::iterator it=_NbrClusterSide0.begin();it!=_NbrClusterSide0.end();++it)
   {
     it->second->Write();
     delete it->second;
   }
-  for(std::map<int,TH1F*>::iterator it=_MultiCluster.begin();it!=_MultiCluster.end();++it)
+  for(std::map<int,TH1F*>::iterator it=_MultiClusterSide0.begin();it!=_MultiClusterSide0.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
+  for(std::map<int,TH1F*>::iterator it=_NbrClusterSide1.begin();it!=_NbrClusterSide1.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
+  for(std::map<int,TH1F*>::iterator it=_MultiClusterSide1.begin();it!=_MultiClusterSide1.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
+  for(std::map<int,TH1F*>::iterator it=_NbrClusterBothSide.begin();it!=_NbrClusterBothSide.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
+  for(std::map<int,TH1F*>::iterator it=_MultiClusterBothSide.begin();it!=_MultiClusterBothSide.end();++it)
   {
     it->second->Write();
     delete it->second;
@@ -362,6 +400,41 @@ bool isTrigger(TdcChannel& c) {return c.channel()==triggerChannel;}
 
 void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 {
+  //Clusterisation Stuff
+  std::vector<TdcChannel*> all;
+  for (TdcChannel* it=begin; it != end; ++it) 
+  {
+    all.push_back(it);
+  }
+  for(unsigned int i=0;i!=3;++i)
+  {
+    RawHit_standard_merge_predicate Side(triggerChannel);
+    Side.setNeighbourTimeDistance(15);
+    Side.setNeighbourStripDistance(1);
+    Side.setSide(i);
+    std::vector<std::vector<TdcChannel*>::iterator> clusters;
+    clusterize(all.begin(),all.end(),clusters,Side);
+    std::map<int,int> NbrCluster;
+    for(unsigned int j=0;j!=clusters.size()-1;++j)
+    {
+      NbrCluster[clusters[j][0]->chamber()]++;
+      unsigned int clustersize=0;
+      for(std::vector<TdcChannel*>::iterator itt=clusters[j];itt!=clusters[j+1];++itt)
+      {
+        clustersize++;
+      }
+      if(i==0)_MultiClusterSide0[clusters[j][0]->chamber()]->Fill(clustersize);
+      else if(i==1)_MultiClusterSide1[clusters[j][0]->chamber()]->Fill(clustersize);
+      else if(i==2)_MultiClusterBothSide[clusters[j][0]->chamber()]->Fill(clustersize);
+    }
+    for(std::map<int,int>::iterator it=NbrCluster.begin();it!=NbrCluster.end();++it)
+    {
+      if(i==0)_NbrClusterSide0[it->first]->Fill(it->second);
+      else if(i==1)_NbrClusterSide1[it->first]->Fill(it->second);
+      else if(i==2)_NbrClusterBothSide[it->first]->Fill(it->second);
+    }
+  }
+  ///
   _data.Reset();
   int trigCount=std::count_if(begin,end,isTrigger);
   if (trigCount != 1) return;
@@ -371,6 +444,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   _tdc_counters.YouAreConcernedByATrigger(trigger.bcid(),valeur);
   _chamberEfficiency.setTriggerSeen((unsigned int)trigger.mezzanine());
   //std::cout<<trigger.chamber()<<std::endl;
+  std::map<int,std::map<int,int>> mul;
   for (TdcChannel* it=begin; it != end; ++it) 
   {
     if(it->channel()!=triggerChannel)
@@ -379,8 +453,18 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
       _data.Push_back(it->side(),it->strip(),it->mezzanine(),it->tdcTime(),trigger.tdcTime());
       it->settdcTrigger(trigger.tdcTime());
       _triggerTime->Fill(it->getTimeFromTrigger());
+      mul[it->side()][it->chamber()]++;
       if (it->side()==0) _hitTimePair[it->mezzanine()]->Fill(it->getTimeFromTrigger());
       else _hitTimeImpair[it->mezzanine()]->Fill(it->getTimeFromTrigger());
+    }
+  }
+  for(std::map<int,std::map<int,int>>::iterator it=mul.begin();it!=mul.end();++it)
+  {
+    for(std::map<int,int>::iterator itt=it->second.begin();itt!=it->second.end();++itt)
+    {
+      if(it->first==0)_MultiplicitySide0[itt->first]->Fill(itt->second);
+      if(it->first==1)_MultiplicitySide1[itt->first]->Fill(itt->second);
+      _MultiplicityBothSide[itt->first]->Fill(itt->second);
     }
   }
   //std::cout<<trigger->chamber()<<std::endl;

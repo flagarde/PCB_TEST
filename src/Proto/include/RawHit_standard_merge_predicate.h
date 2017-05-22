@@ -1,6 +1,7 @@
 #ifndef RawHit_standard_merge_predicate_HH
 #define RawHit_standard_merge_predicate_HH
 #include "TdcChannels.hh"
+
 class RawHit_standard_merge_predicate
 {
  public:
@@ -10,10 +11,11 @@ class RawHit_standard_merge_predicate
   void setNeighbourTimeDistance(unsigned int val) {m_neighbourTimeDistance=val;}
   void setNeighbourStripDistance(unsigned int val) {m_neighbourStripDistance=val;}
   void setSide(unsigned int val)
-{
-	if(val>=1) m_neighbourStripDistance=1;
-	else val=0;
-}
+  {
+	  if(val>1) m_side=2;
+	  else if(val==1) m_side=1;
+	  else if(val==0) m_side=0;
+  }
   bool operator()(TdcChannel* A,TdcChannel* B);
  private:
   unsigned int m_neighbourTimeDistance;
