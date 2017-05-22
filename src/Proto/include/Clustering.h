@@ -68,7 +68,6 @@
     clusterize(first,last,clusterBounds,pred);
     Convert(clusterBounds,cl);
   }
-
 //
 //  Example of usage :
 //  assuming f is a function bool f(const int &,const int &);
