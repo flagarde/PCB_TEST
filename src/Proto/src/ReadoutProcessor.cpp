@@ -140,6 +140,13 @@ void ReadoutProcessor::init()
       _MultiClusterSide1[it->second]=new TH1F(("Cluster_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),300,0,300);
       _NbrClusterBothSide[it->second]=new TH1F(("Number_of_Cluster_Both_Side_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Both_Side_"+std::to_string(it->second)).c_str(),300,0,300);
       _MultiClusterBothSide[it->second]=new TH1F(("Cluster_Multiplicity_Both_Side_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Both_Side_"+std::to_string(it->second)).c_str(),300,0,300);
+       //NOISE
+      _NbrClusterNoiseSide0[it->second]=new TH1F(("Number_of_Cluster_Side0_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Side0_"+std::to_string(it->second)).c_str(),300,0,300);
+      _MultiClusterNoiseSide0[it->second]=new TH1F(("Cluster_Multiplicity_Side0_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Side0_"+std::to_string(it->second)).c_str(),300,0,300);
+      _NbrClusterNoiseSide1[it->second]=new TH1F(("Number_of_Cluster_Side1_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Side1_"+std::to_string(it->second)).c_str(),300,0,300);
+      _MultiClusterNoiseSide1[it->second]=new TH1F(("Cluster_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),300,0,300);
+      _NbrClusterNoiseBothSide[it->second]=new TH1F(("Number_of_Cluster_Both_Side_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Both_Side_"+std::to_string(it->second)).c_str(),300,0,300);
+      _MultiClusterNoiseBothSide[it->second]=new TH1F(("Cluster_Multiplicity_Both_Side_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Both_Side_"+std::to_string(it->second)).c_str(),300,0,300);
     }
   }
   // could try to do something complicated with ChambertoIP or IPtoChamber but keep it simple but not portable for now
@@ -224,6 +231,39 @@ void ReadoutProcessor::finish()
     delete it->second;
   }
   for(std::map<int,TH1F*>::iterator it=_MultiClusterBothSide.begin();it!=_MultiClusterBothSide.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
+  //NOISE
+  _folder->mkdir("Clusters_Noise");
+  _folder->cd("Clusters_Noise");
+    for(std::map<int,TH1F*>::iterator it=_NbrClusterNoiseSide0.begin();it!=_NbrClusterNoiseSide0.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
+  for(std::map<int,TH1F*>::iterator it=_MultiClusterNoiseSide0.begin();it!=_MultiClusterNoiseSide0.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
+  for(std::map<int,TH1F*>::iterator it=_NbrClusterNoiseSide1.begin();it!=_NbrClusterNoiseSide1.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
+  for(std::map<int,TH1F*>::iterator it=_MultiClusterNoiseSide1.begin();it!=_MultiClusterNoiseSide1.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
+  for(std::map<int,TH1F*>::iterator it=_NbrClusterNoiseBothSide.begin();it!=_NbrClusterNoiseBothSide.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
+  for(std::map<int,TH1F*>::iterator it=_MultiClusterNoiseBothSide.begin();it!=_MultiClusterNoiseBothSide.end();++it)
   {
     it->second->Write();
     delete it->second;
@@ -385,10 +425,12 @@ void ReadoutProcessor::processTrigger(TdcChannel* begin,TdcChannel* end)
 
 void ReadoutProcessor::processNoise(TdcChannel* begin,TdcChannel* end)
 {
+  _ugly.clear();
   std::map<int,int>noisehits;
   _data.Reset();
   for (TdcChannel* it=begin; it != end; ++it)
   {
+    _ugly.push_back(it);
     _data.Push_back(it->side(),it->strip(),it->mezzanine(),it->tdcTime());
     noisehits[it->mezzanine()]++;
     noisehits[IPtoChamber[it->mezzanine()]]++;
@@ -396,6 +438,34 @@ void ReadoutProcessor::processNoise(TdcChannel* begin,TdcChannel* end)
   for(std::map<int,int>::iterator it=noisehits.begin();it!=noisehits.end();++it)
   {
     _noisehitspersecond->Fill(it->first,it->second/(_maxBCID*2e-7));
+  }
+    for(unsigned int i=0;i!=3;++i)
+  {
+    RawHit_standard_merge_predicate Side(triggerChannel);
+    Side.setNeighbourTimeDistance(15);
+    Side.setNeighbourStripDistance(1);
+    Side.setSide(i);
+    std::vector<std::vector<TdcChannel*>::iterator> clusters;
+    clusterize(_ugly.begin(),_ugly.end(),clusters,Side);
+    std::map<int,int> NbrCluster;
+    for(unsigned int j=0;j!=clusters.size()-1;++j)
+    {
+      NbrCluster[clusters[j][0]->chamber()]++;
+      unsigned int clustersize=0;
+      for(std::vector<TdcChannel*>::iterator itt=clusters[j];itt!=clusters[j+1];++itt)
+      {
+        clustersize++;
+      }
+      if(i==0)_MultiClusterNoiseSide0[clusters[j][0]->chamber()]->Fill(clustersize);
+      else if(i==1)_MultiClusterNoiseSide1[clusters[j][0]->chamber()]->Fill(clustersize);
+      else if(i==2)_MultiClusterNoiseBothSide[clusters[j][0]->chamber()]->Fill(clustersize);
+    }
+    for(std::map<int,int>::iterator it=NbrCluster.begin();it!=NbrCluster.end();++it)
+    {
+      if(i==0)_NbrClusterNoiseSide0[it->first]->Fill(it->second);
+      else if(i==1)_NbrClusterNoiseSide1[it->first]->Fill(it->second);
+      else if(i==2)_NbrClusterNoiseBothSide[it->first]->Fill(it->second);
+    }
   }
   _data.OneNoise();
   _noiseTree->Fill();
@@ -405,7 +475,7 @@ bool isTrigger(TdcChannel& c) {return c.channel()==triggerChannel;}
 
 void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 {
-  std::vector<TdcChannel*> all;
+  _ugly.clear();
   _data.Reset();
   int trigCount=std::count_if(begin,end,isTrigger);
   if (trigCount != 1) return;
@@ -442,7 +512,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 	    _chamberEfficiency.setHitSeen((unsigned int)it->mezzanine());
 	    //std::cout<<std::setprecision (std::numeric_limits<double>::digits10+1)<<it->tdcTime()-trigger->tdcTime()<<std::endl;
       mul[it->side()][it->chamber()]++;
-	    all.push_back(it);
+	    _ugly.push_back(it);
 	  }
     for(TdcChannel* it=begin; it != endTrigWindow; ++it)
 	  {
@@ -494,7 +564,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
     Side.setNeighbourStripDistance(1);
     Side.setSide(i);
     std::vector<std::vector<TdcChannel*>::iterator> clusters;
-    clusterize(all.begin(),all.end(),clusters,Side);
+    clusterize(_ugly.begin(),_ugly.end(),clusters,Side);
     std::map<int,int> NbrCluster;
     for(unsigned int j=0;j!=clusters.size()-1;++j)
     {
