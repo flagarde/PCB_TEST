@@ -132,12 +132,12 @@ void ReadoutProcessor::init()
       _MultiplicitySide0[it->second]=new TH1F(("Hit_Multiplicity_Side0"+std::to_string(it->second)).c_str(),("Hit_Multiplicity_Side0"+std::to_string(it->second)).c_str(),300,0,300);
       _MultiplicitySide1[it->second]=new TH1F(("Hit_Multiplicity_Side1"+std::to_string(it->second)).c_str(),("Hit_Multiplicity_Side1"+std::to_string(it->second)).c_str(),300,0,300);
       _MultiplicityBothSide[it->second]=new TH1F(("Hit_Multiplicity_BothSide"+std::to_string(it->second)).c_str(),("Hit_Multiplicity_BothSide"+std::to_string(it->second)).c_str(),300,0,300);
-      _NbrClusterSide0[it->second]=new TH1F(("Number_of_Cluster_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_"+std::to_string(it->second)).c_str(),300,0,300);
-      _MultiClusterSide0[it->second]=new TH1F(("Cluster_Multiplicity_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_"+std::to_string(it->second)).c_str(),300,0,300);
-      _NbrClusterSide1[it->second]=new TH1F(("Number_of_Cluster_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_"+std::to_string(it->second)).c_str(),300,0,300);
-      _MultiClusterSide1[it->second]=new TH1F(("Cluster_Multiplicity_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_"+std::to_string(it->second)).c_str(),300,0,300);
-      _NbrClusterBothSide[it->second]=new TH1F(("Number_of_Cluster_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_"+std::to_string(it->second)).c_str(),300,0,300);
-      _MultiClusterBothSide[it->second]=new TH1F(("Cluster_Multiplicity_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_"+std::to_string(it->second)).c_str(),300,0,300);
+      _NbrClusterSide0[it->second]=new TH1F(("Number_of_Cluster_Side0"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Side0"+std::to_string(it->second)).c_str(),300,0,300);
+      _MultiClusterSide0[it->second]=new TH1F(("Cluster_Multiplicity_Side0"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Side0"+std::to_string(it->second)).c_str(),300,0,300);
+      _NbrClusterSide1[it->second]=new TH1F(("Number_of_Cluster_Side1"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Side1"+std::to_string(it->second)).c_str(),300,0,300);
+      _MultiClusterSide1[it->second]=new TH1F(("Cluster_Multiplicity_Side1"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Side1"+std::to_string(it->second)).c_str(),300,0,300);
+      _NbrClusterBothSide[it->second]=new TH1F(("Number_of_Cluster_Both_Side"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Both_Side"+std::to_string(it->second)).c_str(),300,0,300);
+      _MultiClusterBothSide[it->second]=new TH1F(("Cluster_Multiplicity_Both_Side"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Both_Side"+std::to_string(it->second)).c_str(),300,0,300);
     }
   }
   // could try to do something complicated with ChambertoIP or IPtoChamber but keep it simple but not portable for now
