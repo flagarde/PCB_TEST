@@ -13,4 +13,5 @@ static unsigned int const triggerChannel=16;
 static double const vitesse=2.0/3*29.979245800; //2/3 de la vitesse de la lumiere
 static double const longueur=100;
 static int const nbrTotalHitsMax=1000;
+static int area=50*0.4*16;//50cmlong*0.4width*16strips
 #endif

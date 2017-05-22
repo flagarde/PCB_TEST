@@ -141,12 +141,12 @@ void ReadoutProcessor::init()
       _NbrClusterBothSide[it->second]=new TH1F(("Number_of_Cluster_Both_Side_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Both_Side_"+std::to_string(it->second)).c_str(),300,0,300);
       _MultiClusterBothSide[it->second]=new TH1F(("Cluster_Multiplicity_Both_Side_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Both_Side_"+std::to_string(it->second)).c_str(),300,0,300);
        //NOISE
-      _NbrClusterNoiseSide0[it->second]=new TH1F(("Number_of_Cluster_Side0_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Side0_"+std::to_string(it->second)).c_str(),300,0,300);
-      _MultiClusterNoiseSide0[it->second]=new TH1F(("Cluster_Multiplicity_Side0_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Side0_"+std::to_string(it->second)).c_str(),300,0,300);
-      _NbrClusterNoiseSide1[it->second]=new TH1F(("Number_of_Cluster_Side1_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Side1_"+std::to_string(it->second)).c_str(),300,0,300);
-      _MultiClusterNoiseSide1[it->second]=new TH1F(("Cluster_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),300,0,300);
-      _NbrClusterNoiseBothSide[it->second]=new TH1F(("Number_of_Cluster_Both_Side_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Both_Side_"+std::to_string(it->second)).c_str(),300,0,300);
-      _MultiClusterNoiseBothSide[it->second]=new TH1F(("Cluster_Multiplicity_Both_Side_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Both_Side_"+std::to_string(it->second)).c_str(),300,0,300);
+      _NbrClusterNoiseSide0[it->second]=new TH1F(("Number_of_Noise_Cluster_Side0_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Side0_"+std::to_string(it->second)).c_str(),300,0,300);
+      _MultiClusterNoiseSide0[it->second]=new TH1F(("Cluster_Noise_Multiplicity_Side0_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Side0_"+std::to_string(it->second)).c_str(),300,0,300);
+      _NbrClusterNoiseSide1[it->second]=new TH1F(("Number_of_Noise_Cluster_Side1_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Side1_"+std::to_string(it->second)).c_str(),300,0,300);
+      _MultiClusterNoiseSide1[it->second]=new TH1F(("Cluster_Noise_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),300,0,300);
+      _NbrClusterNoiseBothSide[it->second]=new TH1F(("Number_of_Noise_Cluster_Both_Side_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Both_Side_"+std::to_string(it->second)).c_str(),300,0,300);
+      _MultiClusterNoiseBothSide[it->second]=new TH1F(("Cluster_Noise_Multiplicity_Both_Side_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Both_Side_"+std::to_string(it->second)).c_str(),300,0,300);
     }
   }
   // could try to do something complicated with ChambertoIP or IPtoChamber but keep it simple but not portable for now
@@ -425,19 +425,22 @@ void ReadoutProcessor::processTrigger(TdcChannel* begin,TdcChannel* end)
 
 void ReadoutProcessor::processNoise(TdcChannel* begin,TdcChannel* end)
 {
+  uint16_t _maxBCIDNoise=0;
   _ugly.clear();
   std::map<int,int>noisehits;
   _data.Reset();
   for (TdcChannel* it=begin; it != end; ++it)
   {
+    if(_maxBCIDNoise<it->bcid())_maxBCIDNoise=it->bcid();
     _ugly.push_back(it);
     _data.Push_back(it->side(),it->strip(),it->mezzanine(),it->tdcTime());
     noisehits[it->mezzanine()]++;
     noisehits[IPtoChamber[it->mezzanine()]]++;
   }
+  double denominator=(_maxBCIDNoise*2e-7*area);
   for(std::map<int,int>::iterator it=noisehits.begin();it!=noisehits.end();++it)
   {
-    _noisehitspersecond->Fill(it->first,it->second/(_maxBCID*2e-7));
+    _noisehitspersecond->Fill(it->first,it->second*1.0/denominator);
   }
     for(unsigned int i=0;i!=3;++i)
   {
@@ -462,9 +465,9 @@ void ReadoutProcessor::processNoise(TdcChannel* begin,TdcChannel* end)
     }
     for(std::map<int,int>::iterator it=NbrCluster.begin();it!=NbrCluster.end();++it)
     {
-      if(i==0)_NbrClusterNoiseSide0[it->first]->Fill(it->second);
-      else if(i==1)_NbrClusterNoiseSide1[it->first]->Fill(it->second);
-      else if(i==2)_NbrClusterNoiseBothSide[it->first]->Fill(it->second);
+      if(i==0)_NbrClusterNoiseSide0[it->first]->Fill(it->second*1.0/denominator);
+      else if(i==1)_NbrClusterNoiseSide1[it->first]->Fill(it->second*1.0/denominator);
+      else if(i==2)_NbrClusterNoiseBothSide[it->first]->Fill(it->second*1.0/denominator);
     }
   }
   _data.OneNoise();
