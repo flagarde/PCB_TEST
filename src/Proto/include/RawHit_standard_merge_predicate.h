@@ -22,6 +22,7 @@ class RawHit_standard_merge_predicate
   unsigned int m_neighbourStripDistance;
   unsigned int m_side;
   bool IJ_connect(int I1, int I2);
+  bool SideConnect(int side1,int side2);
   int triggerChannel;
 };
 #endif
