@@ -89,7 +89,7 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
 
 void ReadoutProcessor::init()
 {
-  myfile.open("Results.txt",std::ios::out|std::ios::app);
+  _myfile.open("Results.txt",std::ios::out|std::ios::app);
   _maxBCID_histo= new TH1F("MAX_BCID","Maximum BCID",200,0,200);
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6,0,0)
   _maxBCID_histo->GetXaxis()->SetCanExtend(true);
@@ -161,9 +161,10 @@ void ReadoutProcessor::finish()
   for (std::map<unsigned int,TH1F*>::iterator it=_hitTimePair.begin();  it != _hitTimePair.end();   ++it) it->second->Write();
   for (std::map<unsigned int,TH1F*>::iterator it=_hitTimeImpair.begin(); it != _hitTimeImpair.end(); ++it) it->second->Write();
   std::string labels[3]={"ALL", "CHAMBER", "MEZZANINE"};
-  _counters.write(labels,myfile);
-  myfile<<std::endl<<std::endl;
-  myfile.close();
+  _myfile<<_nbrRun<<std::endl;
+  _counters.write(labels,_myfile);
+  _myfile<<std::endl<<std::endl;
+  _myfile.close();
   _tdc_counters.write(labels);
   _chamberEfficiency.print();
   _noisehitspersecond->Write();

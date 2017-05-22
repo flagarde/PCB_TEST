@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
     std::cout << red << "Impossible to open " << filena<< normal << std::endl;
     std::exit(1);
   }
-  ReadoutProcessor Pr(numbereventtoprocess,&file);
+  ReadoutProcessor Pr(numbereventtoprocess,&file,nbrRun);
   Pr.init();
   int retour=0;
   for(unsigned int i=0;i!=FilesTopProcess.size();++i)
