@@ -400,11 +400,91 @@ bool isTrigger(TdcChannel& c) {return c.channel()==triggerChannel;}
 
 void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 {
-  //Clusterisation Stuff
   std::vector<TdcChannel*> all;
-  for (TdcChannel* it=begin; it != end; ++it) 
+  for (TdcChannel* it=begin; it !=end; ++it)
+	{
+	  if(it->channel()==triggerChannel) continue;
+	  _triggerTime->Fill(it->getTimeFromTrigger());
+    if (it->side()==0) _hitTimePair[it->mezzanine()]->Fill(it->getTimeFromTrigger());
+    else _hitTimeImpair[it->mezzanine()]->Fill(it->getTimeFromTrigger());
+	}
+  _data.Reset();
+  int trigCount=std::count_if(begin,end,isTrigger);
+  if (trigCount != 1) return;
+  TdcChannel trigger(*(std::find_if(begin,end,isTrigger)));
+  unsigned int valeur[2]={(unsigned int)trigger.chamber(),(unsigned int)trigger.mezzanine()};
+  _tdc_counters.YouAreConcernedByATrigger(trigger.bcid(),valeur);
+  _chamberEfficiency.setTriggerSeen((unsigned int)trigger.mezzanine());
+  std::map<int,std::map<int,int>> mul;
+  int to_add=0;
+  if (int(end-begin)>1) //at least one hit more than the trigger
   {
-    all.push_back(it);
+    TdcChannel* endTrigWindow=std::remove_if(begin,end,TdcOutofTriggerTimePredicate(trigger.tdcTime(),-900,-861));
+    //TdcChannel* endTrigWindow=std::remove_if(begin,end,TdcOutofTriggerTimePredicate(trigger.tdcTime(),-625,-575));
+    if (endTrigWindow!=begin) {to_add=1; _tdc_counters.YouHaveAHit(trigger.bcid(),valeur);}
+    for (TdcChannel* it=begin; it !=endTrigWindow; ++it)
+	  {
+	    if (it->channel()==triggerChannel) continue;
+	    _chamberEfficiency.setHitSeen((unsigned int)it->mezzanine());
+	  }
+    for(TdcChannel* it=begin; it != end; ++it)
+	  {
+	    if(it->channel()==triggerChannel) continue;
+	    //std::cout<<std::setprecision (std::numeric_limits<double>::digits10+1)<<it->tdcTime()-trigger->tdcTime()<<std::endl;
+      _data.Push_back(it->side(),it->strip(),it->mezzanine(),it->tdcTime(),trigger.tdcTime());
+      it->settdcTrigger(trigger.tdcTime());
+      mul[it->side()][it->chamber()]++;
+	    all.push_back(it);
+	    if (_T1mT0Ch.find(it->strip())==_T1mT0Ch.end())
+	    {
+	      _T1mT0Ch[it->strip()]=new TH1F(("T1-T0_"+std::to_string(it->strip())).c_str(),("T1-T0_"+std::to_string(it->strip())).c_str(),2000,-2000,0);
+	      _T2mT0Ch[it->strip()]=new TH1F(("T2-T0_"+std::to_string(it->strip())).c_str(),("T2-T0_"+std::to_string(it->strip())).c_str(),2000,-2000,0);
+	    }
+	    if (it->side()==0) _T1mT0Ch[it->strip()]->Fill(it->getTimeFromTrigger());
+	    else _T2mT0Ch[it->strip()]->Fill(it->getTimeFromTrigger());
+	  }
+    for(TdcChannel* it=begin; it != endTrigWindow; ++it)
+	  {
+	    TdcChannel* beginpp=it;
+	    beginpp++;
+	    for(TdcChannel* itt=begin; itt != endTrigWindow; ++itt)
+	    {
+	      if(it->channel()==triggerChannel) continue;
+	      if(it->strip()==itt->strip())
+		    {
+		      if(_T1mT2Ch.find(it->strip())==_T1mT2Ch.end())
+		      {
+		        _T1mT2Ch[it->strip()]=new TH1F(("T1-T2_"+std::to_string(it->strip())).c_str(),("T1-T2_"+std::to_string(it->strip())).c_str(),1000,-500,500);
+		      }
+		      double diff=it->getTimeFromTrigger()-itt->getTimeFromTrigger();
+		      if((it->side()+1)==itt->side())
+		      {
+		        _T1mT2[it->chamber()]->Fill(it->strip()%100,diff);
+		        _Position[it->chamber()]->Fill(it->strip()%100,(diff*vitesse+longueur)/2);
+		        _Longueur[it->chamber()]->Fill(it->strip()%100,(it->getTimeFromTrigger()+itt->getTimeFromTrigger()));
+		        _T1mT2Ch[it->strip()]->Fill(diff);
+		        _T1mT2Chamber[it->chamber()]->Fill(diff);
+		      } 
+		      else if (it->side()==(itt->side()+1))
+		      {
+		        _T1mT2[it->chamber()]->Fill(it->strip()%100,-diff);
+		        _T1mT2Ch[it->strip()]->Fill(-diff);
+		        _T1mT2Chamber[it->strip()/100]->Fill(-diff);
+		        _Position[it->chamber()]->Fill(it->strip()%100,float((-diff*vitesse+longueur)/2));
+		        _Longueur[it->chamber()]->Fill(it->strip()%100,float(((itt->getTimeFromTrigger()+it->getTimeFromTrigger()))));
+		      }
+		    }
+	    }
+	  }
+  }
+  for(std::map<int,std::map<int,int>>::iterator it=mul.begin();it!=mul.end();++it)
+  {
+    for(std::map<int,int>::iterator itt=it->second.begin();itt!=it->second.end();++itt)
+    {
+      if(it->first==0)_MultiplicitySide0[itt->first]->Fill(itt->second);
+      if(it->first==1)_MultiplicitySide1[itt->first]->Fill(itt->second);
+      _MultiplicityBothSide[itt->first]->Fill(itt->second);
+    }
   }
   for(unsigned int i=0;i!=3;++i)
   {
@@ -434,97 +514,8 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
       else if(i==2)_NbrClusterBothSide[it->first]->Fill(it->second);
     }
   }
-  ///
-  _data.Reset();
-  int trigCount=std::count_if(begin,end,isTrigger);
-  if (trigCount != 1) return;
-  //std::cout << " trigCount pour nhit = " << int(end-begin) << std::endl;
-  TdcChannel trigger(*(std::find_if(begin,end,isTrigger)));
-  unsigned int valeur[2]={(unsigned int)trigger.chamber(),(unsigned int)trigger.mezzanine()};
-  _tdc_counters.YouAreConcernedByATrigger(trigger.bcid(),valeur);
-  _chamberEfficiency.setTriggerSeen((unsigned int)trigger.mezzanine());
-  //std::cout<<trigger.chamber()<<std::endl;
-  std::map<int,std::map<int,int>> mul;
-  for (TdcChannel* it=begin; it != end; ++it) 
-  {
-    if(it->channel()!=triggerChannel)
-    {
-      //std::cout<<std::setprecision (std::numeric_limits<double>::digits10+1)<<it->tdcTime()-trigger->tdcTime()<<std::endl;
-      _data.Push_back(it->side(),it->strip(),it->mezzanine(),it->tdcTime(),trigger.tdcTime());
-      it->settdcTrigger(trigger.tdcTime());
-      _triggerTime->Fill(it->getTimeFromTrigger());
-      mul[it->side()][it->chamber()]++;
-      if (it->side()==0) _hitTimePair[it->mezzanine()]->Fill(it->getTimeFromTrigger());
-      else _hitTimeImpair[it->mezzanine()]->Fill(it->getTimeFromTrigger());
-    }
-  }
-  for(std::map<int,std::map<int,int>>::iterator it=mul.begin();it!=mul.end();++it)
-  {
-    for(std::map<int,int>::iterator itt=it->second.begin();itt!=it->second.end();++itt)
-    {
-      if(it->first==0)_MultiplicitySide0[itt->first]->Fill(itt->second);
-      if(it->first==1)_MultiplicitySide1[itt->first]->Fill(itt->second);
-      _MultiplicityBothSide[itt->first]->Fill(itt->second);
-    }
-  }
-  //std::cout<<trigger->chamber()<<std::endl;
   _data.OneEvent();
   _dataTree->Fill();
-  int to_add=0;
-  if (int(end-begin)>1) //at least one hit more than the trigger
-    {
-      TdcChannel* endTrigWindow=std::remove_if(begin,end,TdcOutofTriggerTimePredicate(trigger.tdcTime(),-900,-861));
-      //TdcChannel* endTrigWindow=std::remove_if(begin,end,TdcOutofTriggerTimePredicate(trigger.tdcTime(),-625,-575));
-      if (endTrigWindow!=begin) {to_add=1; _tdc_counters.YouHaveAHit(trigger.bcid(),valeur);}
-      for (TdcChannel* it=begin; it !=endTrigWindow; ++it)
-	{
-	  if (it->channel()==triggerChannel) continue;
-	  _chamberEfficiency.setHitSeen((unsigned int)it->mezzanine());
-	}
-      for(TdcChannel* it=begin; it != end; ++it)
-	{
-	  if(it->channel()==triggerChannel) continue;
-	  if (_T1mT0Ch.find(it->strip())==_T1mT0Ch.end())
-	    {
-	      _T1mT0Ch[it->strip()]=new TH1F(("T1-T0_"+std::to_string(it->strip())).c_str(),("T1-T0_"+std::to_string(it->strip())).c_str(),2000,-2000,0);
-	      _T2mT0Ch[it->strip()]=new TH1F(("T2-T0_"+std::to_string(it->strip())).c_str(),("T2-T0_"+std::to_string(it->strip())).c_str(),2000,-2000,0);
-	    }
-	  if (it->side()==0) _T1mT0Ch[it->strip()]->Fill(it->getTimeFromTrigger());
-	  else _T2mT0Ch[it->strip()]->Fill(it->getTimeFromTrigger());
-	}
-      for(TdcChannel* it=begin; it != endTrigWindow; ++it)
-	{
-	  TdcChannel* beginpp=it;
-	  beginpp++;
-	  for(TdcChannel* itt=begin; itt != endTrigWindow; ++itt)
-	    {
-	      if(it->channel()==triggerChannel) continue;
-	      if(it->strip()==itt->strip())
-		{
-		  if(_T1mT2Ch.find(it->strip())==_T1mT2Ch.end())
-		    {
-		      _T1mT2Ch[it->strip()]=new TH1F(("T1-T2_"+std::to_string(it->strip())).c_str(),("T1-T2_"+std::to_string(it->strip())).c_str(),1000,-500,500);
-		    }
-		  double diff=it->getTimeFromTrigger()-itt->getTimeFromTrigger();
-		  if((it->side()+1)==itt->side())
-		    {
-		      _T1mT2[it->chamber()]->Fill(it->strip()%100,diff);
-		      _Position[it->chamber()]->Fill(it->strip()%100,(diff*vitesse+longueur)/2);
-		      _Longueur[it->chamber()]->Fill(it->strip()%100,(it->getTimeFromTrigger()+itt->getTimeFromTrigger()));
-		      _T1mT2Ch[it->strip()]->Fill(diff);
-		      _T1mT2Chamber[it->chamber()]->Fill(diff);
-		    }
-		  else if (it->side()==(itt->side()+1))
-		    {
-		      _T1mT2[it->chamber()]->Fill(it->strip()%100,-diff);
-		      _T1mT2Ch[it->strip()]->Fill(-diff);
-		      _T1mT2Chamber[it->strip()/100]->Fill(-diff);
-		      _Position[it->chamber()]->Fill(it->strip()%100,float((-diff*vitesse+longueur)/2));
-		      _Longueur[it->chamber()]->Fill(it->strip()%100,float(((itt->getTimeFromTrigger()+it->getTimeFromTrigger()))));
-		    }
-		}
-	    }
-	}
-    }
+  ///
   _counters.add(to_add,valeur);
 }
