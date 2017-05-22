@@ -129,15 +129,15 @@ void ReadoutProcessor::init()
       _Position[it->second]=new TH2F(("Position_"+std::to_string(it->second)).c_str(),("Position_"+std::to_string(it->second)).c_str(),32,0,32,2000,-1000,1000); 
       _Longueur[it->second]=new TH2F(("Longueur_"+std::to_string(it->second)).c_str(),("Longueur_"+std::to_string(it->second)).c_str(),32,0,32,2000,-1000,1000);
       _T1mT2Chamber[it->second]=new TH1F(("T1-T2_"+std::to_string(it->second)).c_str(),("T1-T2_"+std::to_string(it->second)).c_str(),1000,-500,500);
-      _MultiplicitySide0[it->second]=new TH1F(("Hit_Multiplicity_Side0"+std::to_string(it->second)).c_str(),("Hit_Multiplicity_Side0"+std::to_string(it->second)).c_str(),300,0,300);
-      _MultiplicitySide1[it->second]=new TH1F(("Hit_Multiplicity_Side1"+std::to_string(it->second)).c_str(),("Hit_Multiplicity_Side1"+std::to_string(it->second)).c_str(),300,0,300);
-      _MultiplicityBothSide[it->second]=new TH1F(("Hit_Multiplicity_BothSide"+std::to_string(it->second)).c_str(),("Hit_Multiplicity_BothSide"+std::to_string(it->second)).c_str(),300,0,300);
-      _NbrClusterSide0[it->second]=new TH1F(("Number_of_Cluster_Side0"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Side0"+std::to_string(it->second)).c_str(),300,0,300);
-      _MultiClusterSide0[it->second]=new TH1F(("Cluster_Multiplicity_Side0"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Side0"+std::to_string(it->second)).c_str(),300,0,300);
-      _NbrClusterSide1[it->second]=new TH1F(("Number_of_Cluster_Side1"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Side1"+std::to_string(it->second)).c_str(),300,0,300);
-      _MultiClusterSide1[it->second]=new TH1F(("Cluster_Multiplicity_Side1"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Side1"+std::to_string(it->second)).c_str(),300,0,300);
-      _NbrClusterBothSide[it->second]=new TH1F(("Number_of_Cluster_Both_Side"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Both_Side"+std::to_string(it->second)).c_str(),300,0,300);
-      _MultiClusterBothSide[it->second]=new TH1F(("Cluster_Multiplicity_Both_Side"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Both_Side"+std::to_string(it->second)).c_str(),300,0,300);
+      _MultiplicitySide0[it->second]=new TH1F(("Hit_Multiplicity_Side0_"+std::to_string(it->second)).c_str(),("Hit_Multiplicity_Side0_"+std::to_string(it->second)).c_str(),300,0,300);
+      _MultiplicitySide1[it->second]=new TH1F(("Hit_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),("Hit_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),300,0,300);
+      _MultiplicityBothSide[it->second]=new TH1F(("Hit_Multiplicity_BothSide_"+std::to_string(it->second)).c_str(),("Hit_Multiplicity_BothSide_"+std::to_string(it->second)).c_str(),300,0,300);
+      _NbrClusterSide0[it->second]=new TH1F(("Number_of_Cluster_Side0_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Side0_"+std::to_string(it->second)).c_str(),300,0,300);
+      _MultiClusterSide0[it->second]=new TH1F(("Cluster_Multiplicity_Side0_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Side0_"+std::to_string(it->second)).c_str(),300,0,300);
+      _NbrClusterSide1[it->second]=new TH1F(("Number_of_Cluster_Side1_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Side1_"+std::to_string(it->second)).c_str(),300,0,300);
+      _MultiClusterSide1[it->second]=new TH1F(("Cluster_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),300,0,300);
+      _NbrClusterBothSide[it->second]=new TH1F(("Number_of_Cluster_Both_Side_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Both_Side_"+std::to_string(it->second)).c_str(),300,0,300);
+      _MultiClusterBothSide[it->second]=new TH1F(("Cluster_Multiplicity_Both_Side_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Both_Side_"+std::to_string(it->second)).c_str(),300,0,300);
     }
   }
   // could try to do something complicated with ChambertoIP or IPtoChamber but keep it simple but not portable for now
@@ -226,7 +226,7 @@ void ReadoutProcessor::finish()
   _folder->mkdir("T1-T2");
   _folder->cd("T1-T2");
   TF1 *gauss = new TF1("gauss", "gaus");
-  TCanvasDivided a(1);
+  TCanvasDivided a(3,3);
   a.setName("Test_*");
   for(std::map<int,TH1F*>::iterator it=_T1mT2Ch.begin();it!=_T1mT2Ch.end();++it)
   { 
