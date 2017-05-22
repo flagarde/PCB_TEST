@@ -401,13 +401,6 @@ bool isTrigger(TdcChannel& c) {return c.channel()==triggerChannel;}
 void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 {
   std::vector<TdcChannel*> all;
-  for (TdcChannel* it=begin; it !=end; ++it)
-	{
-	  if(it->channel()==triggerChannel) continue;
-	  _triggerTime->Fill(it->getTimeFromTrigger());
-    if (it->side()==0) _hitTimePair[it->mezzanine()]->Fill(it->getTimeFromTrigger());
-    else _hitTimeImpair[it->mezzanine()]->Fill(it->getTimeFromTrigger());
-	}
   _data.Reset();
   int trigCount=std::count_if(begin,end,isTrigger);
   if (trigCount != 1) return;
@@ -416,6 +409,21 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   _tdc_counters.YouAreConcernedByATrigger(trigger.bcid(),valeur);
   _chamberEfficiency.setTriggerSeen((unsigned int)trigger.mezzanine());
   std::map<int,std::map<int,int>> mul;
+  for (TdcChannel* it=begin; it !=end; ++it)
+	{
+	  if(it->channel()==triggerChannel) continue;
+	  it->settdcTrigger(trigger.tdcTime());
+	  _triggerTime->Fill(it->getTimeFromTrigger());
+    if (it->side()==0) _hitTimePair[it->mezzanine()]->Fill(it->getTimeFromTrigger());
+    else _hitTimeImpair[it->mezzanine()]->Fill(it->getTimeFromTrigger());
+    if (_T1mT0Ch.find(it->strip())==_T1mT0Ch.end())
+	  {
+	    _T1mT0Ch[it->strip()]=new TH1F(("T1-T0_"+std::to_string(it->strip())).c_str(),("T1-T0_"+std::to_string(it->strip())).c_str(),2000,-2000,0);
+	    _T2mT0Ch[it->strip()]=new TH1F(("T2-T0_"+std::to_string(it->strip())).c_str(),("T2-T0_"+std::to_string(it->strip())).c_str(),2000,-2000,0);
+	  }
+	  if (it->side()==0) _T1mT0Ch[it->strip()]->Fill(it->getTimeFromTrigger());
+	  else _T2mT0Ch[it->strip()]->Fill(it->getTimeFromTrigger());
+	}
   int to_add=0;
   if (int(end-begin)>1) //at least one hit more than the trigger
   {
@@ -426,22 +434,10 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 	  {
 	    if (it->channel()==triggerChannel) continue;
 	    _chamberEfficiency.setHitSeen((unsigned int)it->mezzanine());
-	  }
-    for(TdcChannel* it=begin; it != end; ++it)
-	  {
-	    if(it->channel()==triggerChannel) continue;
 	    //std::cout<<std::setprecision (std::numeric_limits<double>::digits10+1)<<it->tdcTime()-trigger->tdcTime()<<std::endl;
       _data.Push_back(it->side(),it->strip(),it->mezzanine(),it->tdcTime(),trigger.tdcTime());
-      it->settdcTrigger(trigger.tdcTime());
       mul[it->side()][it->chamber()]++;
 	    all.push_back(it);
-	    if (_T1mT0Ch.find(it->strip())==_T1mT0Ch.end())
-	    {
-	      _T1mT0Ch[it->strip()]=new TH1F(("T1-T0_"+std::to_string(it->strip())).c_str(),("T1-T0_"+std::to_string(it->strip())).c_str(),2000,-2000,0);
-	      _T2mT0Ch[it->strip()]=new TH1F(("T2-T0_"+std::to_string(it->strip())).c_str(),("T2-T0_"+std::to_string(it->strip())).c_str(),2000,-2000,0);
-	    }
-	    if (it->side()==0) _T1mT0Ch[it->strip()]->Fill(it->getTimeFromTrigger());
-	    else _T2mT0Ch[it->strip()]->Fill(it->getTimeFromTrigger());
 	  }
     for(TdcChannel* it=begin; it != endTrigWindow; ++it)
 	  {
