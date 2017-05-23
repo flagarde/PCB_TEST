@@ -83,6 +83,7 @@ private:
   std::map<int,TH1F*> _MultiClusterNoiseBothSide;
   std::array<std::vector<TdcChannel*>,3> _ugly;
   std::array<std::map<int,std::pair<int,int>>,2> StreamerProba;
+  std::map<std::pair<int,int>> StreamerProbaBothSide;
   std::ofstream _myfile;
   //processReadoutHelper
   std::set<std::pair<uint16_t,double>> _BCIDwithTrigger;

@@ -321,15 +321,14 @@ void ReadoutProcessor::finish()
   }
   for(unsigned int i=0;i!=StreamerProba.size();++i)
   {
-    int deno=0; int num=0; int cham=0;
     for(std::map<int,std::pair<int,int>>::iterator it=StreamerProba[i].begin();it!=StreamerProba[i].end();++it)
     {
-      cham=it->first;
       std::cout<<red<<"Streamer probability for Chamber "<<it->first<<"  side " <<i<<"  "<<normal<<it->second.first*100.0/it->second.second<<std::endl;
-      deno+=it->second.second;
-      num+=it->second.first;
     }
-    std::cout<<red<<"Streamer probability for Chamber "<<cham<<"  BothSideGrouped "<<normal<<num*100.0/deno<<std::endl;
+  }
+  for(std::map<int,std::pair<int,int>>::iterator it=StreamerProbaBothSide.begin();it!=StreamerProbaBothSide.end();++it)
+  {
+      std::cout<<red<<"Streamer probability for Chamber "<<it->first<<"  BothSideGrouped "<<normal<<it->second.first*100.0/it->second.second<<std::endl;
   }
 }
 
@@ -507,6 +506,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   _tdc_counters.YouAreConcernedByATrigger(trigger.bcid(),valeur);
   _chamberEfficiency.setTriggerSeen((unsigned int)trigger.mezzanine());
   std::map<int,std::map<int,int>> mul;
+  std::map<int,int> mulchamber;
   for (TdcChannel* it=begin; it !=end; ++it)
 	{
 	  if(it->channel()==triggerChannel) continue;
@@ -535,6 +535,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 	    _chamberEfficiency.setHitSeen((unsigned int)it->mezzanine());
 	    //std::cout<<std::setprecision (std::numeric_limits<double>::digits10+1)<<it->tdcTime()-trigger->tdcTime()<<std::endl;
       mul[it->side()][it->chamber()]++;
+      mulchamber[it->chamber()]++;
 	    _ugly[it->side()].push_back(it);
 	    _ugly[2].push_back(it);
 	  }
@@ -583,8 +584,16 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
       StreamerProba[it->first][itt->first].second++;
       if(it->first==0)_MultiplicitySide0[itt->first]->Fill(itt->second);
       if(it->first==1)_MultiplicitySide1[itt->first]->Fill(itt->second);
-      _MultiplicityBothSide[itt->first]->Fill(itt->second);
     }
+  }
+  for(std::map<int,int>::iterator it=mulchamber.begin();it!=mulchamber.end();++it)
+  {
+    if(it->second>=2*NbrStreamer)
+    {
+      StreamerProbaBothSide[it->first][itt->first].first++;
+    }
+    StreamerProbaBothSide[it->first][itt->first].second++;
+    _MultiplicityBothSide[it->first]->Fill(it->second);
   }
   for(unsigned int i=0;i!=3;++i)
   {

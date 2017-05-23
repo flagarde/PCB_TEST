@@ -14,5 +14,5 @@ static double const vitesse=2.0/3*29.979245800; //2/3 de la vitesse de la lumier
 static double const longueur=100;
 static int const nbrTotalHitsMax=1000;
 static int const  area=50*0.4*16;//50cmlong*0.4width*16strips
-static int const NbrStreamer=7; 
+static int const NbrStreamer=7;
 #endif
