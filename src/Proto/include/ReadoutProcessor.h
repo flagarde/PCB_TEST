@@ -85,6 +85,7 @@ private:
   std::array<std::map<int,std::pair<int,int>>,2> StreamerProba;
   std::map<int,std::pair<int,int>> StreamerProbaBothSide;
   std::ofstream _myfile;
+  std::ofstream _myfilestreamer;
   //processReadoutHelper
   std::set<std::pair<uint16_t,double>> _BCIDwithTrigger;
   std::map<int,std::vector<uint16_t> > _BCIDwithTriggerPerMezzanine;

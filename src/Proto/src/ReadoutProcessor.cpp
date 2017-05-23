@@ -90,7 +90,8 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
 void ReadoutProcessor::init()
 {
    for(unsigned int i=0;i!=3;++i) _ugly[i].reserve(500);
-  _myfile.open("Results.txt",std::ios::out|std::ios::app);
+  _myfile.open("Results_Effi.txt",std::ios::out|std::ios::app);
+  _myfilestreamer.open("Results_Streamer.txt",std::ios::out|std::ios::app);
   _maxBCID_histo= new TH1F("MAX_BCID","Maximum BCID",200,0,200);
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6,0,0)
   _maxBCID_histo->GetXaxis()->SetCanExtend(true);
@@ -319,17 +320,22 @@ void ReadoutProcessor::finish()
   { 
     it->second->Write();
   }
+  _myfilestreamer<<_nbrRun<<std::endl;
   for(unsigned int i=0;i!=StreamerProba.size();++i)
   {
     for(std::map<int,std::pair<int,int>>::iterator it=StreamerProba[i].begin();it!=StreamerProba[i].end();++it)
     {
       std::cout<<red<<"Streamer probability for Chamber "<<it->first<<"  side " <<i<<"  "<<normal<<it->second.first*100.0/it->second.second<<std::endl;
+      _myfilestreamer<<"Streamer probability for Chamber "<<it->first<<"  side " <<i<<"  "<<it->second.first*100.0/it->second.second<<std::endl;
     }
   }
   for(std::map<int,std::pair<int,int>>::iterator it=StreamerProbaBothSide.begin();it!=StreamerProbaBothSide.end();++it)
   {
       std::cout<<red<<"Streamer probability for Chamber "<<it->first<<"  BothSideGrouped "<<normal<<it->second.first*100.0/it->second.second<<std::endl;
+      _myfilestreamer<<"Streamer probability for Chamber "<<it->first<<"  BothSideGrouped "<<it->second.first*100.0/it->second.second<<std::endl;
   }
+  _myfilestreamer<<std::endl<<std::endl;
+  _myfilestreamer.close();
 }
 
 void ReadoutProcessor::fillTriggerBCIDInfo(TdcChannelBuffer &tdcBuf)
