@@ -319,6 +319,14 @@ void ReadoutProcessor::finish()
   { 
     it->second->Write();
   }
+  for(unsigned int i=0;i!=StreamerProba.size();++i)
+  {
+    for(std::map<int,std::pair<int,int>>::iterator it=StreamerProba[i].begin();it!=StreamerProba[i].end();++it)
+    {
+      if(i!=2)std::cout<<"Streamer probability for Chamber "<<it->first<<"  side " <<i<<normal<<it->second.first*1.0/it->second.second<<std::endl;
+      else std::cout<<"Streamer probability for Chamber "<<it->first<<"  both side " <<i<<normal<<it->second.first*1.0/it->second.second<<std::endl;
+    }
+  }
 }
 
 void ReadoutProcessor::fillTriggerBCIDInfo(TdcChannelBuffer &tdcBuf)
@@ -564,6 +572,8 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   {
     for(std::map<int,int>::iterator itt=it->second.begin();itt!=it->second.end();++itt)
     {
+      if(itt->second>=NbrStreamer)StreamerProba[it->first][itt->first].first++;
+      StreamerProba[it->first][itt->first].second++;
       if(it->first==0)_MultiplicitySide0[itt->first]->Fill(itt->second);
       if(it->first==1)_MultiplicitySide1[itt->first]->Fill(itt->second);
       _MultiplicityBothSide[itt->first]->Fill(itt->second);
