@@ -590,9 +590,9 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   {
     if(it->second>=2*NbrStreamer)
     {
-      StreamerProbaBothSide[it->first][itt->first].first++;
+      StreamerProbaBothSide[it->first].first++;
     }
-    StreamerProbaBothSide[it->first][itt->first].second++;
+    StreamerProbaBothSide[it->first].second++;
     _MultiplicityBothSide[it->first]->Fill(it->second);
   }
   for(unsigned int i=0;i!=3;++i)
