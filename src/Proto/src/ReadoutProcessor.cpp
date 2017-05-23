@@ -323,8 +323,7 @@ void ReadoutProcessor::finish()
   {
     for(std::map<int,std::pair<int,int>>::iterator it=StreamerProba[i].begin();it!=StreamerProba[i].end();++it)
     {
-      if(i!=2)std::cout<<"Streamer probability for Chamber "<<it->first<<"  side " <<i<<normal<<it->second.first*1.0/it->second.second<<std::endl;
-      else std::cout<<"Streamer probability for Chamber "<<it->first<<"  both side " <<i<<normal<<it->second.first*1.0/it->second.second<<std::endl;
+      std::cout<<red<<"Streamer probability for Chamber "<<it->first<<"  side " <<i<<"  "<<normal<<it->second.first*100.0/it->second.second<<std::endl;
     }
   }
 }
