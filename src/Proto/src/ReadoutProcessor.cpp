@@ -321,9 +321,10 @@ void ReadoutProcessor::finish()
   }
   for(unsigned int i=0;i!=StreamerProba.size();++i)
   {
-    int deno=0; int num=0; int cham=it->first;
+    int deno=0; int num=0; int cham=0;
     for(std::map<int,std::pair<int,int>>::iterator it=StreamerProba[i].begin();it!=StreamerProba[i].end();++it)
     {
+      cham=it->first;
       std::cout<<red<<"Streamer probability for Chamber "<<it->first<<"  side " <<i<<"  "<<normal<<it->second.first*100.0/it->second.second<<std::endl;
       deno+=it->second.second;
       num+=it->second.first;
