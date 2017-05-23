@@ -321,10 +321,14 @@ void ReadoutProcessor::finish()
   }
   for(unsigned int i=0;i!=StreamerProba.size();++i)
   {
+    int deno=0; int num=0;
     for(std::map<int,std::pair<int,int>>::iterator it=StreamerProba[i].begin();it!=StreamerProba[i].end();++it)
     {
       std::cout<<red<<"Streamer probability for Chamber "<<it->first<<"  side " <<i<<"  "<<normal<<it->second.first*100.0/it->second.second<<std::endl;
+      deno+=it->second.second;
+      num+=it->second.first;
     }
+    std::cout<<red<<"Streamer probability for Chamber "<<it->first<<"  BothSideGrouped "<<normal<<num*100.0/deno<<std::endl;
   }
 }
 
@@ -571,7 +575,10 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   {
     for(std::map<int,int>::iterator itt=it->second.begin();itt!=it->second.end();++itt)
     {
-      if(itt->second>=NbrStreamer)StreamerProba[it->first][itt->first].first++;
+      if(itt->second>=NbrStreamer)
+      {
+        StreamerProba[it->first][itt->first].first++;
+      }
       StreamerProba[it->first][itt->first].second++;
       if(it->first==0)_MultiplicitySide0[itt->first]->Fill(itt->second);
       if(it->first==1)_MultiplicitySide1[itt->first]->Fill(itt->second);
