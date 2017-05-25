@@ -470,7 +470,7 @@ void ReadoutProcessor::processTrigger(TdcChannel* begin,TdcChannel* end)
 void ReadoutProcessor::processNoise(TdcChannel* begin,TdcChannel* end)
 {
   uint16_t _maxBCIDNoise=0;
-  uint16_t _minBCIDNoise=9999999;
+  uint16_t _minBCIDNoise=std::numeric_limits<uint16_t>::max();
   for(unsigned int i=0;i!=3;++i)_ugly[i].clear();
   std::map<int,int>noisehits;
   _data.Reset();
