@@ -84,7 +84,7 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
           }
           if(c.channel()==triggerChannel)
           {
-            if(absbcid>_lastTriggerAbsBCID) _lastTriggerAbsBCID=absbcid;
+            _lastTriggerAbsBCID=absbcid;
           }
 		      c.setstrip(ibuf[4],(ibuf[5]>>24)&0xFF);
 		    }
