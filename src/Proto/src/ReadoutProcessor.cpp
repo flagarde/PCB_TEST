@@ -17,6 +17,7 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
   uint32_t maxsize=0x100000;
   levbdim::buffer b(maxsize);
   TdcChannelBuffer tdcBuf(maxsize);
+  tdcBuf.setIsNoise(false);
   while (true)
   {
     tdcBuf.clear();
@@ -98,6 +99,7 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
       {
         if(absbcid>=_lastTriggerAbsBCID+FourSecondsInClockTicks&& absbcid<=_lastTriggerAbsBCID+TenSecondsInClockTicks)
         {
+          std::cout<<"Is Noise"<<std::endl;
           tdcBuf.setIsNoise(true);
         }
       }
