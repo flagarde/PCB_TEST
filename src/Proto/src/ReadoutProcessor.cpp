@@ -99,7 +99,6 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
       {
         if(absbcid>=_lastTriggerAbsBCID+FourSecondsInClockTicks&& absbcid<=_lastTriggerAbsBCID+TenSecondsInClockTicks)
         {
-          std::cout<<"Is Noise"<<std::endl;
           tdcBuf.setIsNoise(true);
         }
       }
@@ -449,6 +448,7 @@ void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
     eventStart=eventEnd;
   }
   if(_BCIDwithTrigger.size()==0&&tdcBuf.isNoise()==true)processNoise(eventStart,tdcBuf.end());
+  else if (_BCIDwithTrigger.size()==0&&tdcBuf.isNoise()==false) std::cout<<green<<"Not selected "<<normal<<std::endl;
 }
 
 
