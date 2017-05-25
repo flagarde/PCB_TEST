@@ -104,6 +104,7 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
       }
       processReadout(tdcBuf);
     }
+    std::cout<<red<<absbcid<<"  "<<_lastTriggerAbsBCID<<normal<<std::endl;
   }
 } 
 
