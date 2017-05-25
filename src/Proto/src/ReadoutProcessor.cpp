@@ -449,7 +449,7 @@ void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
     processTrigger(eventStart,eventEnd);
     eventStart=eventEnd;
   }
-  if(_BCIDwithTrigger.size()==0&&tdcBuf.isNoise()==true)processNoise(eventStart,tdcBuf.end());
+  if(_BCIDwithTrigger.size()==0/*&&tdcBuf.isNoise()==true*/)processNoise(eventStart,tdcBuf.end());
   else if (_BCIDwithTrigger.size()==0&&tdcBuf.isNoise()==false) std::cout<<green<<"Not selected "<<normal<<std::endl;
 }
 
