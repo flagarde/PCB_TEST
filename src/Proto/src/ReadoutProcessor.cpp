@@ -99,10 +99,10 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
       {
         if(absbcid>=_lastTriggerAbsBCID+FourSecondsInClockTicks&& absbcid<=_lastTriggerAbsBCID+TenSecondsInClockTicks)
         {
-          std::cout<<_lastTriggerAbsBCID+FourSecondsInClockTicks<<"  "<< absbcid<<"  "<<_lastTriggerAbsBCID+TenSecondsInClockTicks<<std::endl;
+          std::cout<<_lastTriggerAbsBCID+FourSecondsInClockTicks*200e-7<<"  "<< absbcid*200e-7<<"  "<<_lastTriggerAbsBCID+TenSecondsInClockTicks*200e-7<<std::endl;
           tdcBuf.setIsNoise(true);
         }
-        else std::cout<<red<<_lastTriggerAbsBCID+FourSecondsInClockTicks<<"  "<< absbcid<<"  "<<_lastTriggerAbsBCID+TenSecondsInClockTicks<<normal<<std::endl;
+        else std::cout<<red<<_lastTriggerAbsBCID+FourSecondsInClockTicks*200e-7<<"  "<< absbcid*200e-7<<"  "<<_lastTriggerAbsBCID+TenSecondsInClockTicks*200e-7<<normal<<std::endl;
       }
       processReadout(tdcBuf);
     }
