@@ -472,7 +472,7 @@ void ReadoutProcessor::processTrigger(TdcChannel* begin,TdcChannel* end)
 void ReadoutProcessor::processNoise(TdcChannel* begin,TdcChannel* end)
 {
   uint16_t _maxBCIDNoise=0;
-  uint16_t _minBCIDNoise=std::numeric_limits<uint16_t>::max();
+  //uint16_t _minBCIDNoise=std::numeric_limits<uint16_t>::max();
   for(unsigned int i=0;i!=3;++i)_ugly[i].clear();
   std::map<int,int>noisehits;
   _data.Reset();
@@ -486,7 +486,7 @@ void ReadoutProcessor::processNoise(TdcChannel* begin,TdcChannel* end)
     noisehits[it->mezzanine()]++;
     noisehits[IPtoChamber[it->mezzanine()]]++;
   }
-  double denominator=((_maxBCIDNoise-_minBCIDNoise)*2e-7*area);
+  double denominator=((_maxBCIDNoise/*-_minBCIDNoise*/)*2e-7*area);
   for(std::map<int,int>::iterator it=noisehits.begin();it!=noisehits.end();++it)
   {
     _noisehitspersecond->Fill(it->first,it->second*1.0/denominator);
