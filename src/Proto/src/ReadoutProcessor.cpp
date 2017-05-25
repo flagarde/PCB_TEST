@@ -40,6 +40,7 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
     unsigned int nDIFwithChannel=0;
     std::set<uint64_t> absbcidFoundInThisReadout;
     bool OKprocess=true;
+    uint64_t absbcid=0;
     for (uint32_t idif=0;idif<theNumberOfDIF;idif++) 
 	  {
 	    uint32_t bsize=0;
@@ -60,7 +61,7 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
 	    if (b.detectorId() != 110) continue;
 	    uint32_t* ibuf=(uint32_t*) b.payload();
 	    //for (int i=0;i<7;i++)  printf("%d ",ibuf[i]);
-	    uint64_t absbcid=ibuf[3]; absbcid=(absbcid<<32)|ibuf[2];
+	    absbcid=ibuf[3]; absbcid=(absbcid<<32)|ibuf[2];
 	    //printf("\n event number %d, GTC %d, ABSBCID %lu, mezzanine number %u, ",ibuf[0],ibuf[1]&0xFFFF,absbcid,ibuf[4]);
 	    //printf("IP address %u.%u.%u.%u,",ibuf[5]&0xFF,(ibuf[5]>>8)&0xFF,(ibuf[5]>>16)&0xFF,(ibuf[5]>>24)&0xFF);
 	    //uint32_t nch=ibuf[6];
@@ -74,7 +75,16 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
 		    {
 		      tdcBuf.addChannel(&cbuf[8*i]);
 		      TdcChannel &c=tdcBuf.last();
-                      if (tdcBuf.nTdcChannel()>maxsize) {std::cout << "WARNING TOO BIG EVENT skipping" << std::endl; OKprocess=false; break;}
+          if (tdcBuf.nTdcChannel()>maxsize) 
+          {
+            std::cout << "WARNING TOO BIG EVENT skipping" << std::endl; 
+            OKprocess=false; 
+            break;
+          }
+          if(c.channel()==triggerChannel)
+          {
+            if(absbcid>_lastTriggerAbsBCID) _lastTriggerAbsBCID=absbcid;
+          }
 		      c.setstrip(ibuf[4],(ibuf[5]>>24)&0xFF);
 		    }
 	    }
@@ -82,7 +92,17 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
     _nDIFinReadout->Fill(nDIFwithChannel);
     for (auto it=absbcidFoundInThisReadout.begin(); it != absbcidFoundInThisReadout.end(); ++it) _AbsBCID_Readout_map[*it]++;
     if(tdcBuf.nTdcChannel()>nbrTotalHitsMax) return 0;
-    if (OKprocess) processReadout(tdcBuf);
+    if (OKprocess) 
+    {
+      if(_lastTriggerAbsBCID!=0)
+      {
+        if(absbcid>=_lastTriggerAbsBCID+FourSecondsInClockTicks&& absbcid<=_lastTriggerAbsBCID+TenSecondsInClockTicks)
+        {
+          tdcBuf.setIsNoise(true);
+        }
+      }
+      processReadout(tdcBuf);
+    }
   }
 } 
 
@@ -426,7 +446,7 @@ void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
     processTrigger(eventStart,eventEnd);
     eventStart=eventEnd;
   }
-  if(_BCIDwithTrigger.size()==0)processNoise(eventStart,tdcBuf.end());
+  if(_BCIDwithTrigger.size()==0&&tdcBuf.isNoise()==true)processNoise(eventStart,tdcBuf.end());
 }
 
 
@@ -450,19 +470,21 @@ void ReadoutProcessor::processTrigger(TdcChannel* begin,TdcChannel* end)
 void ReadoutProcessor::processNoise(TdcChannel* begin,TdcChannel* end)
 {
   uint16_t _maxBCIDNoise=0;
+  uint16_t _minBCIDNoise=9999999;
   for(unsigned int i=0;i!=3;++i)_ugly[i].clear();
   std::map<int,int>noisehits;
   _data.Reset();
   for (TdcChannel* it=begin; it != end; ++it)
   {
     if(_maxBCIDNoise<it->bcid())_maxBCIDNoise=it->bcid();
+    if(_minBCIDNoise>it->bcid())_minBCIDNoise=it->bcid();
     _ugly[it->side()].push_back(it);
     _ugly[2].push_back(it);
     _data.Push_back(it->side(),it->strip(),it->mezzanine(),it->tdcTime());
     noisehits[it->mezzanine()]++;
     noisehits[IPtoChamber[it->mezzanine()]]++;
   }
-  double denominator=(_maxBCIDNoise*2e-7*area);
+  double denominator=((_maxBCIDNoise-_minBCIDNoise)*2e-7*area);
   for(std::map<int,int>::iterator it=noisehits.begin();it!=noisehits.end();++it)
   {
     _noisehitspersecond->Fill(it->first,it->second*1.0/denominator);

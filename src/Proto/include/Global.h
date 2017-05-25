@@ -15,4 +15,6 @@ static double const longueur=100;
 static int const nbrTotalHitsMax=1000;
 static int const  area=50*0.4*16;//50cmlong*0.4width*16strips
 static int const NbrStreamer=7;
+static uint64_t FourSecondsInClockTicks=20000000;
+static uint64_t TenSecondsInClockTicks=50000000;
 #endif

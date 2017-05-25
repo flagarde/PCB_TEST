@@ -26,6 +26,7 @@ public:
 private:
   std::string _nbrRun{""};
   uint16_t _maxBCID;
+  uint16_t _minBCIDNoise;
   TH1F* _maxBCID_histo=nullptr;
   TH1F* _maxBCID_histozoom=nullptr;
   TH1F* _triggerPerReadout=nullptr;
@@ -36,6 +37,7 @@ private:
   TH1F* _nDIFinReadout=nullptr;
   TH1F* _nReadoutperAbsBCID=nullptr;
   std::map<uint64_t,unsigned int> _AbsBCID_Readout_map;
+  uint64_t _lastTriggerAbsBCID{0};
   TProfile* _noisehitspersecond=nullptr;
   RAWData _data;
   TTree* _dataTree=nullptr;

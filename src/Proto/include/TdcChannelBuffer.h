@@ -16,9 +16,12 @@ public:
   void clear() {_end=_Tdcptr;}
   uint32_t nTdcChannel() {return _end-_Tdcptr;}
   void setEnd(TdcChannel* end) {_end=end;}
+  bool isNoise(){return _isNoise;};
+  void setIsNoise(bool i){_isNoise=i;}
 private:
   char* _ptr;
   TdcChannel* _Tdcptr;
   TdcChannel* _end;
+  bool _isNoise{false};
 };
 #endif

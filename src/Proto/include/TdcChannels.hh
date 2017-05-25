@@ -35,10 +35,10 @@ public:
   inline void setUsed(bool t){_used=t;}
 private:
   uint8_t _fr[8];
-  bool _used;
-  int _strip;
-  int _mezzanine;
-  double _tdcTrigger;
+  bool _used{false};
+  int _strip{-1};
+  int _mezzanine{-1};
+  double _tdcTrigger{-1};
 };
 
 static std::ostream& operator<<(std::ostream& flux, TdcChannel& c)
