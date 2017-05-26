@@ -88,6 +88,8 @@ private:
   std::map<int,std::pair<int,int>> StreamerProbaBothSide;
   std::ofstream _myfile;
   std::ofstream _myfilestreamer;
+  uint32_t _Selected{0};
+  uint32_t _NotSelected{0};
   //processReadoutHelper
   std::set<std::pair<uint16_t,double>> _BCIDwithTrigger;
   std::map<int,std::vector<uint16_t> > _BCIDwithTriggerPerMezzanine;

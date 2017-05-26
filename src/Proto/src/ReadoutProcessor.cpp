@@ -359,6 +359,7 @@ void ReadoutProcessor::finish()
   }
   _myfilestreamer<<std::endl<<std::endl;
   _myfilestreamer.close();
+  std::cout<<green<<_Selected<<" noise event and "<<_NotSelected<<" not selected"<<normal<<std::endl;
 }
 
 void ReadoutProcessor::fillTriggerBCIDInfo(TdcChannelBuffer &tdcBuf)
@@ -451,10 +452,13 @@ void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
   }
   if(_BCIDwithTrigger.size()==0&&tdcBuf.isNoise()==true)
   {
+    _Selected++;
     processNoise(eventStart,tdcBuf.end());
-    std::cout<<green<<"selected noise"<<normal<<std::endl;
   }
-  //else if (_BCIDwithTrigger.size()==0&&tdcBuf.isNoise()==false) 
+  else if (_BCIDwithTrigger.size()==0&&tdcBuf.isNoise()==false) 
+  {
+    _NotSelected++;
+  }
 }
 
 
