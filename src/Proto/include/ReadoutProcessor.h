@@ -25,6 +25,8 @@ public:
   void finish();
 private:
   std::string _nbrRun{""};
+  int _windowslow{0};
+  int _windowshigh{0};
   uint16_t _maxBCID;
   uint16_t _minBCIDNoise;
   TH1F* _maxBCID_histo=nullptr;

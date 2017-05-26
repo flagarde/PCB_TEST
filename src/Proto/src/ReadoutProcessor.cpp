@@ -112,6 +112,22 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
 
 void ReadoutProcessor::init()
 {
+   for(std::map<std::pair<int,int>,std::pair<int,int>>::iterator it=Windows.begin();it!=Windows.end();++it)
+   {
+      if(std::stoi(_nbrRun)>=it->first.first&&std::stoi(_nbrRun)<=it->first.second)
+      {
+        _windowslow=it->second.first;
+        _windowshigh=it->second.second;
+        std::cout<<yellow<<"Time Windows for run "<<_nbrRun<<" {"<<it->second.first<<";"<<it->second.second<<"}"<<normal<<std::endl;
+        break;
+      }
+   }
+   if(_windowslow==0&&_windowshigh==0)
+   {
+    std::cout<<red<<"Error in time window I will use the standard one"<<normal<<std::endl;
+    _windowslow=-900;
+    _windowshigh=-861;
+   }
    for(unsigned int i=0;i!=3;++i) _ugly[i].reserve(500);
   _myfile.open("Results_Effi.txt",std::ios::out|std::ios::app);
   _myfilestreamer.open("Results_Streamer.txt",std::ios::out|std::ios::app);
@@ -566,7 +582,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   int to_add=0;
   if (int(end-begin)>1) //at least one hit more than the trigger
   {
-    TdcChannel* endTrigWindow=std::remove_if(begin,end,TdcOutofTriggerTimePredicate(trigger.tdcTime(),-900,-861));
+    TdcChannel* endTrigWindow=std::remove_if(begin,end,TdcOutofTriggerTimePredicate(trigger.tdcTime(),_windowslow,_windowshigh));
     //TdcChannel* endTrigWindow=std::remove_if(begin,end,TdcOutofTriggerTimePredicate(trigger.tdcTime(),-625,-575));
     if (endTrigWindow!=begin) {to_add=1; _tdc_counters.YouHaveAHit(trigger.bcid(),valeur);}
     for (TdcChannel* it=begin; it !=endTrigWindow; ++it)
