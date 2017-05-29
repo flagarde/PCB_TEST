@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <set>
 #include "buffer.h"
 #include "TdcChannels.hh"
 
@@ -123,7 +124,17 @@ int main(int argc, char *argv[])
 	  if (it->second.size()!=numberOfDIFforFullEvent) continue;
 	  if (it->first==0) continue; // do not process event 0
 	  event=((it->first)>>16)& 0xFFFF;
-	  std::cout<<"full  event find  Trigger " <<((it->first)& 0xFFFF)<<" GTC  "<< (((it->first)>>16)& 0xFFFF)<<std::endl;
+	  std::cout<<"full  event find  Trigger " <<((it->first)& 0xFFFF)<<" GTC  "<< (((it->first)>>16)& 0xFFFF)<<" mezz list ";
+	  std::set<uint32_t> mezzList;
+	  for ( auto buf:it->second)
+	    {
+	      uint32_t* ibuf=(uint32_t*) buf->payload();
+	      uint32_t mezz=(ibuf[5]>>24)&0xFF;
+	      mezzList.insert(mezz);
+	      std::cout << " " << mezz;
+	    }
+	  if (mezzList.size() != 4) std::cout << "    ######### WARNING ########## ";
+	  std::cout << std::endl;
 	  uint32_t theNumberOfDIF=it->second.size();
 	  if (fdOut>0)
 	    {
