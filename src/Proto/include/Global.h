@@ -19,7 +19,7 @@ static std::map<std::pair<int,int>,std::pair<int,int>>Windows
 {
 {{0,735976},{-900,-861}},
 {{735977,735984},{-623,-601}},
-{{735984,736027},{-612,-592}}
+{{735985,736027},{-612,-592}}
 };
 static uint64_t FourSecondsInClockTicks=20000000;
 static uint64_t TenSecondsInClockTicks=50000000;

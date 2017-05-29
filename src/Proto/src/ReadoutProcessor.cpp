@@ -197,6 +197,7 @@ void ReadoutProcessor::init()
 
 void ReadoutProcessor::finish()
 {
+  _tmt0global->Write();
   _maxBCID_histo->Write();
   _maxBCID_histozoom->Write();
   _triggerPerReadout->Write();
@@ -577,6 +578,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 	  }
 	  if (it->side()==0) _T1mT0Ch[it->strip()]->Fill(it->getTimeFromTrigger());
 	  else _T2mT0Ch[it->strip()]->Fill(it->getTimeFromTrigger());
+	  _tmt0global->Fill(it->getTimeFromTrigger());
 	  _data.Push_back(it->side(),it->strip(),it->mezzanine(),it->tdcTime(),trigger.tdcTime());
 	}
   int to_add=0;
