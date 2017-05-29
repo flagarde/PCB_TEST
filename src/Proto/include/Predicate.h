@@ -9,7 +9,8 @@ public:
     uint16_t bcid=c.bcid(); 
     bool bcidConditions=(bcid>=_lowbcid && bcid <=_highbcid)||(c.channel()==triggerChannel && (bcid==_trigBCID || bcid==_trigBCID+1 || bcid+1==_trigBCID));
     bool tdcTimeConditions=(_trigtdcTime-c.tdcTime()>=-50000&&_trigtdcTime-c.tdcTime()<=50000);
-    return bcidConditions&&tdcTimeConditions;
+    //return bcidConditions&&tdcTimeConditions;
+    return bcidConditions;
   } 
 private:
   int _trigBCID;
