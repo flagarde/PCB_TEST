@@ -63,7 +63,7 @@ private:
   int32_t _numbereventtoprocess;
   int32_t _totalevent{0};
   TFile* _folder=nullptr;
-  TH1F* _tmt0global{new TH1F("T-T0 global","T1-T0 global",2000,-2000,0)};
+  TH1F* _tmt0global{new TH1F("T-T0 global","T1-T0 global",200000,-2000,0)};
   std::map<int,TH1F*> _MultiplicitySide0;
   std::map<int,TH1F*> _MultiplicitySide1;
   std::map<int,TH1F*> _MultiplicityBothSide;
