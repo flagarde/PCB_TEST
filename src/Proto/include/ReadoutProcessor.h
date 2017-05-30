@@ -3,6 +3,7 @@
 #include "TdcChannelBuffer.h"
 #include "TH1F.h"
 #include "TH2F.h"
+#include "TH3F.h"
 #include "GG_counter.h"
 #include "TdcChamberEfficiency.hh"
 #include <cstdint>
@@ -68,6 +69,8 @@ private:
   std::map<int,TH1F*> _MultiplicitySide1;
   std::map<int,TH1F*> _MultiplicityBothSide;
   std::map<int,TH2F*> _T1mT2;
+  std::map<int,TH2F*> _Correlation;
+  std::map<int,TH3F*> _CorrelationandTime;
   std::map<int,TH1F*> _T1mT2Ch;
   std::map<int,TH1F*> _T1mT0Ch;
   std::map<int,TH1F*> _T2mT0Ch;

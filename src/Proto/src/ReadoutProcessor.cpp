@@ -164,29 +164,31 @@ void ReadoutProcessor::init()
   _bMezzanine2 = _noiseTree->Branch("Mezzanine",  &_data.Mezzanine,50000,0);
   for(std::map<int,int>::iterator it=IPtoChamber.begin();it!=IPtoChamber.end();++it)
   {
-    _hitTimePair[it->first]=new TH1F(("triggerTimePair_mezz"+std::to_string(it->first)).c_str(),("Time of hits minus triggerTime even strip mezzanine "+std::to_string(it->first)).c_str(),2000,-2000,0);
-    _hitTimeImpair[it->first]=new TH1F(("triggerTimeImpair_mezz"+std::to_string(it->first)).c_str(),("Time of hits minus triggerTime odd strip mezzanine "+std::to_string(it->first)).c_str(),2000,-2000,0);
+     _hitTimePair[it->first]=new TH1F(("triggerTimePair_mezz"+std::to_string(it->first)).c_str(),("Time of hits minus triggerTime even strip mezzanine "+std::to_string(it->first)).c_str(),2000,-2000,0);
+     _hitTimeImpair[it->first]=new TH1F(("triggerTimeImpair_mezz"+std::to_string(it->first)).c_str(),("Time of hits minus triggerTime odd strip mezzanine "+std::to_string(it->first)).c_str(),2000,-2000,0);
     if(_T1mT2.find(it->second)==_T1mT2.end())
     {
-      _T1mT2[it->second]=new TH2F(("T1-T2_th2_"+std::to_string(it->second)).c_str(),("T1-T2_th2_"+std::to_string(it->second)).c_str(),32,0,32,100000,-500,500);
-      _Position[it->second]=new TH2F(("Position_"+std::to_string(it->second)).c_str(),("Position_"+std::to_string(it->second)).c_str(),32,0,32,200000,-1000,1000); 
-      _Longueur[it->second]=new TH2F(("Longueur_"+std::to_string(it->second)).c_str(),("Longueur_"+std::to_string(it->second)).c_str(),32,0,32,200000,-1000,1000);
-      _T1mT2Chamber[it->second]=new TH1F(("T1-T2_"+std::to_string(it->second)).c_str(),("T1-T2_"+std::to_string(it->second)).c_str(),100000,-500,500);
+       _Correlation[it->second]=new TH2F(("Correlation_"+std::to_string(it->second)).c_str(),("Correlation"+std::to_string(it->second)).c_str(),32,0,32,32,0,30);
+       _CorrelationandTime[it->second]=new TH3F(("CorrelationAndTime_"+std::to_string(it->second)).c_str(),("CorrelationAndTime_"+std::to_string(it->second)).c_str(),32,0,32,32,0,30,3000,-150,150);
+      _T1mT2[it->second]=new TH2F(("T1-T2_th2_"+std::to_string(it->second)).c_str(),("T1-T2_th2_"+std::to_string(it->second)).c_str(),32,0,32,10000,-500,500);
+      _Position[it->second]=new TH2F(("Position_"+std::to_string(it->second)).c_str(),("Position_"+std::to_string(it->second)).c_str(),32,0,32,20000,-1000,1000); 
+      _Longueur[it->second]=new TH2F(("Longueur_"+std::to_string(it->second)).c_str(),("Longueur_"+std::to_string(it->second)).c_str(),32,0,32,20000,-1000,1000);
+      _T1mT2Chamber[it->second]=new TH1F(("T1-T2_"+std::to_string(it->second)).c_str(),("T1-T2_"+std::to_string(it->second)).c_str(),10000,-500,500);
       _MultiplicitySide0[it->second]=new TH1F(("Hit_Multiplicity_Side0_"+std::to_string(it->second)).c_str(),("Hit_Multiplicity_Side0_"+std::to_string(it->second)).c_str(),60,0,60);
       _MultiplicitySide1[it->second]=new TH1F(("Hit_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),("Hit_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),60,0,60);
       _MultiplicityBothSide[it->second]=new TH1F(("Hit_Multiplicity_BothSide_"+std::to_string(it->second)).c_str(),("Hit_Multiplicity_BothSide_"+std::to_string(it->second)).c_str(),60,0,60);
-      _NbrClusterSide0[it->second]=new TH1F(("Number_of_Cluster_Side0_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Side0_"+std::to_string(it->second)).c_str(),3000,0,3000);
+      _NbrClusterSide0[it->second]=new TH1F(("Number_of_Cluster_Side0_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Side0_"+std::to_string(it->second)).c_str(),100,0,10);
       _MultiClusterSide0[it->second]=new TH1F(("Cluster_Multiplicity_Side0_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Side0_"+std::to_string(it->second)).c_str(),60,0,60);
-      _NbrClusterSide1[it->second]=new TH1F(("Number_of_Cluster_Side1_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Side1_"+std::to_string(it->second)).c_str(),3000,0,3000);
+      _NbrClusterSide1[it->second]=new TH1F(("Number_of_Cluster_Side1_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Side1_"+std::to_string(it->second)).c_str(),100,0,100);
       _MultiClusterSide1[it->second]=new TH1F(("Cluster_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),60,0,60);
-      _NbrClusterBothSide[it->second]=new TH1F(("Number_of_Cluster_Both_Side_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Both_Side_"+std::to_string(it->second)).c_str(),3000,0,3000);
+      _NbrClusterBothSide[it->second]=new TH1F(("Number_of_Cluster_Both_Side_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Both_Side_"+std::to_string(it->second)).c_str(),100,0,100);
       _MultiClusterBothSide[it->second]=new TH1F(("Cluster_Multiplicity_Both_Side_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Both_Side_"+std::to_string(it->second)).c_str(),60,0,60);
        //NOISE
-      _NbrClusterNoiseSide0[it->second]=new TH1F(("Number_of_Noise_Cluster_Side0_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Side0_"+std::to_string(it->second)).c_str(),3000,0,3000);
+      _NbrClusterNoiseSide0[it->second]=new TH1F(("Number_of_Noise_Cluster_Side0_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Side0_"+std::to_string(it->second)).c_str(),100,0,100);
       _MultiClusterNoiseSide0[it->second]=new TH1F(("Cluster_Noise_Multiplicity_Side0_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Side0_"+std::to_string(it->second)).c_str(),60,0,60);
-      _NbrClusterNoiseSide1[it->second]=new TH1F(("Number_of_Noise_Cluster_Side1_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Side1_"+std::to_string(it->second)).c_str(),3000,0,3000);
+      _NbrClusterNoiseSide1[it->second]=new TH1F(("Number_of_Noise_Cluster_Side1_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Side1_"+std::to_string(it->second)).c_str(),100,0,100);
       _MultiClusterNoiseSide1[it->second]=new TH1F(("Cluster_Noise_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),60,0,60);
-      _NbrClusterNoiseBothSide[it->second]=new TH1F(("Number_of_Noise_Cluster_Both_Side_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Both_Side_"+std::to_string(it->second)).c_str(),3000,0,3000);
+      _NbrClusterNoiseBothSide[it->second]=new TH1F(("Number_of_Noise_Cluster_Both_Side_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Both_Side_"+std::to_string(it->second)).c_str(),100,0,100);
       _MultiClusterNoiseBothSide[it->second]=new TH1F(("Cluster_Noise_Multiplicity_Both_Side_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Both_Side_"+std::to_string(it->second)).c_str(),60,0,60);
     }
   }
@@ -236,6 +238,16 @@ void ReadoutProcessor::finish()
     delete it->second;
   }
   for(std::map<int,TH2F*>::iterator it=_Longueur.begin();it!=_Longueur.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
+  for(std::map<int,TH2F*>::iterator it=_Correlation.begin();it!=_Correlation.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
+  for(std::map<int,TH3F*>::iterator it=_CorrelationandTime.begin();it!=_CorrelationandTime.end();++it)
   {
     it->second->Write();
     delete it->second;
@@ -604,6 +616,11 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 	    for(TdcChannel* itt=begin; itt != endTrigWindow; ++itt)
 	    {
 	      if(it->channel()==triggerChannel) continue;
+	      if(it->chamber()==itt->chamber())
+	      {
+	        _Correlation[it->chamber()]->Fill(TDCchannelToStrip[it->mezzanine()][it->channel()],TDCchannelToStrip[itt->mezzanine()][itt->channel()]);
+	        _CorrelationandTime[it->chamber()]->Fill(TDCchannelToStrip[it->mezzanine()][it->channel()],TDCchannelToStrip[itt->mezzanine()][itt->channel()],it->getTimeFromTrigger()-itt->getTimeFromTrigger());
+	      }
 	      if(it->strip()==itt->strip())
 		    {
 		      if(_T1mT2Ch.find(it->strip())==_T1mT2Ch.end())
