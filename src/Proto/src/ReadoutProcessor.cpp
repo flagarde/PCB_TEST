@@ -573,8 +573,8 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
     else _hitTimeImpair[it->mezzanine()]->Fill(it->getTimeFromTrigger());
     if (_T1mT0Ch.find(it->strip())==_T1mT0Ch.end())
 	  {
-	    _T1mT0Ch[it->strip()]=new TH1F(("T1-T0_"+std::to_string(it->strip())).c_str(),("T1-T0_"+std::to_string(it->strip())).c_str(),2000,-2000,0);
-	    _T2mT0Ch[it->strip()]=new TH1F(("T2-T0_"+std::to_string(it->strip())).c_str(),("T2-T0_"+std::to_string(it->strip())).c_str(),2000,-2000,0);
+	    _T1mT0Ch[it->strip()]=new TH1F(("T1-T0_"+std::to_string(it->strip())).c_str(),("T1-T0_"+std::to_string(it->strip())).c_str(),200000,-2000,0);
+	    _T2mT0Ch[it->strip()]=new TH1F(("T2-T0_"+std::to_string(it->strip())).c_str(),("T2-T0_"+std::to_string(it->strip())).c_str(),200000,-2000,0);
 	  }
 	  if (it->side()==0) _T1mT0Ch[it->strip()]->Fill(it->getTimeFromTrigger());
 	  else _T2mT0Ch[it->strip()]->Fill(it->getTimeFromTrigger());
@@ -608,7 +608,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 		    {
 		      if(_T1mT2Ch.find(it->strip())==_T1mT2Ch.end())
 		      {
-		        _T1mT2Ch[it->strip()]=new TH1F(("T1-T2_"+std::to_string(it->strip())).c_str(),("T1-T2_"+std::to_string(it->strip())).c_str(),1000,-500,500);
+		        _T1mT2Ch[it->strip()]=new TH1F(("T1-T2_"+std::to_string(it->strip())).c_str(),("T1-T2_"+std::to_string(it->strip())).c_str(),100000,-500,500);
 		      }
 		      double diff=it->getTimeFromTrigger()-itt->getTimeFromTrigger();
 		      if((it->side()+1)==itt->side())
