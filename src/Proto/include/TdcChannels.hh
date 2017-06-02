@@ -14,7 +14,11 @@ public:
   inline uint64_t coarse(){return ((uint64_t)_fr[6])|((uint64_t)_fr[5]<<8)|((uint64_t)_fr[4]<<16)|((uint64_t)_fr[3]<<24);}
   inline uint8_t fine(){return _fr[7];}
   inline int side(){return (_fr[0]&0XFF)%2;}
-  inline void settdcTrigger(double i){_tdcTrigger=i;}
+  inline void settdcTrigger(double i)
+  {
+    _tdcTrigger=i;
+    if((tdcTime()-_tdcTrigger)<_MinTimeFromTriggerInEvent[_mezzanine].second)_MinTimeFromTriggerInEvent[_mezzanine]={_strip,(tdcTime()-_tdcTrigger)};
+  }
   inline double getTimeFromTrigger(){return tdcTime()-_tdcTrigger;}
   inline int strip(){return _strip;};
   inline void  setstrip(uint8_t mezzanine,uint8_t IP)

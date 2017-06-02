@@ -164,6 +164,7 @@ void ReadoutProcessor::init()
   _bMezzanine2 = _noiseTree->Branch("Mezzanine",  &_data.Mezzanine,50000,0);
   for(std::map<int,int>::iterator it=IPtoChamber.begin();it!=IPtoChamber.end();++it)
   {
+     _MinTimeFromTriggerInEvent[it->first]={0,std::numeric_limits<double>::max()};
      _hitTimePair[it->first]=new TH1F(("triggerTimePair_mezz"+std::to_string(it->first)).c_str(),("Time of hits minus triggerTime even strip mezzanine "+std::to_string(it->first)).c_str(),2000,-2000,0);
      _hitTimeImpair[it->first]=new TH1F(("triggerTimeImpair_mezz"+std::to_string(it->first)).c_str(),("Time of hits minus triggerTime odd strip mezzanine "+std::to_string(it->first)).c_str(),2000,-2000,0);
     if(_T1mT2.find(it->second)==_T1mT2.end())
@@ -233,6 +234,11 @@ void ReadoutProcessor::finish()
     delete it->second;
   } 
   for(std::map<int,TH1F*>::iterator it=_MultiplicityBothSide.begin();it!=_MultiplicityBothSide.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
+  for(std::map<int,TH2F*>::iterator it=_TimeWithRespectToFirstOneCh2d.begin();it!=_TimeWithRespectToFirstOneCh2d.end();++it)
   {
     it->second->Write();
     delete it->second;
@@ -460,6 +466,11 @@ void ReadoutProcessor::removeDataForMezzanineWithMoreThanOneTrigger(TdcChannelBu
 
 void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
 {
+  _MinTimeFromTriggerInEvent.clear();
+  for(std::map<int,int>::iterator it=IPtoChamber.begin();it!=IPtoChamber.end();++it)
+  {
+     _MinTimeFromTriggerInEvent[it->first]={0,std::numeric_limits<double>::max()};
+  }
   fillTriggerBCIDInfo(tdcBuf);
   //eventually here put a filter on the  BCIDwithTrigger set (like remove first ones, last ones, close ones)
   removeDataForChamberWithMoreThanOneTrigger(tdcBuf);
@@ -585,8 +596,9 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
     else _hitTimeImpair[it->mezzanine()]->Fill(it->getTimeFromTrigger());
     if (_T1mT0Ch.find(it->strip())==_T1mT0Ch.end())
 	  {
-	    _T1mT0Ch[it->strip()]=new TH1F(("T1-T0_"+std::to_string(it->strip())).c_str(),("T1-T0_"+std::to_string(it->strip())).c_str(),200000,-2000,0);
-	    _T2mT0Ch[it->strip()]=new TH1F(("T2-T0_"+std::to_string(it->strip())).c_str(),("T2-T0_"+std::to_string(it->strip())).c_str(),200000,-2000,0);
+	    _T1mT0Ch[it->strip()]=new TH1F(("T1-T0_"+std::to_string(it->strip())).c_str(),("T1-T0_"+std::to_string(it->strip())).c_str(),20000,-2000,0);
+	    _T2mT0Ch[it->strip()]=new TH1F(("T2-T0_"+std::to_string(it->strip())).c_str(),("T2-T0_"+std::to_string(it->strip())).c_str(),20000,-2000,0);
+	    _TimeWithRespectToFirstOneCh2d[it->strip()]=new TH2F(("Timerespecttofirstone2d_for_strip_"+std::to_string(it->strip())).c_str(),("Timerespecttofirstone2d_fot_strip_"+std::to_string(it->strip())).c_str(),64,-32,32,4000,-200,200);
 	  }
 	  if (it->side()==0) _T1mT0Ch[it->strip()]->Fill(it->getTimeFromTrigger());
 	  else _T2mT0Ch[it->strip()]->Fill(it->getTimeFromTrigger());
@@ -616,16 +628,17 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 	    for(TdcChannel* itt=begin; itt != endTrigWindow; ++itt)
 	    {
 	      if(it->channel()==triggerChannel) continue;
+	      _TimeWithRespectToFirstOneCh2d[it->strip()]->Fill((itt->strip()-it->strip())%100,itt->getTimeFromTrigger()-it->getTimeFromTrigger());
 	      if(it->chamber()==itt->chamber())
 	      {
-	        _Correlation[it->chamber()]->Fill(TDCchannelToStrip[it->mezzanine()][it->channel()],TDCchannelToStrip[itt->mezzanine()][itt->channel()]);
-	        _CorrelationandTime[it->chamber()]->Fill(TDCchannelToStrip[it->mezzanine()][it->channel()],TDCchannelToStrip[itt->mezzanine()][itt->channel()],it->getTimeFromTrigger()-itt->getTimeFromTrigger());
+	        _Correlation[it->chamber()]->Fill(it->strip()%100,itt->strip()%100);
+	        _CorrelationandTime[it->chamber()]->Fill(it->strip()%100,itt->strip()%100,it->getTimeFromTrigger()-itt->getTimeFromTrigger());
 	      }
 	      if(it->strip()==itt->strip())
 		    {
 		      if(_T1mT2Ch.find(it->strip())==_T1mT2Ch.end())
 		      {
-		        _T1mT2Ch[it->strip()]=new TH1F(("T1-T2_"+std::to_string(it->strip())).c_str(),("T1-T2_"+std::to_string(it->strip())).c_str(),100000,-500,500);
+		        _T1mT2Ch[it->strip()]=new TH1F(("T1-T2_"+std::to_string(it->strip())).c_str(),("T1-T2_"+std::to_string(it->strip())).c_str(),10000,-500,500);
 		      }
 		      double diff=it->getTimeFromTrigger()-itt->getTimeFromTrigger();
 		      if((it->side()+1)==itt->side())
