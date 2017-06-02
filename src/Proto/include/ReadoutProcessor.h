@@ -64,7 +64,12 @@ private:
   int32_t _numbereventtoprocess;
   int32_t _totalevent{0};
   TFile* _folder=nullptr;
-  TH1F* _tmt0global{new TH1F("T-T0 global","T1-T0 global",200000,-2000,0)};
+  TH1F* _tmt0global{new TH1F("T-T0 global","T-T0 global",20000,-2000,0)};
+  TH1F* _t1mt0global{new TH1F("T1-T0 global","T1-T0 global",20000,-2000,0)};
+  TH1F* _t2mt0global{new TH1F("T2-T0 global","T2-T0 global",20000,-2000,0)};
+  std::map<int,TH1F*> _tmt0;
+  std::map<int,TH1F*> _t1mt0;
+  std::map<int,TH1F*> _t2mt0;
   std::map<int,TH1F*> _MultiplicitySide0;
   std::map<int,TH1F*> _MultiplicitySide1;
   std::map<int,TH1F*> _MultiplicityBothSide;
@@ -75,6 +80,7 @@ private:
   std::map<int,TH1F*> _T1mT0Ch;
   std::map<int,TH1F*> _T2mT0Ch;
   std::map<int,TH2F*> _TimeWithRespectToFirstOneCh2d;
+  std::map<int,TH1F*> _TimeWithRespectToFirst;
   std::map<int,TH1F*> _T1mT2Chamber;
   std::map<int,TH2F*> _Position;
   std::map<int,TH2F*> _Longueur;
@@ -95,6 +101,7 @@ private:
   std::map<int,std::pair<int,int>> StreamerProbaBothSide;
   std::ofstream _myfile;
   std::ofstream _myfilestreamer;
+  std::ofstream _myfilepeaks;
   uint32_t _Selected{0};
   uint32_t _NotSelected{0};
   //processReadoutHelper

@@ -9,6 +9,7 @@
 #include "Clustering.h"
 #include "RawHit_standard_merge_predicate.h"
 #include <fstream>
+#include "TSpectrum.h"
 //#define LAURENT_STYLE
 int ReadoutProcessor::readstream(int32_t _fdIn)
 {
@@ -131,6 +132,7 @@ void ReadoutProcessor::init()
    for(unsigned int i=0;i!=3;++i) _ugly[i].reserve(500);
   _myfile.open("Results_Effi.txt",std::ios::out|std::ios::app);
   _myfilestreamer.open("Results_Streamer.txt",std::ios::out|std::ios::app);
+  _myfilepeaks.open("Results_Peaks.txt",std::ios::out|std::ios::app);
   _maxBCID_histo= new TH1F("MAX_BCID","Maximum BCID",200,0,200);
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6,0,0)
   _maxBCID_histo->GetXaxis()->SetCanExtend(true);
@@ -169,6 +171,10 @@ void ReadoutProcessor::init()
      _hitTimeImpair[it->first]=new TH1F(("triggerTimeImpair_mezz"+std::to_string(it->first)).c_str(),("Time of hits minus triggerTime odd strip mezzanine "+std::to_string(it->first)).c_str(),2000,-2000,0);
     if(_T1mT2.find(it->second)==_T1mT2.end())
     {
+        _tmt0[it->second]=new TH1F(("T-T0_"+std::to_string(it->second)).c_str(),("T-T0_"+std::to_string(it->second)).c_str(),2000,-2000,0);
+        _t1mt0[it->second]=new TH1F(("T1-T0_"+std::to_string(it->second)).c_str(),("T1-T0_"+std::to_string(it->second)).c_str(),2000,-2000,0);
+        _t2mt0[it->second]=new TH1F(("T2-T0_"+std::to_string(it->second)).c_str(),("T2-T0_"+std::to_string(it->second)).c_str(),2000,-2000,0);
+       _TimeWithRespectToFirst[it->second]=new TH1F(("TimeWithRespectToFirst_"+std::to_string(it->second)).c_str(),("TimeWithRespectToFirst_"+std::to_string(it->second)).c_str(),10000,-500,500);
        _Correlation[it->second]=new TH2F(("Correlation_"+std::to_string(it->second)).c_str(),("Correlation"+std::to_string(it->second)).c_str(),32,0,32,32,0,30);
        _CorrelationandTime[it->second]=new TH3F(("CorrelationAndTime_"+std::to_string(it->second)).c_str(),("CorrelationAndTime_"+std::to_string(it->second)).c_str(),32,0,32,32,0,30,3000,-150,150);
       _T1mT2[it->second]=new TH2F(("T1-T2_th2_"+std::to_string(it->second)).c_str(),("T1-T2_th2_"+std::to_string(it->second)).c_str(),32,0,32,10000,-500,500);
@@ -198,9 +204,70 @@ void ReadoutProcessor::init()
   _chamberEfficiency.addChamber(12,13);
 }
 
+//estimate linear background using a fitting method
+std::set<double> findPeaks(TH1* obj)
+{
+  std::set<double> xs;
+  TSpectrum *s = new TSpectrum(20);
+  Int_t nfound = s->Search(obj,3,"",2);
+  Double_t *xpeaks = s->GetPositionX();
+  for(int p=0;p<nfound;p++) 
+  {
+    xs.insert(xpeaks[p]);
+    //Double_t xp = xpeaks[p];
+   // Int_t bin = h->GetXaxis()->FindBin(xp);
+   // Double_t yp = h->GetBinContent(bin);
+  }
+  delete s;
+  return xs;
+}
+ 
+
+
 void ReadoutProcessor::finish()
 {
   _tmt0global->Write();
+  _t1mt0global->Write();
+  _t2mt0global->Write();
+  _myfilepeaks<<_nbrRun<<std::endl;
+  for(std::map<int,TH1F*>::iterator it=_tmt0.begin();it!=_tmt0.end();++it)
+  {
+    _myfilepeaks<<"T-T0 Chamber "<<it->first<<" : ";
+    std::set<double> a = findPeaks(it->second);
+    for(std::set<double>::iterator itt=a.begin();itt!=a.end();++itt)
+    {
+      _myfilepeaks<<(*itt)<<" ";
+    }
+    _myfilepeaks<<std::endl;
+    it->second->Write();
+    delete it->second;
+  }
+   for(std::map<int,TH1F*>::iterator it=_t1mt0.begin();it!=_t1mt0.end();++it)
+  {
+    _myfilepeaks<<"T1-T0 Chamber "<<it->first<<" : ";
+    std::set<double> a = findPeaks(it->second);
+    for(std::set<double>::iterator itt=a.begin();itt!=a.end();++itt)
+    {
+      _myfilepeaks<<(*itt)<<" ";
+    }
+    _myfilepeaks<<std::endl;
+    it->second->Write();
+    delete it->second;
+  }
+   for(std::map<int,TH1F*>::iterator it=_t2mt0.begin();it!=_t2mt0.end();++it)
+  {
+    _myfilepeaks<<"T2-T0 Chamber "<<it->first<<" : ";
+    std::set<double> a = findPeaks(it->second);
+    for(std::set<double>::iterator itt=a.begin();itt!=a.end();++itt)
+    {
+      _myfilepeaks<<(*itt)<<" ";
+    }
+    _myfilepeaks<<std::endl;
+    it->second->Write();
+    delete it->second;
+  }
+  _myfile<<std::endl;
+  _myfile.close();
   _maxBCID_histo->Write();
   _maxBCID_histozoom->Write();
   _triggerPerReadout->Write();
@@ -239,6 +306,11 @@ void ReadoutProcessor::finish()
     delete it->second;
   }
   for(std::map<int,TH2F*>::iterator it=_TimeWithRespectToFirstOneCh2d.begin();it!=_TimeWithRespectToFirstOneCh2d.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
+    for(std::map<int,TH1F*>::iterator it= _TimeWithRespectToFirst.begin();it!= _TimeWithRespectToFirst.end();++it)
   {
     it->second->Write();
     delete it->second;
@@ -544,7 +616,7 @@ void ReadoutProcessor::processNoise(TdcChannel* begin,TdcChannel* end)
     for(unsigned int i=0;i!=3;++i)
   {
     RawHit_standard_merge_predicate Side(triggerChannel);
-    Side.setNeighbourTimeDistance(15);
+    Side.setNeighbourTimeDistance(NeighbourTimeDistance);
     Side.setNeighbourStripDistance(1);
     Side.setSide(i);
     std::vector<std::vector<TdcChannel*>::iterator> clusters;
@@ -598,11 +670,22 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 	  {
 	    _T1mT0Ch[it->strip()]=new TH1F(("T1-T0_"+std::to_string(it->strip())).c_str(),("T1-T0_"+std::to_string(it->strip())).c_str(),20000,-2000,0);
 	    _T2mT0Ch[it->strip()]=new TH1F(("T2-T0_"+std::to_string(it->strip())).c_str(),("T2-T0_"+std::to_string(it->strip())).c_str(),20000,-2000,0);
-	    _TimeWithRespectToFirstOneCh2d[it->strip()]=new TH2F(("Timerespecttofirstone2d_for_strip_"+std::to_string(it->strip())).c_str(),("Timerespecttofirstone2d_fot_strip_"+std::to_string(it->strip())).c_str(),64,-32,32,4000,-200,200);
+	    _TimeWithRespectToFirstOneCh2d[it->strip()]=new TH2F(("Timerespecttofirstone2d_for_strip_"+std::to_string(it->strip())).c_str(),("Timerespecttofirstone2d_fot_strip_"+std::to_string(it->strip())).c_str(),20,-10,10,1200,-60,60);
 	  }
-	  if (it->side()==0) _T1mT0Ch[it->strip()]->Fill(it->getTimeFromTrigger());
-	  else _T2mT0Ch[it->strip()]->Fill(it->getTimeFromTrigger());
+	  if (it->side()==0) 
+	  {
+	    _T1mT0Ch[it->strip()]->Fill(it->getTimeFromTrigger());
+	    _t1mt0global->Fill(it->getTimeFromTrigger());
+	    _t1mt0[it->chamber()]->Fill(it->getTimeFromTrigger());
+	  }
+	  else
+	  {
+	    _T2mT0Ch[it->strip()]->Fill(it->getTimeFromTrigger());
+	    _t2mt0global->Fill(it->getTimeFromTrigger());
+	    _t2mt0[it->chamber()]->Fill(it->getTimeFromTrigger());
+	  }
 	  _tmt0global->Fill(it->getTimeFromTrigger());
+	  _tmt0[it->chamber()]->Fill(it->getTimeFromTrigger());
 	  _data.Push_back(it->side(),it->strip(),it->mezzanine(),it->tdcTime(),trigger.tdcTime());
 	}
   int to_add=0;
@@ -623,14 +706,16 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 	  }
     for(TdcChannel* it=begin; it != endTrigWindow; ++it)
 	  {
+	    if(it->channel()==triggerChannel) continue;
+	    _TimeWithRespectToFirst[it->chamber()]->Fill(_MinTimeFromTriggerInEvent[it->mezzanine()].second-it->getTimeFromTrigger());
 	    TdcChannel* beginpp=it;
 	    beginpp++;
 	    for(TdcChannel* itt=begin; itt != endTrigWindow; ++itt)
 	    {
-	      if(it->channel()==triggerChannel) continue;
-	      _TimeWithRespectToFirstOneCh2d[it->strip()]->Fill((itt->strip()-it->strip())%100,itt->getTimeFromTrigger()-it->getTimeFromTrigger());
+	      if(itt->channel()==triggerChannel) continue;
 	      if(it->chamber()==itt->chamber())
 	      {
+	         _TimeWithRespectToFirstOneCh2d[it->strip()]->Fill((itt->strip()%100)-(it->strip()%100),itt->getTimeFromTrigger()-it->getTimeFromTrigger());
 	        _Correlation[it->chamber()]->Fill(it->strip()%100,itt->strip()%100);
 	        _CorrelationandTime[it->chamber()]->Fill(it->strip()%100,itt->strip()%100,it->getTimeFromTrigger()-itt->getTimeFromTrigger());
 	      }
@@ -686,7 +771,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   for(unsigned int i=0;i!=3;++i)
   {
     RawHit_standard_merge_predicate Side(triggerChannel);
-    Side.setNeighbourTimeDistance(15);
+    Side.setNeighbourTimeDistance(NeighbourTimeDistance);
     Side.setNeighbourStripDistance(1);
     Side.setSide(i);
     std::vector<std::vector<TdcChannel*>::iterator> clusters;

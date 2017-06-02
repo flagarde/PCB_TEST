@@ -37,7 +37,6 @@ file(COPY ./include/ DESTINATION ${PROJECT_INCLUDE_DIR})
 # -------------------------------------------------
 AUX_SOURCE_DIRECTORY( ./src library_sources )
 LIST( REMOVE_ITEM library_sources ./src/main.cpp ./src/RepareData.cpp)
-
 ADD_LIBRARY( Protoo STATIC ${library_sources} )
 TARGET_LINK_LIBRARIES( Protoo ${CMAKE_DL_LIBS} ${ZLIB_LIBRARIES} ${ROOT_LIBRARIES})
 INSTALL( TARGETS Protoo LIBRARY DESTINATION ${LIBRARY_OUTPUT_PATH} ARCHIVE DESTINATION ${LIBRARY_OUTPUT_PATH})
@@ -45,16 +44,7 @@ INSTALL( TARGETS Protoo LIBRARY DESTINATION ${LIBRARY_OUTPUT_PATH} ARCHIVE DESTI
 ADD_EXECUTABLE( Read ./src/main.cpp)
 ADD_EXECUTABLE( RepareData ./src/RepareData.cpp)
 # avoid name conflict between Marlin library and Marlin application
-TARGET_LINK_LIBRARIES( Read Protoo 
-${ROOT_LIBRARIES} ${ZLIB_LIBRARIES})
-TARGET_LINK_LIBRARIES( RepareData
-${ZLIB_LIBRARIES})
+TARGET_LINK_LIBRARIES( Read Protoo ${ROOT_LIBRARIES} -lSpectrum ${ZLIB_LIBRARIES})
+TARGET_LINK_LIBRARIES( RepareData ${ZLIB_LIBRARIES})
 INSTALL( TARGETS Read RepareData DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 # ----------------------------------------------------------------------------    
-    
-    
-    
-    
-    
-
-

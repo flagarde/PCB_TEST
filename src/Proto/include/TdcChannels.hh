@@ -5,6 +5,7 @@
 #include <limits>
 #include "Global.h"
 #include <string.h>
+#include <cmath>
 class TdcChannel
 {
 public:
@@ -17,7 +18,7 @@ public:
   inline void settdcTrigger(double i)
   {
     _tdcTrigger=i;
-    if((tdcTime()-_tdcTrigger)<_MinTimeFromTriggerInEvent[_mezzanine].second)_MinTimeFromTriggerInEvent[_mezzanine]={_strip,(tdcTime()-_tdcTrigger)};
+    if(std::fabs(tdcTime()-_tdcTrigger)<_MinTimeFromTriggerInEvent[_mezzanine].second)_MinTimeFromTriggerInEvent[_mezzanine]={_strip,(tdcTime()-_tdcTrigger)};
   }
   inline double getTimeFromTrigger(){return tdcTime()-_tdcTrigger;}
   inline int strip(){return _strip;};
