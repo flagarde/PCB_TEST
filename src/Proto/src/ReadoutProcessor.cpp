@@ -10,8 +10,28 @@
 #include "RawHit_standard_merge_predicate.h"
 #include <fstream>
 #include "TSpectrum.h"
+
+//estimate linear background using a fitting method
+std::set<double> findPeaks(TH1* obj)
+{
+  std::set<double> xs;
+  TSpectrum *s = new TSpectrum(20);
+  Int_t nfound = s->Search(obj,3,"",2);
+  Double_t *xpeaks = s->GetPositionX();
+  for(int p=0;p<nfound;p++) 
+  {
+    xs.insert(xpeaks[p]);
+    //Double_t xp = xpeaks[p];
+   // Int_t bin = h->GetXaxis()->FindBin(xp);
+   // Double_t yp = h->GetBinContent(bin);
+  }
+  delete s;
+  return xs;
+}
+ 
+
 //#define LAURENT_STYLE
-int ReadoutProcessor::readstream(int32_t _fdIn)
+int ReadoutProcessor::readstream(int32_t _fdIn,bool firstTime)
 {
   if (_fdIn<=0) return 0;
   uint32_t _event=0;
@@ -105,7 +125,7 @@ int ReadoutProcessor::readstream(int32_t _fdIn)
         }
         //else std::cout<<red<<_lastTriggerAbsBCID+FourSecondsInClockTicks<<"  "<< absbcid<<"  "<<_lastTriggerAbsBCID+TenSecondsInClockTicks<<normal<<std::endl;
       }
-      processReadout(tdcBuf);
+      processReadout(tdcBuf,firstTime);
     }
   }
 } 
@@ -166,7 +186,6 @@ void ReadoutProcessor::init()
   _bMezzanine2 = _noiseTree->Branch("Mezzanine",  &_data.Mezzanine,50000,0);
   for(std::map<int,int>::iterator it=IPtoChamber.begin();it!=IPtoChamber.end();++it)
   {
-     _MinTimeFromTriggerInEvent[it->first]={0,std::numeric_limits<double>::max()};
      _hitTimePair[it->first]=new TH1F(("triggerTimePair_mezz"+std::to_string(it->first)).c_str(),("Time of hits minus triggerTime even strip mezzanine "+std::to_string(it->first)).c_str(),2000,-2000,0);
      _hitTimeImpair[it->first]=new TH1F(("triggerTimeImpair_mezz"+std::to_string(it->first)).c_str(),("Time of hits minus triggerTime odd strip mezzanine "+std::to_string(it->first)).c_str(),2000,-2000,0);
     if(_T1mT2.find(it->second)==_T1mT2.end())
@@ -174,9 +193,7 @@ void ReadoutProcessor::init()
         _tmt0[it->second]=new TH1F(("T-T0_"+std::to_string(it->second)).c_str(),("T-T0_"+std::to_string(it->second)).c_str(),2000,-2000,0);
         _t1mt0[it->second]=new TH1F(("T1-T0_"+std::to_string(it->second)).c_str(),("T1-T0_"+std::to_string(it->second)).c_str(),2000,-2000,0);
         _t2mt0[it->second]=new TH1F(("T2-T0_"+std::to_string(it->second)).c_str(),("T2-T0_"+std::to_string(it->second)).c_str(),2000,-2000,0);
-       _TimeWithRespectToFirst[it->second]=new TH1F(("TimeWithRespectToFirst_"+std::to_string(it->second)).c_str(),("TimeWithRespectToFirst_"+std::to_string(it->second)).c_str(),10000,-500,500);
        _Correlation[it->second]=new TH2F(("Correlation_"+std::to_string(it->second)).c_str(),("Correlation"+std::to_string(it->second)).c_str(),32,0,32,32,0,30);
-       _CorrelationandTime[it->second]=new TH3F(("CorrelationAndTime_"+std::to_string(it->second)).c_str(),("CorrelationAndTime_"+std::to_string(it->second)).c_str(),32,0,32,32,0,30,3000,-150,150);
       _T1mT2[it->second]=new TH2F(("T1-T2_th2_"+std::to_string(it->second)).c_str(),("T1-T2_th2_"+std::to_string(it->second)).c_str(),32,0,32,10000,-500,500);
       _Position[it->second]=new TH2F(("Position_"+std::to_string(it->second)).c_str(),("Position_"+std::to_string(it->second)).c_str(),32,0,32,20000,-1000,1000); 
       _Longueur[it->second]=new TH2F(("Longueur_"+std::to_string(it->second)).c_str(),("Longueur_"+std::to_string(it->second)).c_str(),32,0,32,20000,-1000,1000);
@@ -204,70 +221,9 @@ void ReadoutProcessor::init()
   _chamberEfficiency.addChamber(12,13);
 }
 
-//estimate linear background using a fitting method
-std::set<double> findPeaks(TH1* obj)
-{
-  std::set<double> xs;
-  TSpectrum *s = new TSpectrum(20);
-  Int_t nfound = s->Search(obj,3,"",2);
-  Double_t *xpeaks = s->GetPositionX();
-  for(int p=0;p<nfound;p++) 
-  {
-    xs.insert(xpeaks[p]);
-    //Double_t xp = xpeaks[p];
-   // Int_t bin = h->GetXaxis()->FindBin(xp);
-   // Double_t yp = h->GetBinContent(bin);
-  }
-  delete s;
-  return xs;
-}
- 
-
 
 void ReadoutProcessor::finish()
 {
-  _tmt0global->Write();
-  _t1mt0global->Write();
-  _t2mt0global->Write();
-  _myfilepeaks<<_nbrRun<<std::endl;
-  for(std::map<int,TH1F*>::iterator it=_tmt0.begin();it!=_tmt0.end();++it)
-  {
-    _myfilepeaks<<"T-T0 Chamber "<<it->first<<" : ";
-    std::set<double> a = findPeaks(it->second);
-    for(std::set<double>::iterator itt=a.begin();itt!=a.end();++itt)
-    {
-      _myfilepeaks<<(*itt)<<" ";
-    }
-    _myfilepeaks<<std::endl;
-    it->second->Write();
-    delete it->second;
-  }
-   for(std::map<int,TH1F*>::iterator it=_t1mt0.begin();it!=_t1mt0.end();++it)
-  {
-    _myfilepeaks<<"T1-T0 Chamber "<<it->first<<" : ";
-    std::set<double> a = findPeaks(it->second);
-    for(std::set<double>::iterator itt=a.begin();itt!=a.end();++itt)
-    {
-      _myfilepeaks<<(*itt)<<" ";
-    }
-    _myfilepeaks<<std::endl;
-    it->second->Write();
-    delete it->second;
-  }
-   for(std::map<int,TH1F*>::iterator it=_t2mt0.begin();it!=_t2mt0.end();++it)
-  {
-    _myfilepeaks<<"T2-T0 Chamber "<<it->first<<" : ";
-    std::set<double> a = findPeaks(it->second);
-    for(std::set<double>::iterator itt=a.begin();itt!=a.end();++itt)
-    {
-      _myfilepeaks<<(*itt)<<" ";
-    }
-    _myfilepeaks<<std::endl;
-    it->second->Write();
-    delete it->second;
-  }
-  _myfile<<std::endl;
-  _myfile.close();
   _maxBCID_histo->Write();
   _maxBCID_histozoom->Write();
   _triggerPerReadout->Write();
@@ -290,6 +246,11 @@ void ReadoutProcessor::finish()
   _dataTree->Write();
   _noiseTree->Write();
   _folder->cd();
+  for(std::map<int,TH1F*>::iterator it=_DistributionHitCloseTrigger.begin();it!=_DistributionHitCloseTrigger.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  } 
   for(std::map<int,TH1F*>::iterator it=_MultiplicitySide0.begin();it!=_MultiplicitySide0.end();++it)
   {
     it->second->Write();
@@ -305,12 +266,27 @@ void ReadoutProcessor::finish()
     it->second->Write();
     delete it->second;
   }
-  for(std::map<int,TH2F*>::iterator it=_TimeWithRespectToFirstOneCh2d.begin();it!=_TimeWithRespectToFirstOneCh2d.end();++it)
+  for(std::map<int,TH2F*>::iterator it=_TimeWithRespectToFirstOneCh2d0.begin();it!=_TimeWithRespectToFirstOneCh2d0.end();++it)
   {
     it->second->Write();
     delete it->second;
   }
-    for(std::map<int,TH1F*>::iterator it= _TimeWithRespectToFirst.begin();it!= _TimeWithRespectToFirst.end();++it)
+  for(std::map<int,TH2F*>::iterator it=_TimeWithRespectToFirstOneCh2d1.begin();it!=_TimeWithRespectToFirstOneCh2d1.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
+  for(std::map<int,TH1F*>::iterator it= _TimeWithRespectToFirst.begin();it!= _TimeWithRespectToFirst.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
+  for(std::map<int,TH1F*>::iterator it= _TimeWithRespectToFirstSameStrip0.begin();it!= _TimeWithRespectToFirstSameStrip0.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
+  for(std::map<int,TH1F*>::iterator it= _TimeWithRespectToFirstSameStrip1.begin();it!= _TimeWithRespectToFirstSameStrip1.end();++it)
   {
     it->second->Write();
     delete it->second;
@@ -321,11 +297,6 @@ void ReadoutProcessor::finish()
     delete it->second;
   }
   for(std::map<int,TH2F*>::iterator it=_Correlation.begin();it!=_Correlation.end();++it)
-  {
-    it->second->Write();
-    delete it->second;
-  }
-  for(std::map<int,TH3F*>::iterator it=_CorrelationandTime.begin();it!=_CorrelationandTime.end();++it)
   {
     it->second->Write();
     delete it->second;
@@ -536,13 +507,13 @@ void ReadoutProcessor::removeDataForMezzanineWithMoreThanOneTrigger(TdcChannelBu
       }
 }
 
-void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
+void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf,bool firstTime)
 {
-  _MinTimeFromTriggerInEvent.clear();
-  for(std::map<int,int>::iterator it=IPtoChamber.begin();it!=IPtoChamber.end();++it)
+  for(static std::map<int,std::map<int,std::pair<int,double>>>::iterator it=_MinTimeFromTriggerInEvent.begin();it!=_MinTimeFromTriggerInEvent.end();++it)
   {
-     _MinTimeFromTriggerInEvent[it->first]={0,std::numeric_limits<double>::max()};
+    (it->second).clear();
   }
+  _MinTimeFromTriggerInEvent.clear();
   fillTriggerBCIDInfo(tdcBuf);
   //eventually here put a filter on the  BCIDwithTrigger set (like remove first ones, last ones, close ones)
   removeDataForChamberWithMoreThanOneTrigger(tdcBuf);
@@ -557,38 +528,46 @@ void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf)
   for (std::set<std::pair<uint16_t,double>>::iterator it=_BCIDwithTrigger.begin(); it !=_BCIDwithTrigger.end(); ++it)
   {
     eventEnd=std::partition(eventStart,tdcBuf.end(),TdcChannelBcidpredicate((*it).first,(*it).second,-6,-3));
-    //eventEnd=std::partition(eventStart,tdcBuf.end(),TdcChannelBcidpredicate((*it).first,(*it).second,-5,-2));
-    //eventEnd=std::partition(eventStart,tdcBuf.end(),TdcChannelBcidpredicate((*it).first,(*it).second,-10,-1));
-    processTrigger(eventStart,eventEnd);
+    processTrigger(eventStart,eventEnd,firstTime);
     eventStart=eventEnd;
   }
-  if(_BCIDwithTrigger.size()==0&&tdcBuf.isNoise()==true)
+  if(firstTime==false)
   {
-    _Selected++;
-    processNoise(eventStart,tdcBuf.end());
-  }
-  else if (_BCIDwithTrigger.size()==0&&tdcBuf.isNoise()==false) 
-  {
-    _NotSelected++;
+    if(_BCIDwithTrigger.size()==0&&tdcBuf.isNoise()==true)
+    {
+      _Selected++;
+      processNoise(eventStart,tdcBuf.end());
+    }
+    else if (_BCIDwithTrigger.size()==0&&tdcBuf.isNoise()==false) 
+    {
+      _NotSelected++;
+    }
   }
 }
 
 
-void ReadoutProcessor::processTrigger(TdcChannel* begin,TdcChannel* end)
+void ReadoutProcessor::processTrigger(TdcChannel* begin,TdcChannel* end,bool firstTime)
 { 
   TdcChannel* mezzStart=begin;
   TdcChannel* mezzEnd=nullptr;
-  _tdc_counters.NewEvent();
-  _chamberEfficiency.startEvent();
+  if(firstTime==false)
+  {
+    _tdc_counters.NewEvent();
+    _chamberEfficiency.startEvent();
+  }
   for(std::map<int,int>::iterator it=IPtoChamber.begin();it!=IPtoChamber.end();++it)
   {
     mezzEnd=std::partition(mezzStart,end,TdcMezzaninePredicate(it->first));
-	  processMezzanine(mezzStart,mezzEnd);
+	  if(firstTime==true) processMezzanineFirst(mezzStart,mezzEnd);
+	  else processMezzanine(mezzStart,mezzEnd);
 	  mezzStart=mezzEnd;
   }
   //if (nullptr != mezzEnd && end != mezzEnd) std::cout << "WARNING WARNING mess here" << std::endl;
-  _counters.newSet();
-  _chamberEfficiency.endEvent();
+  if(firstTime==false)
+  {
+    _counters.newSet();
+    _chamberEfficiency.endEvent();
+  }
 }
 
 void ReadoutProcessor::processNoise(TdcChannel* begin,TdcChannel* end)
@@ -647,9 +626,110 @@ void ReadoutProcessor::processNoise(TdcChannel* begin,TdcChannel* end)
 
 bool isTrigger(TdcChannel& c) {return c.channel()==triggerChannel;}
 
+
+void ReadoutProcessor::processMezzanineFirst(TdcChannel* begin,TdcChannel* end)
+{
+  int trigCount=std::count_if(begin,end,isTrigger);
+  if (trigCount != 1) return;
+  TdcChannel trigger(*(std::find_if(begin,end,isTrigger)));
+  unsigned int valeur[2]={(unsigned int)trigger.chamber(),(unsigned int)trigger.mezzanine()};
+  for (TdcChannel* it=begin; it !=end; ++it)
+	{
+	  if(it->channel()==triggerChannel) continue;
+	  it->settdcTrigger(trigger.tdcTime());
+	  if (it->side()==0) 
+	  {
+	    _t1mt0global->Fill(it->getTimeFromTrigger());
+	    _t1mt0[it->chamber()]->Fill(it->getTimeFromTrigger());
+	  }
+	  else
+	  {
+	    _t2mt0global->Fill(it->getTimeFromTrigger());
+	    _t2mt0[it->chamber()]->Fill(it->getTimeFromTrigger());
+	  }
+	  _tmt0global->Fill(it->getTimeFromTrigger());
+	  _tmt0[it->chamber()]->Fill(it->getTimeFromTrigger());
+	}
+  /*if (int(end-begin)>1) //at least one hit more than the trigger
+  {
+    TdcChannel* endTrigWindow=std::remove_if(begin,end,TdcOutofTriggerTimePredicate(trigger.tdcTime(),_windowslow,_windowshigh));
+  }*/
+}
+	
+void ReadoutProcessor::finishFirst()
+{
+  for(std::map<int,TH1F*>::iterator oo=_tmt0.begin();oo!=_tmt0.end();++oo)
+	{
+    std::set<double>a=findPeaks(oo->second);
+    std::set<double>::iterator yy=a.begin();
+    double b=*(yy);
+    yy++;
+    double c=*(yy);
+    TF1 *gauss = new TF1("gauss", "gaus");
+    std::cout<<yellow<<b<<"  "<<c<<normal<<std::endl;
+    gauss->SetParameter(1,b);
+    gauss->SetParameter(2,(c+b)/2.0);
+    std::cout<<blue<<(c-b)/2.0+b<<"  "<<(b-c)/2.0+b<<normal<<std::endl;
+    oo->second->Fit("gauss","Q","",(b-c)/2.0+b,(c-b)/2.0+b);
+    TF1 *fit1 = (TF1*)oo->second->GetFunction("gaus");
+    if(fit1!=nullptr)
+    {
+      fit1->SetLineColor(kRed);
+      fit1->Draw("same");
+    }
+    means[oo->first]=gauss->GetParameter(1);
+    sigmas[oo->first]=gauss->GetParameter(2);
+    std::cout<<blue<<"Parameter chamber"<<oo->first<<" : Mean:"<<gauss->GetParameter(1)<<" Sigma:"<<gauss->GetParameter(2)<<normal<<std::endl;
+    delete gauss;
+    //delete fit1;
+  }
+  _tmt0global->Write();
+  _t1mt0global->Write();
+  _t2mt0global->Write();
+  _myfilepeaks<<_nbrRun<<std::endl;
+  for(std::map<int,TH1F*>::iterator it=_tmt0.begin();it!=_tmt0.end();++it)
+  {
+    _myfilepeaks<<"T-T0 Chamber "<<it->first<<" : ";
+    std::set<double> a = findPeaks(it->second);
+    for(std::set<double>::iterator itt=a.begin();itt!=a.end();++itt)
+    {
+      _myfilepeaks<<(*itt)<<" ";
+    }
+    _myfilepeaks<<std::endl;
+    it->second->Write();
+    delete it->second;
+  }
+   for(std::map<int,TH1F*>::iterator it=_t1mt0.begin();it!=_t1mt0.end();++it)
+  {
+    _myfilepeaks<<"T1-T0 Chamber "<<it->first<<" : ";
+    std::set<double> a = findPeaks(it->second);
+    for(std::set<double>::iterator itt=a.begin();itt!=a.end();++itt)
+    {
+      _myfilepeaks<<(*itt)<<" ";
+    }
+    _myfilepeaks<<std::endl;
+    it->second->Write();
+    delete it->second;
+  }
+   for(std::map<int,TH1F*>::iterator it=_t2mt0.begin();it!=_t2mt0.end();++it)
+  {
+    _myfilepeaks<<"T2-T0 Chamber "<<it->first<<" : ";
+    std::set<double> a = findPeaks(it->second);
+    for(std::set<double>::iterator itt=a.begin();itt!=a.end();++itt)
+    {
+      _myfilepeaks<<(*itt)<<" ";
+    }
+    _myfilepeaks<<std::endl;
+    it->second->Write();
+    delete it->second;
+  }
+  _myfile<<std::endl;
+  _myfile.close();
+}
+
 void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 {
-   for(unsigned int i=0;i!=3;++i)_ugly[i].clear();
+  for(unsigned int i=0;i!=3;++i)_ugly[i].clear();
   _data.Reset();
   int trigCount=std::count_if(begin,end,isTrigger);
   if (trigCount != 1) return;
@@ -670,28 +750,35 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 	  {
 	    _T1mT0Ch[it->strip()]=new TH1F(("T1-T0_"+std::to_string(it->strip())).c_str(),("T1-T0_"+std::to_string(it->strip())).c_str(),20000,-2000,0);
 	    _T2mT0Ch[it->strip()]=new TH1F(("T2-T0_"+std::to_string(it->strip())).c_str(),("T2-T0_"+std::to_string(it->strip())).c_str(),20000,-2000,0);
-	    _TimeWithRespectToFirstOneCh2d[it->strip()]=new TH2F(("Timerespecttofirstone2d_for_strip_"+std::to_string(it->strip())).c_str(),("Timerespecttofirstone2d_fot_strip_"+std::to_string(it->strip())).c_str(),20,-10,10,1200,-60,60);
+	    _TimeWithRespectToFirstOneCh2d0[it->strip()]=new TH2F(("Timerespecttofirstone2d0_for_strip_"+std::to_string(it->strip())).c_str(),("Timerespecttofirstone2d0_fot_strip_"+std::to_string(it->strip())).c_str(),20,-10,10,1200,-60,60);
+	    _TimeWithRespectToFirstOneCh2d1[it->strip()]=new TH2F(("Timerespecttofirstone2d1_for_strip_"+std::to_string(it->strip())).c_str(),("Timerespecttofirstone2d1_fot_strip_"+std::to_string(it->strip())).c_str(),20,-10,10,1200,-60,60);
+	    _TimeWithRespectToFirst[it->strip()]=new TH1F(("TimeWithRespectToFirst_"+std::to_string(it->strip())).c_str(),("TimeWithRespectToFirst_"+std::to_string(it->strip())).c_str(),20000,-5000,5000);
+      _TimeWithRespectToFirstSameStrip0[it->strip()]=new TH1F(("TimeWithRespectToFirstSameStrip0_"+std::to_string(it->strip())).c_str(),("TimeWithRespectToFirstSameStrip0_"+std::to_string(it->strip())).c_str(),2500,0,250);
+       _TimeWithRespectToFirstSameStrip1[it->strip()]=new TH1F(("TimeWithRespectToFirstSameStrip1_"+std::to_string(it->strip())).c_str(),("TimeWithRespectToFirstSameStrip1_"+std::to_string(it->strip())).c_str(),2500,0,250);
+       _DistributionHitCloseTrigger[it->strip()]=new TH1F(("Closesttotrigger"+std::to_string(it->strip())).c_str(),("Closesttotrigger"+std::to_string(it->strip())).c_str(),2000,-2000,0);
 	  }
 	  if (it->side()==0) 
 	  {
 	    _T1mT0Ch[it->strip()]->Fill(it->getTimeFromTrigger());
-	    _t1mt0global->Fill(it->getTimeFromTrigger());
-	    _t1mt0[it->chamber()]->Fill(it->getTimeFromTrigger());
 	  }
 	  else
 	  {
 	    _T2mT0Ch[it->strip()]->Fill(it->getTimeFromTrigger());
-	    _t2mt0global->Fill(it->getTimeFromTrigger());
-	    _t2mt0[it->chamber()]->Fill(it->getTimeFromTrigger());
 	  }
-	  _tmt0global->Fill(it->getTimeFromTrigger());
-	  _tmt0[it->chamber()]->Fill(it->getTimeFromTrigger());
 	  _data.Push_back(it->side(),it->strip(),it->mezzanine(),it->tdcTime(),trigger.tdcTime());
 	}
   int to_add=0;
   if (int(end-begin)>1) //at least one hit more than the trigger
   {
     TdcChannel* endTrigWindow=std::remove_if(begin,end,TdcOutofTriggerTimePredicate(trigger.tdcTime(),_windowslow,_windowshigh));
+    for(std::map<int,std::map<int,std::pair<int,double>>>::iterator tt=_MinTimeFromTriggerInEvent.begin();tt!=_MinTimeFromTriggerInEvent.end();++tt)
+    {
+      for(std::map<int,std::pair<int,double>>::iterator op=tt->second.begin();op!=tt->second.end();++op)
+      {
+        std::cout<<red<<(op->second).first<<"  "<<(op->second).second<<normal<<std::endl;
+        _DistributionHitCloseTrigger[(op->second).first]->Fill((op->second).second);
+      }
+    }
     //TdcChannel* endTrigWindow=std::remove_if(begin,end,TdcOutofTriggerTimePredicate(trigger.tdcTime(),-625,-575));
     if (endTrigWindow!=begin) {to_add=1; _tdc_counters.YouHaveAHit(trigger.bcid(),valeur);}
     for (TdcChannel* it=begin; it !=endTrigWindow; ++it)
@@ -707,7 +794,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
     for(TdcChannel* it=begin; it != endTrigWindow; ++it)
 	  {
 	    if(it->channel()==triggerChannel) continue;
-	    _TimeWithRespectToFirst[it->chamber()]->Fill(_MinTimeFromTriggerInEvent[it->mezzanine()].second-it->getTimeFromTrigger());
+	    _TimeWithRespectToFirst[it->strip()]->Fill(_MinTimeFromTriggerInEvent[it->mezzanine()][it->strip()%100].second-it->getTimeFromTrigger());
 	    TdcChannel* beginpp=it;
 	    beginpp++;
 	    for(TdcChannel* itt=begin; itt != endTrigWindow; ++itt)
@@ -715,12 +802,17 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 	      if(itt->channel()==triggerChannel) continue;
 	      if(it->chamber()==itt->chamber())
 	      {
-	         _TimeWithRespectToFirstOneCh2d[it->strip()]->Fill((itt->strip()%100)-(it->strip()%100),itt->getTimeFromTrigger()-it->getTimeFromTrigger());
-	        _Correlation[it->chamber()]->Fill(it->strip()%100,itt->strip()%100);
-	        _CorrelationandTime[it->chamber()]->Fill(it->strip()%100,itt->strip()%100,it->getTimeFromTrigger()-itt->getTimeFromTrigger());
+	         if(it->side()==0&&itt->side()==0)_TimeWithRespectToFirstOneCh2d0[it->strip()]->Fill((itt->strip()%100)-(it->strip()%100),itt->getTimeFromTrigger()-it->getTimeFromTrigger());
+	         else if(it->side()==1&&itt->side()==1)_TimeWithRespectToFirstOneCh2d1[it->strip()]->Fill((itt->strip()%100)-(it->strip()%100),itt->getTimeFromTrigger()-it->getTimeFromTrigger());
+	        if(itt>beginpp)
+	        {
+	          _Correlation[it->chamber()]->Fill(it->strip()%100,itt->strip()%100);
+	        }
 	      }
 	      if(it->strip()==itt->strip())
 		    {
+		      if(it->side()==0&&itt->side()==0)_TimeWithRespectToFirstSameStrip0[it->strip()]->Fill(_MinTimeFromTriggerInEvent[it->mezzanine()][it->strip()%100].second-itt->getTimeFromTrigger());
+		      else if(it->side()==1&&itt->side()==1)_TimeWithRespectToFirstSameStrip1[it->strip()]->Fill(_MinTimeFromTriggerInEvent[it->mezzanine()][it->strip()%100].second-itt->getTimeFromTrigger());
 		      if(_T1mT2Ch.find(it->strip())==_T1mT2Ch.end())
 		      {
 		        _T1mT2Ch[it->strip()]=new TH1F(("T1-T2_"+std::to_string(it->strip())).c_str(),("T1-T2_"+std::to_string(it->strip())).c_str(),10000,-500,500);

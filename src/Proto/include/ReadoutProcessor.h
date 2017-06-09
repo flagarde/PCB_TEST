@@ -3,7 +3,6 @@
 #include "TdcChannelBuffer.h"
 #include "TH1F.h"
 #include "TH2F.h"
-#include "TH3F.h"
 #include "GG_counter.h"
 #include "TdcChamberEfficiency.hh"
 #include <cstdint>
@@ -18,12 +17,14 @@ class ReadoutProcessor
 public:
   ReadoutProcessor(int NbrEventToProcess,TFile* fol,std::string& nbr):_numbereventtoprocess(NbrEventToProcess),_folder(fol),_nbrRun(nbr){}
   void init();
-  int readstream(int32_t _fdIn);
-  void processReadout(TdcChannelBuffer &tdcBuf);
-  void processTrigger(TdcChannel* begin,TdcChannel* end);
+  int readstream(int32_t _fdIn,bool firstTime);
+  void processReadout(TdcChannelBuffer &tdcBuf,bool firstTime);
+  void processTrigger(TdcChannel* begin,TdcChannel* end,bool firstTime);
   void processMezzanine(TdcChannel* begin,TdcChannel* end);
+  void processMezzanineFirst(TdcChannel* begin,TdcChannel* end);
   void processNoise(TdcChannel* begin,TdcChannel* end);
   void finish();
+  void finishFirst();
 private:
   std::string _nbrRun{""};
   int _windowslow{0};
@@ -75,12 +76,15 @@ private:
   std::map<int,TH1F*> _MultiplicityBothSide;
   std::map<int,TH2F*> _T1mT2;
   std::map<int,TH2F*> _Correlation;
-  std::map<int,TH3F*> _CorrelationandTime;
   std::map<int,TH1F*> _T1mT2Ch;
   std::map<int,TH1F*> _T1mT0Ch;
   std::map<int,TH1F*> _T2mT0Ch;
-  std::map<int,TH2F*> _TimeWithRespectToFirstOneCh2d;
+  std::map<int,TH2F*> _TimeWithRespectToFirstOneCh2d0;
+  std::map<int,TH2F*> _TimeWithRespectToFirstOneCh2d1;
   std::map<int,TH1F*> _TimeWithRespectToFirst;
+  std::map<int,TH1F*> _DistributionHitCloseTrigger;
+  std::map<int,TH1F*> _TimeWithRespectToFirstSameStrip0;
+  std::map<int,TH1F*> _TimeWithRespectToFirstSameStrip1;
   std::map<int,TH1F*> _T1mT2Chamber;
   std::map<int,TH2F*> _Position;
   std::map<int,TH2F*> _Longueur;

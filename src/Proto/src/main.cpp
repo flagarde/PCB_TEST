@@ -7,7 +7,6 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <errno.h>
-
 int getdir (std::string dir, std::vector<std::string> &files,std::string nbrRunToProcess)
 {
   DIR *dp;
@@ -75,7 +74,22 @@ int main(int argc, char *argv[])
       return 1;
     }
     else std::cout<<green<<"Opening "<<FilesTopProcess[i]<<normal<<std::endl;
-    retour=Pr.readstream(_fdIn);
+    retour=Pr.readstream(_fdIn,true);
+  }
+  Pr.finishFirst();
+  for(unsigned int i=0;i!=FilesTopProcess.size();++i)
+  {
+    if(retour==2)continue;
+    int32_t _fdIn= ::open((path+FilesTopProcess[i]).c_str(), O_RDONLY | O_NONBLOCK,S_IRWXU);
+    if (_fdIn<0)
+    {
+      perror("Can't open file :");
+      Pr.finish();
+      file.Close();
+      return 1;
+    }
+    else std::cout<<green<<"Opening "<<FilesTopProcess[i]<<normal<<std::endl;
+    retour=Pr.readstream(_fdIn,false);
   }
   Pr.finish();
   file.Close();

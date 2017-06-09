@@ -44,6 +44,8 @@ static std::map<std::pair<int,int>,std::pair<int,int>>Windows
 };
 static uint64_t FourSecondsInClockTicks=20000000;
 static uint64_t TenSecondsInClockTicks=50000000;
-static std::map<int,std::pair<int,double>> _MinTimeFromTriggerInEvent;
+static std::map<int,std::map<int,std::pair<int,double>>> _MinTimeFromTriggerInEvent;
+static std::map<int,double>means;
+static std::map<int,double>sigmas;
 static int NeighbourTimeDistance=2; //ns
 #endif

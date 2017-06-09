@@ -18,7 +18,14 @@ public:
   inline void settdcTrigger(double i)
   {
     _tdcTrigger=i;
-    if(std::fabs(tdcTime()-_tdcTrigger)<_MinTimeFromTriggerInEvent[_mezzanine].second)_MinTimeFromTriggerInEvent[_mezzanine]={_strip,(tdcTime()-_tdcTrigger)};
+    double a=0;
+    if(means[_strip/100]<0)a=-means[_strip/100];
+    else a=means[_strip/100];
+    if(_MinTimeFromTriggerInEvent.find(_mezzanine)!=_MinTimeFromTriggerInEvent.end()&&_MinTimeFromTriggerInEvent[_mezzanine].find(_strip%100)!=_MinTimeFromTriggerInEvent[_mezzanine].end())
+    {
+      if(std::fabs((tdcTime()-_tdcTrigger)-a)<std::fabs(_MinTimeFromTriggerInEvent[_mezzanine][_strip%100].second-a))_MinTimeFromTriggerInEvent[_mezzanine][_strip%100]={_strip,(tdcTime()-_tdcTrigger)};
+    }
+    else _MinTimeFromTriggerInEvent[_mezzanine][_strip%100]={_strip,(tdcTime()-_tdcTrigger)};
   }
   inline double getTimeFromTrigger(){return tdcTime()-_tdcTrigger;}
   inline int strip(){return _strip;};
