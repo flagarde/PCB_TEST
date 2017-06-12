@@ -16,20 +16,16 @@ std::set<double> findPeaks(TH1* obj)
 {
   std::set<double> xs;
   TSpectrum *s = new TSpectrum(20);
-  Int_t nfound = s->Search(obj,3,"",2);
+  Int_t nfound = s->Search(obj,3,"",0.05);
   Double_t *xpeaks = s->GetPositionX();
   for(int p=0;p<nfound;p++) 
   {
     xs.insert(xpeaks[p]);
-    //Double_t xp = xpeaks[p];
-   // Int_t bin = h->GetXaxis()->FindBin(xp);
-   // Double_t yp = h->GetBinContent(bin);
   }
   delete s;
   return xs;
 }
  
-
 //#define LAURENT_STYLE
 int ReadoutProcessor::readstream(int32_t _fdIn,bool firstTime)
 {
@@ -82,12 +78,7 @@ int ReadoutProcessor::readstream(int32_t _fdIn,bool firstTime)
 	    b.uncompress();
 	    if (b.detectorId() != 110) continue;
 	    uint32_t* ibuf=(uint32_t*) b.payload();
-	    //for (int i=0;i<7;i++)  printf("%d ",ibuf[i]);
 	    absbcid=ibuf[3]; absbcid=(absbcid<<32)|ibuf[2];
-	    //printf("\n event number %d, GTC %d, ABSBCID %lu, mezzanine number %u, ",ibuf[0],ibuf[1]&0xFFFF,absbcid,ibuf[4]);
-	    //printf("IP address %u.%u.%u.%u,",ibuf[5]&0xFF,(ibuf[5]>>8)&0xFF,(ibuf[5]>>16)&0xFF,(ibuf[5]>>24)&0xFF);
-	    //uint32_t nch=ibuf[6];
-	    //printf("\n channels -> %d \n",nch);
 	    if (ibuf[6]>0)
 	    {
 	      ++nDIFwithChannel;
@@ -133,22 +124,6 @@ int ReadoutProcessor::readstream(int32_t _fdIn,bool firstTime)
 
 void ReadoutProcessor::init()
 {
-   for(std::map<std::pair<int,int>,std::pair<int,int>>::iterator it=Windows.begin();it!=Windows.end();++it)
-   {
-      if(std::stoi(_nbrRun)>=it->first.first&&std::stoi(_nbrRun)<=it->first.second)
-      {
-        _windowslow=it->second.first;
-        _windowshigh=it->second.second;
-        std::cout<<yellow<<"Time Windows for run "<<_nbrRun<<" {"<<it->second.first<<";"<<it->second.second<<"}"<<normal<<std::endl;
-        break;
-      }
-   }
-   if(_windowslow==0&&_windowshigh==0)
-   {
-    std::cout<<red<<"Error in time window I will use the standard one"<<normal<<std::endl;
-    _windowslow=-900;
-    _windowshigh=-861;
-   }
    for(unsigned int i=0;i!=3;++i) _ugly[i].reserve(500);
   _myfile.open("Results_Effi.txt",std::ios::out|std::ios::app);
   _myfilestreamer.open("Results_Streamer.txt",std::ios::out|std::ios::app);
@@ -650,10 +625,6 @@ void ReadoutProcessor::processMezzanineFirst(TdcChannel* begin,TdcChannel* end)
 	  _tmt0global->Fill(it->getTimeFromTrigger());
 	  _tmt0[it->chamber()]->Fill(it->getTimeFromTrigger());
 	}
-  /*if (int(end-begin)>1) //at least one hit more than the trigger
-  {
-    TdcChannel* endTrigWindow=std::remove_if(begin,end,TdcOutofTriggerTimePredicate(trigger.tdcTime(),_windowslow,_windowshigh));
-  }*/
 }
 	
 void ReadoutProcessor::finishFirst()
@@ -679,7 +650,10 @@ void ReadoutProcessor::finishFirst()
     }
     means[oo->first]=gauss->GetParameter(1);
     sigmas[oo->first]=gauss->GetParameter(2);
+    _windowslow=gauss->GetParameter(1)-NbrOfSigmas*gauss->GetParameter(2);
+    _windowshigh=gauss->GetParameter(1)+NbrOfSigmas*gauss->GetParameter(2);
     std::cout<<blue<<"Parameter chamber"<<oo->first<<" : Mean:"<<gauss->GetParameter(1)<<" Sigma:"<<gauss->GetParameter(2)<<normal<<std::endl;
+    std::cout<<yellow<<"Time Windows for run "<<_nbrRun<<" {"<<_windowslow<<";"<<_windowshigh<<"}"<<normal<<std::endl;
     delete gauss;
     //delete fit1;
   }
@@ -775,17 +749,14 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
     {
       for(std::map<int,std::pair<int,double>>::iterator op=tt->second.begin();op!=tt->second.end();++op)
       {
-        std::cout<<red<<(op->second).first<<"  "<<(op->second).second<<normal<<std::endl;
         _DistributionHitCloseTrigger[(op->second).first]->Fill((op->second).second);
       }
     }
-    //TdcChannel* endTrigWindow=std::remove_if(begin,end,TdcOutofTriggerTimePredicate(trigger.tdcTime(),-625,-575));
     if (endTrigWindow!=begin) {to_add=1; _tdc_counters.YouHaveAHit(trigger.bcid(),valeur);}
     for (TdcChannel* it=begin; it !=endTrigWindow; ++it)
 	  {
 	    if (it->channel()==triggerChannel) continue;
 	    _chamberEfficiency.setHitSeen((unsigned int)it->mezzanine());
-	    //std::cout<<std::setprecision (std::numeric_limits<double>::digits10+1)<<it->tdcTime()-trigger->tdcTime()<<std::endl;
       mul[it->side()][it->chamber()]++;
       mulchamber[it->chamber()]++;
 	    _ugly[it->side()].push_back(it);

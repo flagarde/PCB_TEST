@@ -101,6 +101,7 @@ private:
   std::map<int,TH1F*> _NbrClusterNoiseBothSide;
   std::map<int,TH1F*> _MultiClusterNoiseBothSide;
   std::array<std::vector<TdcChannel*>,3> _ugly;
+  std::map<int,TdcChannel*> _OnlyOne;
   std::array<std::map<int,std::pair<int,int>>,2> StreamerProba;
   std::map<int,std::pair<int,int>> StreamerProbaBothSide;
   std::ofstream _myfile;

@@ -15,37 +15,11 @@ static double const longueur=100;
 static int const nbrTotalHitsMax=1000;
 static int const  area=50*0.4*16;//50cmlong*0.4width*16strips
 static int const NbrStreamer=7;
-static std::map<std::pair<int,int>,std::pair<int,int>>Windows
-{
-{{0,735976},{-900,-861}},
-{{735977,735985},{-623,-601}},
-{{735986,736007},{-900,-861}},
-{{736007,736027},{-920,-890}},
-{{736028,736032},{-635,-610}},
-{{736033,736033},{-730,-710}},
-{{736034,736087},{-635,-610}},
-{{736088,736088},{-690,-660}},
-{{736089,736089},{-805,-770}},
-{{736090,736094},{-635,-610}},
-{{736095,736095},{-750,-680}},
-{{736096,736096},{-635,-610}},
-{{736097,736097},{-730,-680}},
-{{736098,736098},{-635,-610}},
-{{736099,736099},{-760,-680}},
-{{736100,736100},{-635,-610}},
-{{736101,736101},{-760,-680}},
-{{736102,736102},{-635,-610}},
-{{736103,736103},{-760,-680}},
-{{736104,736104},{-635,-610}},
-{{736105,736105},{-760,-680}},
-{{736106,736106},{-635,-610}},
-{{736107,736107},{-760,-680}},
-{{736108,736185},{-635,-610}},
-};
 static uint64_t FourSecondsInClockTicks=20000000;
 static uint64_t TenSecondsInClockTicks=50000000;
 static std::map<int,std::map<int,std::pair<int,double>>> _MinTimeFromTriggerInEvent;
 static std::map<int,double>means;
 static std::map<int,double>sigmas;
 static int NeighbourTimeDistance=2; //ns
+static double NbrOfSigmas=1.5;
 #endif
