@@ -17,7 +17,7 @@ std::set<double> findPeaks(TH1* obj)
   std::set<double> xs;
   TSpectrum *s = new TSpectrum(20);
   Int_t nfound = s->Search(obj,3,"",0.05);
-  Double_t *xpeaks = s->GetPositionX();
+  Float_t *xpeaks = s->GetPositionX();
   for(int p=0;p<nfound;p++) 
   {
     xs.insert(xpeaks[p]);
