@@ -11,13 +11,18 @@
 #include <fstream>
 #include "TSpectrum.h"
 
+
 //estimate linear background using a fitting method
 std::set<double> findPeaks(TH1* obj)
 {
   std::set<double> xs;
   TSpectrum *s = new TSpectrum(20);
   Int_t nfound = s->Search(obj,3,"",0.05);
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,0,0)
+  Double_t *xpeaks = s->GetPositionX();
+#else
   Float_t *xpeaks = s->GetPositionX();
+#endif
   for(int p=0;p<nfound;p++) 
   {
     xs.insert(xpeaks[p]);
