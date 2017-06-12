@@ -11,7 +11,7 @@ static std::map<int,int>IPtoChamber{{15,1},{14,1},{13,2},{12,2}};
 static std::multimap<int,int>ChambertoIP{{1,15},{1,14},{2,13},{2,12}};
 static unsigned int const triggerChannel=16;
 static double const vitesse=2.0/3*29.979245800; //2/3 de la vitesse de la lumiere
-static double const longueur=100;
+static double const longueur=137;
 static int const nbrTotalHitsMax=1000;
 static int const  area=50*0.4*16;//50cmlong*0.4width*16strips
 static int const NbrStreamer=7;
@@ -21,5 +21,6 @@ static std::map<int,std::map<int,std::pair<int,double>>> _MinTimeFromTriggerInEv
 static std::map<int,double>means;
 static std::map<int,double>sigmas;
 static int NeighbourTimeDistance=2; //ns
+static int incertitude=4; //ns
 static double NbrOfSigmas=1.5;
 #endif

@@ -221,6 +221,11 @@ void ReadoutProcessor::finish()
   _dataTree->Write();
   _noiseTree->Write();
   _folder->cd();
+  for(std::map<int,TH1F*>::iterator it=_T1mT2ChOneHit.begin();it!=_T1mT2ChOneHit.end();++it)
+  {
+    it->second->Write();
+    delete it->second;
+  }
   for(std::map<int,TH1F*>::iterator it=_DistributionHitCloseTrigger.begin();it!=_DistributionHitCloseTrigger.end();++it)
   {
     it->second->Write();
@@ -704,6 +709,7 @@ void ReadoutProcessor::finishFirst()
 void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 {
   for(unsigned int i=0;i!=3;++i)_ugly[i].clear();
+  _OnlyOne.clear();
   _data.Reset();
   int trigCount=std::count_if(begin,end,isTrigger);
   if (trigCount != 1) return;
@@ -759,6 +765,8 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 	    _chamberEfficiency.setHitSeen((unsigned int)it->mezzanine());
       mul[it->side()][it->chamber()]++;
       mulchamber[it->chamber()]++;
+      if(_OnlyOne.find(it->side()*10000+it->strip())==_OnlyOne.end()) _OnlyOne[it->side()*10000+it->strip()]=it;
+      else if(_OnlyOne[it->side()*10000+it->strip()]->getTimeFromTrigger()>it->getTimeFromTrigger()) _OnlyOne[it->side()*10000+it->strip()]=it;
 	    _ugly[it->side()].push_back(it);
 	    _ugly[2].push_back(it);
 	  }
@@ -787,13 +795,15 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 		      if(_T1mT2Ch.find(it->strip())==_T1mT2Ch.end())
 		      {
 		        _T1mT2Ch[it->strip()]=new TH1F(("T1-T2_"+std::to_string(it->strip())).c_str(),("T1-T2_"+std::to_string(it->strip())).c_str(),10000,-500,500);
+		        _T1mT2ChOneHit[it->strip()]=new TH1F(("T1-T2_onehit_"+std::to_string(it->strip())).c_str(),("T1-T2_onehit_"+std::to_string(it->strip())).c_str(),200,-20,20);
 		      }
 		      double diff=it->getTimeFromTrigger()-itt->getTimeFromTrigger();
+		      double sum=std::fabs(it->getTimeFromTrigger())+std::fabs(itt->getTimeFromTrigger())+means[it->chamber()]+means[itt->chamber()];
 		      if((it->side()+1)==itt->side())
 		      {
 		        _T1mT2[it->chamber()]->Fill(it->strip()%100,diff);
 		        _Position[it->chamber()]->Fill(it->strip()%100,(diff*vitesse+longueur)/2);
-		        _Longueur[it->chamber()]->Fill(it->strip()%100,(it->getTimeFromTrigger()+itt->getTimeFromTrigger()));
+		        _Longueur[it->chamber()]->Fill(it->strip()%100,sum*vitesse);
 		        _T1mT2Ch[it->strip()]->Fill(diff);
 		        _T1mT2Chamber[it->chamber()]->Fill(diff);
 		      } 
@@ -803,11 +813,27 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 		        _T1mT2Ch[it->strip()]->Fill(-diff);
 		        _T1mT2Chamber[it->strip()/100]->Fill(-diff);
 		        _Position[it->chamber()]->Fill(it->strip()%100,float((-diff*vitesse+longueur)/2));
-		        _Longueur[it->chamber()]->Fill(it->strip()%100,float(((itt->getTimeFromTrigger()+it->getTimeFromTrigger()))));
+		        _Longueur[it->chamber()]->Fill(it->strip()%100,sum*vitesse);
 		      }
 		    }
 	    }
 	  }
+  }
+  for(std::map<int,TdcChannel*>::iterator tt=_OnlyOne.begin();tt!=_OnlyOne.end();++tt)
+  {
+    for(std::map<int,TdcChannel*>::iterator ttt=tt;ttt!=_OnlyOne.end();++ttt)
+    {
+      double diff=tt->second->getTimeFromTrigger()-ttt->second->getTimeFromTrigger();
+      double sum=std::fabs(tt->second->getTimeFromTrigger())+std::fabs(ttt->second->getTimeFromTrigger())+means[tt->second->chamber()]+means[ttt->second->chamber()];
+      if(tt->second->strip()==ttt->second->strip()&&tt->second->side()+1==ttt->second->side())
+      {
+        /*if(sum*vitesse>(longueur-incertitude*vitesse)&&sum*vitesse<(longueur+incertitude*vitesse))*/_T1mT2ChOneHit[tt->second->strip()]->Fill(diff);
+      }
+      else if (tt->second->strip()==ttt->second->strip()&&tt->second->side()==ttt->second->side()+1)
+      {
+        /*if(sum*vitesse>(longueur-incertitude*vitesse)&&sum*vitesse<(longueur+incertitude*vitesse))*/_T1mT2ChOneHit[tt->second->strip()]->Fill(-diff);
+      }
+    }
   }
   for(std::map<int,std::map<int,int>>::iterator it=mul.begin();it!=mul.end();++it)
   {
