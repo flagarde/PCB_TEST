@@ -723,8 +723,8 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   unsigned int valeur[2]={(unsigned int)trigger.chamber(),(unsigned int)trigger.mezzanine()};
   _tdc_counters.YouAreConcernedByATrigger(trigger.bcid(),valeur);
   _chamberEfficiency.setTriggerSeen((unsigned int)trigger.mezzanine());
-  std::map<int,std::map<int,int>> _mul;
-  std::map<int,int> _mulchamber;
+  _mul.clear();
+  _mulchamber.clear();
   for (TdcChannel* it=begin; it !=end; ++it)
 	{
 	  if(it->channel()==triggerChannel) continue;

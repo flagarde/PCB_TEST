@@ -102,6 +102,10 @@ private:
   std::map<int,TH1F*> _NbrClusterNoiseBothSide;
   std::map<int,TH1F*> _MultiClusterNoiseBothSide;
   std::array<std::vector<TdcChannel*>,3> _ugly;
+  std::map<int,std::map<int,int>> _mul;
+  std::map<int,int> _mulchamber;
+
+  
   std::map<int,TdcChannel*> _OnlyOne;
   std::array<std::map<int,std::pair<int,int>>,2> StreamerProba;
   std::map<int,std::pair<int,int>> StreamerProbaBothSide;
@@ -114,7 +118,6 @@ private:
   std::set<std::pair<uint16_t,double>> _BCIDwithTrigger;
   std::map<int,std::vector<uint16_t> > _BCIDwithTriggerPerMezzanine;
   std::map<int,std::vector<TdcChannel>> _BCIDwithTriggerPerChamber;
-
   void fillTriggerBCIDInfo(TdcChannelBuffer &tdcBuf);
   void removeDataForChamberWithMoreThanOneTrigger(TdcChannelBuffer &tdcBuf);
   void removeDataForMezzanineWithMoreThanOneTrigger(TdcChannelBuffer &tdcBuf);
