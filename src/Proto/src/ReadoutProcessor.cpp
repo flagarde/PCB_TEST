@@ -541,6 +541,8 @@ void ReadoutProcessor::processTrigger(TdcChannel* begin,TdcChannel* end,bool fir
     _chamberEfficiency.startEvent();
   }
   for(unsigned int i=0;i!=3;++i)_ugly[i].clear(); //reset _ugly array for clusterization
+  _mul.clear();
+  _mulchamber.clear();
   for(std::map<int,int>::iterator it=IPtoChamber.begin();it!=IPtoChamber.end();++it)
   {
     mezzEnd=std::partition(mezzStart,end,TdcMezzaninePredicate(it->first));
@@ -549,6 +551,7 @@ void ReadoutProcessor::processTrigger(TdcChannel* begin,TdcChannel* end,bool fir
 	  mezzStart=mezzEnd;
   }
   doClusterize();
+  fillHitMultiplicity();
   //if (nullptr != mezzEnd && end != mezzEnd) std::cout << "WARNING WARNING mess here" << std::endl;
   if(firstTime==false)
   {
@@ -723,8 +726,6 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   unsigned int valeur[2]={(unsigned int)trigger.chamber(),(unsigned int)trigger.mezzanine()};
   _tdc_counters.YouAreConcernedByATrigger(trigger.bcid(),valeur);
   _chamberEfficiency.setTriggerSeen((unsigned int)trigger.mezzanine());
-  _mul.clear();
-  _mulchamber.clear();
   for (TdcChannel* it=begin; it !=end; ++it)
 	{
 	  if(it->channel()==triggerChannel) continue;
@@ -841,7 +842,6 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
       }
     }
   }
-  fillHitMultiplicity();
   _data.OneEvent();
   _dataTree->Fill();
   ///
