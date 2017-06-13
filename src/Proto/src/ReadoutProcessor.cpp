@@ -723,8 +723,8 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   unsigned int valeur[2]={(unsigned int)trigger.chamber(),(unsigned int)trigger.mezzanine()};
   _tdc_counters.YouAreConcernedByATrigger(trigger.bcid(),valeur);
   _chamberEfficiency.setTriggerSeen((unsigned int)trigger.mezzanine());
-  std::map<int,std::map<int,int>> mul;
-  std::map<int,int> mulchamber;
+  std::map<int,std::map<int,int>> _mul;
+  std::map<int,int> _mulchamber;
   for (TdcChannel* it=begin; it !=end; ++it)
 	{
 	  if(it->channel()==triggerChannel) continue;
@@ -769,8 +769,8 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 	  {
 	    if (it->channel()==triggerChannel) continue;
 	    _chamberEfficiency.setHitSeen((unsigned int)it->mezzanine());
-      mul[it->side()][it->chamber()]++;
-      mulchamber[it->chamber()]++;
+      _mul[it->side()][it->chamber()]++;
+      _mulchamber[it->chamber()]++;
       if(_OnlyOne.find(it->side()*10000+it->strip())==_OnlyOne.end()) _OnlyOne[it->side()*10000+it->strip()]=it;
       else if(_OnlyOne[it->side()*10000+it->strip()]->getTimeFromTrigger()>it->getTimeFromTrigger()) _OnlyOne[it->side()*10000+it->strip()]=it;
 	    _ugly[it->side()].push_back(it);
@@ -841,7 +841,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
       }
     }
   }
-  for(std::map<int,std::map<int,int>>::iterator it=mul.begin();it!=mul.end();++it)
+  for(std::map<int,std::map<int,int>>::iterator it=_mul.begin();it!=_mul.end();++it)
   {
     for(std::map<int,int>::iterator itt=it->second.begin();itt!=it->second.end();++itt)
     {
@@ -854,7 +854,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
       if(it->first==1)_MultiplicitySide1[itt->first]->Fill(itt->second);
     }
   }
-  for(std::map<int,int>::iterator it=mulchamber.begin();it!=mulchamber.end();++it)
+  for(std::map<int,int>::iterator it=_mulchamber.begin();it!=_mulchamber.end();++it)
   {
     if(it->second>=2*NbrStreamer)
     {
