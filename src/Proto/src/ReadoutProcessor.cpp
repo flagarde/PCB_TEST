@@ -862,8 +862,17 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
     StreamerProbaBothSide[it->first].second++;
     _MultiplicityBothSide[it->first]->Fill(it->second);
   }
+  doClusterize();
+  _data.OneEvent();
+  _dataTree->Fill();
+  ///
+  _counters.add(to_add,valeur);
+}
+
+void ReadoutProcessor::doClusterize()
+{
   for(unsigned int i=0;i!=3;++i)
-  {
+    {
     RawHit_standard_merge_predicate Side(triggerChannel);
     Side.setNeighbourTimeDistance(NeighbourTimeDistance);
     Side.setNeighbourStripDistance(1);
@@ -890,8 +899,4 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
       else if(i==2)_NbrClusterBothSide[it->first]->Fill(it->second);
     }
   }
-  _data.OneEvent();
-  _dataTree->Fill();
-  ///
-  _counters.add(to_add,valeur);
 }

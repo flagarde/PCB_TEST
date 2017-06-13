@@ -118,5 +118,6 @@ private:
   void fillTriggerBCIDInfo(TdcChannelBuffer &tdcBuf);
   void removeDataForChamberWithMoreThanOneTrigger(TdcChannelBuffer &tdcBuf);
   void removeDataForMezzanineWithMoreThanOneTrigger(TdcChannelBuffer &tdcBuf);
+  void doClusterize();
 };
 #endif 
