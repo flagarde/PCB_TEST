@@ -181,9 +181,9 @@ void ReadoutProcessor::init()
       _MultiplicitySide0[it->second]=new TH1F(("Hit_Multiplicity_Side0_"+std::to_string(it->second)).c_str(),("Hit_Multiplicity_Side0_"+std::to_string(it->second)).c_str(),60,0,60);
       _MultiplicitySide1[it->second]=new TH1F(("Hit_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),("Hit_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),60,0,60);
       _MultiplicityBothSide[it->second]=new TH1F(("Hit_Multiplicity_BothSide_"+std::to_string(it->second)).c_str(),("Hit_Multiplicity_BothSide_"+std::to_string(it->second)).c_str(),60,0,60);
-      _NbrClusterSide0[it->second]=new TH1F(("Number_of_Cluster_Side0_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Side0_"+std::to_string(it->second)).c_str(),100,0,10);
+      _NbrClusterSide0[it->second]=new TH1F(("Number_of_Cluster_Side0_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Side0_"+std::to_string(it->second)).c_str(),10,0,10);
       _MultiClusterSide0[it->second]=new TH1F(("Cluster_Multiplicity_Side0_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Side0_"+std::to_string(it->second)).c_str(),60,0,60);
-      _NbrClusterSide1[it->second]=new TH1F(("Number_of_Cluster_Side1_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Side1_"+std::to_string(it->second)).c_str(),100,0,100);
+      _NbrClusterSide1[it->second]=new TH1F(("Number_of_Cluster_Side1_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Side1_"+std::to_string(it->second)).c_str(),10,0,10);
       _MultiClusterSide1[it->second]=new TH1F(("Cluster_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),60,0,60);
       _NbrClusterBothSide[it->second]=new TH1F(("Number_of_Cluster_Both_Side_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Both_Side_"+std::to_string(it->second)).c_str(),100,0,100);
       _MultiClusterBothSide[it->second]=new TH1F(("Cluster_Multiplicity_Both_Side_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Both_Side_"+std::to_string(it->second)).c_str(),60,0,60);
