@@ -540,6 +540,7 @@ void ReadoutProcessor::processTrigger(TdcChannel* begin,TdcChannel* end,bool fir
     _tdc_counters.NewEvent();
     _chamberEfficiency.startEvent();
   }
+  for(unsigned int i=0;i!=3;++i)_ugly[i].clear(); //reset _ugly array for clusterization
   for(std::map<int,int>::iterator it=IPtoChamber.begin();it!=IPtoChamber.end();++it)
   {
     mezzEnd=std::partition(mezzStart,end,TdcMezzaninePredicate(it->first));
@@ -547,6 +548,7 @@ void ReadoutProcessor::processTrigger(TdcChannel* begin,TdcChannel* end,bool fir
 	  else processMezzanine(mezzStart,mezzEnd);
 	  mezzStart=mezzEnd;
   }
+  doClusterize();
   //if (nullptr != mezzEnd && end != mezzEnd) std::cout << "WARNING WARNING mess here" << std::endl;
   if(firstTime==false)
   {
@@ -713,7 +715,6 @@ void ReadoutProcessor::finishFirst()
 
 void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 {
-  for(unsigned int i=0;i!=3;++i)_ugly[i].clear();
   _OnlyOne.clear();
   _data.Reset();
   int trigCount=std::count_if(begin,end,isTrigger);
@@ -862,7 +863,6 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
     StreamerProbaBothSide[it->first].second++;
     _MultiplicityBothSide[it->first]->Fill(it->second);
   }
-  doClusterize();
   _data.OneEvent();
   _dataTree->Fill();
   ///
