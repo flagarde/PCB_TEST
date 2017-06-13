@@ -841,6 +841,15 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
       }
     }
   }
+  fillHitMultiplicity();
+  _data.OneEvent();
+  _dataTree->Fill();
+  ///
+  _counters.add(to_add,valeur);
+}
+
+void ReadoutProcessor::fillHitMultiplicity()
+{
   for(std::map<int,std::map<int,int>>::iterator it=_mul.begin();it!=_mul.end();++it)
   {
     for(std::map<int,int>::iterator itt=it->second.begin();itt!=it->second.end();++itt)
@@ -863,10 +872,6 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
     StreamerProbaBothSide[it->first].second++;
     _MultiplicityBothSide[it->first]->Fill(it->second);
   }
-  _data.OneEvent();
-  _dataTree->Fill();
-  ///
-  _counters.add(to_add,valeur);
 }
 
 void ReadoutProcessor::doClusterize()

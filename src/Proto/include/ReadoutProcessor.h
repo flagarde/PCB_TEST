@@ -122,5 +122,6 @@ private:
   void removeDataForChamberWithMoreThanOneTrigger(TdcChannelBuffer &tdcBuf);
   void removeDataForMezzanineWithMoreThanOneTrigger(TdcChannelBuffer &tdcBuf);
   void doClusterize();
+  void fillHitMultiplicity();
 };
 #endif 
