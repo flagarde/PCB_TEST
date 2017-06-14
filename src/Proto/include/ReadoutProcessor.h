@@ -101,6 +101,7 @@ private:
   std::map<int,TH1F*> _MultiClusterNoiseSide1;
   std::map<int,TH1F*> _NbrClusterNoiseBothSide;
   std::map<int,TH1F*> _MultiClusterNoiseBothSide;
+  TH1F* _clusterTimeAnalysisCut;
   std::array<std::vector<TdcChannel*>,3> _ugly;
   std::map<int,std::map<int,int>> _mul;
   std::map<int,int> _mulchamber;

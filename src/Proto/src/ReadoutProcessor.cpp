@@ -196,6 +196,7 @@ void ReadoutProcessor::init()
       _MultiClusterNoiseBothSide[it->second]=new TH1F(("Cluster_Noise_Multiplicity_Both_Side_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Both_Side_"+std::to_string(it->second)).c_str(),60,0,60);
     }
   }
+  _clusterTimeAnalysisCut=new TH1F("clusterTimeAnalysisCut","Number of clusters kept",15,0,15);
   // could try to do something complicated with ChambertoIP or IPtoChamber but keep it simple but not portable for now
   _chamberEfficiency.addChamber(14,15);
   _chamberEfficiency.addChamber(12,13);
@@ -323,6 +324,7 @@ void ReadoutProcessor::finish()
     it->second->Write();
     delete it->second;
   }
+  _clusterTimeAnalysisCut->Write();
   //NOISE
   _folder->mkdir("Clusters_Noise");
   _folder->cd("Clusters_Noise");
@@ -909,4 +911,12 @@ void ReadoutProcessor::doClusterize()
 
 void ReadoutProcessor::doTimeAnalyzeClusters(std::vector<std::vector<TdcChannel*>::iterator> &clusterBounds)
 {
+  for(unsigned int j=0;j!=clusterBounds.size()-1;++j)
+    {
+      _clusterTimeAnalysisCut->Fill(0.5);
+      unsigned int clusterSize=std::distance(clusterBounds[j],clusterBounds[j+1]);
+      if (clusterSize<2) continue;
+      _clusterTimeAnalysisCut->Fill(1.5);
+      std::cout << " cluster size = " << clusterSize << std::endl;
+    }
 }
