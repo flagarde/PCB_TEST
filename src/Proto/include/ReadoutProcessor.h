@@ -104,6 +104,9 @@ private:
   std::map<int,TH1F*> _NumberOfStripsForT1mT0inCluster;
   std::map<int,TH1F*> _NumberOfStripsForT2mT0inCluster;
   std::map<int,TH1F*> _NumberOfStripsForT1mT2inCluster;
+  std::map<int,TH1F*> _MeanT1mimusMeanT2inCluster;
+  std::map<int,TH1F*> _MeanT1mimusT2inCluster;
+  std::map<int,TH1F*> _MeanT1mimusT2inCluster3StripMin;
   TH1F* _clusterTimeAnalysisCut;
   std::array<std::vector<TdcChannel*>,3> _ugly;
   std::map<int,std::map<int,int>> _mul;

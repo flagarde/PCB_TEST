@@ -194,9 +194,13 @@ void ReadoutProcessor::init()
       _MultiClusterNoiseSide1[it->second]=new TH1F(("Cluster_Noise_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),60,0,60);
       _NbrClusterNoiseBothSide[it->second]=new TH1F(("Number_of_Noise_Cluster_Both_Side_"+std::to_string(it->second)).c_str(),("Number_of_Cluster_Both_Side_"+std::to_string(it->second)).c_str(),100,0,100);
       _MultiClusterNoiseBothSide[it->second]=new TH1F(("Cluster_Noise_Multiplicity_Both_Side_"+std::to_string(it->second)).c_str(),("Cluster_Multiplicity_Both_Side_"+std::to_string(it->second)).c_str(),60,0,60);
+      //Cluster timing analysis 
       _NumberOfStripsForT1mT0inCluster[it->second]=new TH1F(("NumberOfStripsForT1mT0inCluster_"+std::to_string(it->second)).c_str(),("Number of strips usable to compute mean of T1-T0 in clusters for chamber "+std::to_string(it->second)).c_str(),32,0,32);
       _NumberOfStripsForT2mT0inCluster[it->second]=new TH1F(("NumberOfStripsForT2mT0inCluster_"+std::to_string(it->second)).c_str(),("Number of strips usable to compute mean of T2-T0 in clusters for chamber "+std::to_string(it->second)).c_str(),32,0,32);
       _NumberOfStripsForT1mT2inCluster[it->second]=new TH1F(("NumberOfStripsForT1mT2inCluster_"+std::to_string(it->second)).c_str(),("Number of strips usable to compute mean of T1-T2 in clusters for chamber "+std::to_string(it->second)).c_str(),32,0,32);
+      _MeanT1mimusMeanT2inCluster[it->second]=new TH1F(("MeanT1mimusMeanT2inCluster_"+std::to_string(it->second)).c_str(),("Mean(T1-T0) minus Mean(T2-T0) in clusters for chamber "+std::to_string(it->second)).c_str(),1000,-50,50);
+      _MeanT1mimusT2inCluster[it->second]=new TH1F(("MeanT1mimusT2inCluster_"+std::to_string(it->second)).c_str(),("Mean(T1-T2) in clusters for chamber "+std::to_string(it->second)).c_str(),1000,-50,50);
+      _MeanT1mimusT2inCluster3StripMin[it->second]=new TH1F(("MeanT1mimusT2inCluster3StripMin_"+std::to_string(it->second)).c_str(),("Mean(T1-T2) in clusters with at least 3 strips for chamber "+std::to_string(it->second)).c_str(),1000,-50,50);
     }
   }
   _clusterTimeAnalysisCut=new TH1F("clusterTimeAnalysisCut","Number of clusters kept",15,0,15);
@@ -331,6 +335,9 @@ void ReadoutProcessor::finish()
   for(std::map<int,TH1F*>::iterator it=_NumberOfStripsForT1mT0inCluster.begin();it!=_NumberOfStripsForT1mT0inCluster.end();++it) {it->second->Write();delete it->second;}
   for(std::map<int,TH1F*>::iterator it=_NumberOfStripsForT2mT0inCluster.begin();it!=_NumberOfStripsForT2mT0inCluster.end();++it) {it->second->Write();delete it->second;}
   for(std::map<int,TH1F*>::iterator it=_NumberOfStripsForT1mT2inCluster.begin();it!=_NumberOfStripsForT1mT2inCluster.end();++it) {it->second->Write();delete it->second;}
+  for(std::map<int,TH1F*>::iterator it=_MeanT1mimusMeanT2inCluster.begin();it!=_MeanT1mimusMeanT2inCluster.end();++it) {it->second->Write();delete it->second;}
+  for(std::map<int,TH1F*>::iterator it=_MeanT1mimusT2inCluster.begin();it!=_MeanT1mimusT2inCluster.end();++it) {it->second->Write();delete it->second;}
+  for(std::map<int,TH1F*>::iterator it=_MeanT1mimusT2inCluster3StripMin.begin();it!=_MeanT1mimusT2inCluster3StripMin.end();++it) {it->second->Write();delete it->second;}
   //NOISE
   _folder->mkdir("Clusters_Noise");
   _folder->cd("Clusters_Noise");
@@ -950,11 +957,14 @@ void ReadoutProcessor::doTimeAnalyzeClusters(std::vector<std::vector<TdcChannel*
       _clusterTimeAnalysisCut->Fill(3.5);
       _NumberOfStripsForT1mT0inCluster[(**(clusterBounds[j])).chamber()]->Fill(T1mT0accumulate.first);
       _NumberOfStripsForT2mT0inCluster[(**(clusterBounds[j])).chamber()]->Fill(T2mT0accumulate.first);
+      _MeanT1mimusMeanT2inCluster[(**(clusterBounds[j])).chamber()]->Fill(T1mT0accumulate.second/T1mT0accumulate.first-T2mT0accumulate.second/T2mT0accumulate.first);
       std::cout << "cluster T1 stat = " << T1mT0accumulate.second << "/" << T1mT0accumulate.first << std::endl;
       std::cout << "cluster T2 stat = " << T2mT0accumulate.second << "/" << T2mT0accumulate.first << std::endl;
       if (T1mT2accumulate.first==0) continue;
       _clusterTimeAnalysisCut->Fill(4.5);
-      _NumberOfStripsForT1mT2inCluster[(**(clusterBounds[j])).chamber()]->Fill(T1mT2accumulate.first);	    
+      _NumberOfStripsForT1mT2inCluster[(**(clusterBounds[j])).chamber()]->Fill(T1mT2accumulate.first);
+      _MeanT1mimusT2inCluster[(**(clusterBounds[j])).chamber()]->Fill(T1mT2accumulate.second/T1mT2accumulate.first);
+      if (T1mT2accumulate.first>2) _MeanT1mimusT2inCluster3StripMin[(**(clusterBounds[j])).chamber()]->Fill(T1mT2accumulate.second/T1mT2accumulate.first);
       std::cout << "cluster T1-T2 stat = " << T1mT2accumulate.second << "/" << T1mT2accumulate.first << std::endl;
     }
 }
