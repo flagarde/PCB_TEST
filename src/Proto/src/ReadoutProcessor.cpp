@@ -917,6 +917,17 @@ void ReadoutProcessor::doTimeAnalyzeClusters(std::vector<std::vector<TdcChannel*
       unsigned int clusterSize=std::distance(clusterBounds[j],clusterBounds[j+1]);
       if (clusterSize<2) continue;
       _clusterTimeAnalysisCut->Fill(1.5);
-      std::cout << " cluster size = " << clusterSize << std::endl;
+      typedef int stripNumber;
+      typedef int stripSide;
+      std::map<stripNumber,std::map<stripSide,std::vector<double> > > timeInfo;
+      bool timeInfoIsDirty=false;
+      for (std::vector<TdcChannel*>::iterator ithit=clusterBounds[j]; ithit!=clusterBounds[j+1]; ++ithit)
+	{
+	  timeInfo[(**ithit).strip()][(**ithit).side()].push_back((**ithit).getTimeFromTrigger());
+	  if (timeInfo[(**ithit).strip()][(**ithit).side()].size()>1) {timeInfoIsDirty=true; break;}
+	  //std::cout << " " << **ithit;
+	}
+      if (timeInfoIsDirty) continue;
+      _clusterTimeAnalysisCut->Fill(2.5);
     }
 }
