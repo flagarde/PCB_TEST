@@ -903,5 +903,10 @@ void ReadoutProcessor::doClusterize()
       else if(i==1)_NbrClusterSide1[it->first]->Fill(it->second);
       else if(i==2)_NbrClusterBothSide[it->first]->Fill(it->second);
     }
+    if (i==2) doTimeAnalyzeClusters(clusters);
   }
+}
+
+void ReadoutProcessor::doTimeAnalyzeClusters(std::vector<std::vector<TdcChannel*>::iterator> &clusterBounds)
+{
 }

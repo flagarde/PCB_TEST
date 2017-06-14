@@ -122,6 +122,7 @@ private:
   void removeDataForChamberWithMoreThanOneTrigger(TdcChannelBuffer &tdcBuf);
   void removeDataForMezzanineWithMoreThanOneTrigger(TdcChannelBuffer &tdcBuf);
   void doClusterize();
+  void doTimeAnalyzeClusters(std::vector<std::vector<TdcChannel*>::iterator> &clusterBounds);
   void fillHitMultiplicity();
 };
 #endif 
