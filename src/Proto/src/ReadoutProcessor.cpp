@@ -929,21 +929,21 @@ void ReadoutProcessor::doTimeAnalyzeClusters(std::vector<std::vector<TdcChannel*
 	}
       if (timeInfoIsDirty) continue;
       _clusterTimeAnalysisCut->Fill(2.5);
-      std::pair<int,double> T1accumulate(0,0.0),T2accumulate(0,0.0),T1mT2accumulate(0,0.0);
+      std::pair<int,double> T1mT0accumulate(0,0.0),T2mT0accumulate(0,0.0),T1mT2accumulate(0,0.0);
       for (auto itStrip=timeInfo.begin(); itStrip!=timeInfo.end(); ++itStrip)
 	{
 	  if (itStrip->second.size()==2)
 	    {++T1mT2accumulate.first; T1mT2accumulate.second+=(itStrip->second[0][0]-itStrip->second[1][0]);}
 	  for (auto itSide=itStrip->second.begin(); itSide!=itStrip->second.end(); ++itSide)
 	    {
-	      if (itSide->first==0) {++T1accumulate.first; T1accumulate.second+=itSide->second[0];}
-	      if (itSide->first==1) {++T2accumulate.first; T2accumulate.second+=itSide->second[0];}
+	      if (itSide->first==0) {++T1mT0accumulate.first; T1mT0accumulate.second+=itSide->second[0];}
+	      if (itSide->first==1) {++T2mT0accumulate.first; T2mT0accumulate.second+=itSide->second[0];}
 	    }
 	}
-      if (T1accumulate.first==0 or T2accumulate.first==0) continue;
+      if (T1mT0accumulate.first==0 or T2mT0accumulate.first==0) continue;
       _clusterTimeAnalysisCut->Fill(3.5);
-      std::cout << "cluster T1 stat = " << T1accumulate.second << "/" << T1accumulate.first << std::endl;
-      std::cout << "cluster T2 stat = " << T2accumulate.second << "/" << T2accumulate.first << std::endl;
+      std::cout << "cluster T1 stat = " << T1mT0accumulate.second << "/" << T1mT0accumulate.first << std::endl;
+      std::cout << "cluster T2 stat = " << T2mT0accumulate.second << "/" << T2mT0accumulate.first << std::endl;
       if (T1mT2accumulate.first==0) continue;
       _clusterTimeAnalysisCut->Fill(4.5);
       std::cout << "cluster T1-T2 stat = " << T1mT2accumulate.second << "/" << T1mT2accumulate.first << std::endl;
