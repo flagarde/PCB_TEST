@@ -958,13 +958,10 @@ void ReadoutProcessor::doTimeAnalyzeClusters(std::vector<std::vector<TdcChannel*
       _NumberOfStripsForT1mT0inCluster[(**(clusterBounds[j])).chamber()]->Fill(T1mT0accumulate.first);
       _NumberOfStripsForT2mT0inCluster[(**(clusterBounds[j])).chamber()]->Fill(T2mT0accumulate.first);
       _MeanT1mimusMeanT2inCluster[(**(clusterBounds[j])).chamber()]->Fill(T1mT0accumulate.second/T1mT0accumulate.first-T2mT0accumulate.second/T2mT0accumulate.first);
-      std::cout << "cluster T1 stat = " << T1mT0accumulate.second << "/" << T1mT0accumulate.first << std::endl;
-      std::cout << "cluster T2 stat = " << T2mT0accumulate.second << "/" << T2mT0accumulate.first << std::endl;
       if (T1mT2accumulate.first==0) continue;
       _clusterTimeAnalysisCut->Fill(4.5);
       _NumberOfStripsForT1mT2inCluster[(**(clusterBounds[j])).chamber()]->Fill(T1mT2accumulate.first);
       _MeanT1mimusT2inCluster[(**(clusterBounds[j])).chamber()]->Fill(T1mT2accumulate.second/T1mT2accumulate.first);
       if (T1mT2accumulate.first>2) _MeanT1mimusT2inCluster3StripMin[(**(clusterBounds[j])).chamber()]->Fill(T1mT2accumulate.second/T1mT2accumulate.first);
-      std::cout << "cluster T1-T2 stat = " << T1mT2accumulate.second << "/" << T1mT2accumulate.first << std::endl;
     }
 }
