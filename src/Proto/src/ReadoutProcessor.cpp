@@ -889,8 +889,29 @@ void ReadoutProcessor::fillHitMultiplicity()
   }
 }
 
+double TdcChannelClusterWrapper::meanStrip()
+{
+  int N=_cl.size();
+  if (0==N) return -999;
+  double S=0;
+  for (auto it=_cl.begin(); it!=_cl.end(); ++it) S+=(**it)->strip();
+  return S/N;
+}
+
+double TdcChannelClusterWrapper::meanTime()
+{
+  int N=_cl.size();
+  if (0==N) return -999;
+  double S=0;
+  for (auto it=_cl.begin(); it!=_cl.end(); ++it) S+=(**it)->getTimeFromTrigger();
+  return S/N;
+}
+
+
 void ReadoutProcessor::doClusterize()
 {
+  std::vector<Cluster<TdcChannel*> > clustersT1side;
+  std::vector<Cluster<TdcChannel*> > clustersT2side;
   for(unsigned int i=0;i!=3;++i)
     {
     RawHit_standard_merge_predicate Side(triggerChannel);
@@ -918,8 +939,45 @@ void ReadoutProcessor::doClusterize()
       else if(i==1)_NbrClusterSide1[it->first]->Fill(it->second);
       else if(i==2)_NbrClusterBothSide[it->first]->Fill(it->second);
     }
+    if (i==0) Convert(clusters,clustersT1side);
+    if (i==1) Convert(clusters,clustersT2side);
     if (i==2) doTimeAnalyzeClusters(clusters);
   }
+  std::map<unsigned int, std::vector<unsigned int> > T1indexStripConnectWithT2;
+  std::map<unsigned int, std::vector<unsigned int> > T2indexStripConnectWithT1;
+  for (unsigned int j=0; j<clustersT1side.size(); ++j)
+    {
+      TdcChannelClusterWrapper T1clus(clustersT1side[j]);
+      double meanStrip=T1clus.meanStrip();
+      for (unsigned k=0; k<clustersT2side.size(); ++k)
+	{
+	  TdcChannelClusterWrapper T2clus(clustersT2side[k]);
+	  if (abs(meanStrip-T2clus.meanStrip()) <=1 ) T1indexStripConnectWithT2[j].push_back(k);
+	}
+    }
+  for (unsigned int j=0; j<clustersT2side.size(); ++j)
+    {
+      TdcChannelClusterWrapper T2clus(clustersT2side[j]);
+      double meanStrip=T2clus.meanStrip();
+      for (unsigned k=0; k<clustersT1side.size(); ++k)
+	{
+	  TdcChannelClusterWrapper T1clus(clustersT1side[k]);
+	  if (abs(meanStrip-T1clus.meanStrip()) <=1 ) T2indexStripConnectWithT1[j].push_back(k);
+	}
+    }
+  for (std::map<unsigned int, std::vector<unsigned int> >::iterator it=T1indexStripConnectWithT2.begin(); it != T1indexStripConnectWithT2.end(); ++it)
+    if (it->second.size() >1)
+      {
+	TdcChannelClusterWrapper T1Clus(clustersT1side[it->first]);
+	std::cout << "WHAT SHOULD I DO ? cluster on T1 side (strip=" << T1Clus.meanStrip() << " time=" << T1Clus.meanTime()
+		  << ") is strip compatible with " << it->second.size() << " clusters on the T2 side :" << std::endl;
+	for (std::vector<unsigned int>::iterator itb=it->second.begin(); itb!=it->second.end(); ++itb)
+	  {
+	    TdcChannelClusterWrapper T2Clus(clustersT2side[*itb]);
+	    std::cout << "       ---- T2 cluster (strip=" << T2Clus.meanStrip() << " time=" << T2Clus.meanTime() << ")"<< std::endl;
+	  }
+      }
+
 }
 
 void ReadoutProcessor::doTimeAnalyzeClusters(std::vector<std::vector<TdcChannel*>::iterator> &clusterBounds)

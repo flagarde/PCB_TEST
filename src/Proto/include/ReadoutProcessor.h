@@ -12,6 +12,19 @@
 #include "TProfile.h"
 #include "TFile.h"
 #include <fstream>
+
+#include "Clustering.h"
+//helper class for time clustering studies
+class TdcChannelClusterWrapper 
+{
+ public:
+ TdcChannelClusterWrapper(Cluster<TdcChannel*>& cl) : _cl(cl) {}
+  double meanStrip();
+  double meanTime();
+ private:
+  Cluster<TdcChannel*>& _cl;
+};
+
 class ReadoutProcessor
 {
 public:
