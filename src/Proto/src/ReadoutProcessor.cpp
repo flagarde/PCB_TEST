@@ -992,6 +992,18 @@ void ReadoutProcessor::doClusterize()
   reportClusterTSideConnectedTOtherSide(T2indexStripConnectWithT1,clustersT2side,"T2",clustersT1side,"T1");
   _T1toT2ClusterSideCorrelHistos.fill(T1indexStripConnectWithT2,clustersT1side,clustersT2side);
   _T2toT1ClusterSideCorrelHistos.fill(T2indexStripConnectWithT1,clustersT2side,clustersT1side);
+
+  //WARNING modifying some clusters after that part
+  std::vector<Cluster<TdcChannel*> > clustersT1_T2;
+  for (std::map<unsigned int, std::vector<unsigned int> >::iterator it=T1indexStripConnectWithT2.begin(); it!=T1indexStripConnectWithT2.end(); ++it)
+    {
+      if (it->second.size()==0) clustersT1_T2.push_back(clustersT1side[it->first]);
+      if (it->second.size()!=1) continue;
+      clustersT1side[it->first].merge(clustersT2side[it->second[0]]);
+      clustersT1_T2.push_back(clustersT1side[it->first]);
+    }
+  for (std::map<unsigned int, std::vector<unsigned int> >::iterator it=T2indexStripConnectWithT1.begin(); it!=T2indexStripConnectWithT1.end(); ++it)
+    if (it->second.size()==0) clustersT1_T2.push_back(clustersT2side[it->first]);
 }
 
 void ReadoutProcessor::doTimeAnalyzeClusters(std::vector<std::vector<TdcChannel*>::iterator> &clusterBounds)
