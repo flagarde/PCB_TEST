@@ -980,7 +980,6 @@ void ReadoutProcessor::doClusterize()
     }
     if (i==0) Convert(clusters,clustersT1side);
     if (i==1) Convert(clusters,clustersT2side);
-    if (i==2) doTimeAnalyzeClusters(clusters);
   }
   _T1SideClusterHistos.fill(clustersT1side);
   _T2SideClusterHistos.fill(clustersT2side);
@@ -1004,24 +1003,25 @@ void ReadoutProcessor::doClusterize()
     }
   for (std::map<unsigned int, std::vector<unsigned int> >::iterator it=T2indexStripConnectWithT1.begin(); it!=T2indexStripConnectWithT1.end(); ++it)
     if (it->second.size()==0) clustersT1_T2.push_back(clustersT2side[it->first]);
+  doTimeAnalyzeClusters(clustersT1_T2);
 }
 
-void ReadoutProcessor::doTimeAnalyzeClusters(std::vector<std::vector<TdcChannel*>::iterator> &clusterBounds)
+void ReadoutProcessor::doTimeAnalyzeClusters(std::vector<Cluster<TdcChannel*> > &clusters)
 {
-  for(unsigned int j=0;j!=clusterBounds.size()-1;++j)
+  for(unsigned int j=0;j!=clusters.size();++j)
     {
       _clusterTimeAnalysisCut->Fill(0.5);
-      unsigned int clusterSize=std::distance(clusterBounds[j],clusterBounds[j+1]);
+      unsigned int clusterSize=clusters[j].size();
       if (clusterSize<2) continue;
       _clusterTimeAnalysisCut->Fill(1.5);
       typedef int stripNumber;
       typedef int stripSide;
       std::map<stripNumber,std::map<stripSide,std::vector<double> > > timeInfo;
       bool timeInfoIsDirty=false;
-      for (std::vector<TdcChannel*>::iterator ithit=clusterBounds[j]; ithit!=clusterBounds[j+1]; ++ithit)
+      for (auto ithit=clusters[j].begin(); ithit!=clusters[j].end(); ++ithit)
 	{
-	  timeInfo[(**ithit).strip()][(**ithit).side()].push_back((**ithit).getTimeFromTrigger());
-	  if (timeInfo[(**ithit).strip()][(**ithit).side()].size()>1) {timeInfoIsDirty=true; break;}
+	  timeInfo[(***ithit).strip()][(***ithit).side()].push_back((***ithit).getTimeFromTrigger());
+	  if (timeInfo[(***ithit).strip()][(***ithit).side()].size()>1) {timeInfoIsDirty=true; break;}
 	  //std::cout << " " << **ithit;
 	}
       if (timeInfoIsDirty) continue;
@@ -1039,14 +1039,14 @@ void ReadoutProcessor::doTimeAnalyzeClusters(std::vector<std::vector<TdcChannel*
 	}
       if (T1mT0accumulate.first==0 or T2mT0accumulate.first==0) continue;
       _clusterTimeAnalysisCut->Fill(3.5);
-      _NumberOfStripsForT1mT0inCluster[(**(clusterBounds[j])).chamber()]->Fill(T1mT0accumulate.first);
-      _NumberOfStripsForT2mT0inCluster[(**(clusterBounds[j])).chamber()]->Fill(T2mT0accumulate.first);
-      _MeanT1mimusMeanT2inCluster[(**(clusterBounds[j])).chamber()]->Fill(T1mT0accumulate.second/T1mT0accumulate.first-T2mT0accumulate.second/T2mT0accumulate.first);
+      _NumberOfStripsForT1mT0inCluster[(***(clusters[j].begin())).chamber()]->Fill(T1mT0accumulate.first);
+      _NumberOfStripsForT2mT0inCluster[(***(clusters[j].begin())).chamber()]->Fill(T2mT0accumulate.first);
+      _MeanT1mimusMeanT2inCluster[(***(clusters[j].begin())).chamber()]->Fill(T1mT0accumulate.second/T1mT0accumulate.first-T2mT0accumulate.second/T2mT0accumulate.first);
       if (T1mT2accumulate.first==0) continue;
       _clusterTimeAnalysisCut->Fill(4.5);
-      _NumberOfStripsForT1mT2inCluster[(**(clusterBounds[j])).chamber()]->Fill(T1mT2accumulate.first);
-      _MeanT1mimusT2inCluster[(**(clusterBounds[j])).chamber()]->Fill(T1mT2accumulate.second/T1mT2accumulate.first);
-      if (T1mT2accumulate.first>2) _MeanT1mimusT2inCluster3StripMin[(**(clusterBounds[j])).chamber()]->Fill(T1mT2accumulate.second/T1mT2accumulate.first);
+      _NumberOfStripsForT1mT2inCluster[(***(clusters[j].begin())).chamber()]->Fill(T1mT2accumulate.first);
+      _MeanT1mimusT2inCluster[(***(clusters[j].begin())).chamber()]->Fill(T1mT2accumulate.second/T1mT2accumulate.first);
+      if (T1mT2accumulate.first>2) _MeanT1mimusT2inCluster3StripMin[(***(clusters[j].begin())).chamber()]->Fill(T1mT2accumulate.second/T1mT2accumulate.first);
     }
 }
 
