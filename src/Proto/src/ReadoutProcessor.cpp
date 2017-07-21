@@ -209,6 +209,8 @@ void ReadoutProcessor::init()
   _chamberEfficiency.addChamber(12,13);
   _T1SideClusterHistos.book("T1_clusters");
   _T2SideClusterHistos.book("T2_clusters");
+  _T1toT2ClusterSideCorrelHistos.book("T1","T2");
+  _T2toT1ClusterSideCorrelHistos.book("T2","T1");
 }
 
 
@@ -342,6 +344,8 @@ void ReadoutProcessor::finish()
   for(std::map<int,TH1F*>::iterator it=_MeanT1mimusT2inCluster3StripMin.begin();it!=_MeanT1mimusT2inCluster3StripMin.end();++it) {it->second->Write();delete it->second;}
   _T1SideClusterHistos.write();
   _T2SideClusterHistos.write();
+  _T1toT2ClusterSideCorrelHistos.write();
+  _T2toT1ClusterSideCorrelHistos.write();
   //NOISE
   _folder->mkdir("Clusters_Noise");
   _folder->cd("Clusters_Noise");
@@ -986,6 +990,8 @@ void ReadoutProcessor::doClusterize()
   fillClusterTSideConnectedTOtherSide(T2indexStripConnectWithT1,clustersT2side,clustersT1side);
   reportClusterTSideConnectedTOtherSide(T1indexStripConnectWithT2,clustersT1side,"T1",clustersT2side,"T2");
   reportClusterTSideConnectedTOtherSide(T2indexStripConnectWithT1,clustersT2side,"T2",clustersT1side,"T1");
+  _T1toT2ClusterSideCorrelHistos.fill(T1indexStripConnectWithT2,clustersT1side,clustersT2side);
+  _T2toT1ClusterSideCorrelHistos.fill(T2indexStripConnectWithT1,clustersT2side,clustersT1side);
 }
 
 void ReadoutProcessor::doTimeAnalyzeClusters(std::vector<std::vector<TdcChannel*>::iterator> &clusterBounds)
@@ -1088,3 +1094,39 @@ void ReadoutProcessor::ClusterSideHistos::addGraphPoint(TdcChannel* ref,TdcChann
   _StripVsDT->SetPoint(index,second->getTimeFromTrigger()-ref->getTimeFromTrigger(),second->strip());
 }
 
+void ReadoutProcessor::ClusterSideCorrelHistos::book(std::string refSideName, std::string otherSideName)
+{
+  _NAssociatedClusters=new TH1F((refSideName+"_"+otherSideName+"_NAssociatedClusters").c_str(),(refSideName+" : number of associated clusters from "+otherSideName).c_str(),15,0,15);
+  _StripVsDT=new TGraph();
+  _StripVsDT->SetNameTitle((refSideName+"_"+otherSideName+"_StripVsDt").c_str(),(refSideName+" : strip vs delta T of associated cluster from "+otherSideName).c_str());
+}
+
+void ReadoutProcessor::ClusterSideCorrelHistos::write()
+{
+  if (nullptr==_NAssociatedClusters) {std::cout << "WARNING, ask to fill non-booked histograms" << std::endl; return;}
+  _NAssociatedClusters->Write();
+  _StripVsDT->Write();
+}
+
+void ReadoutProcessor::ClusterSideCorrelHistos::fill(std::map<unsigned int, std::vector<unsigned int> >& connexionMap, std::vector<Cluster<TdcChannel*> >& refSide, std::vector<Cluster<TdcChannel*> >& otherSide)
+{
+  for (std::map<unsigned int, std::vector<unsigned int> >::iterator it=connexionMap.begin(); it != connexionMap.end(); ++it)
+    {
+      _NAssociatedClusters->Fill(it->second.size());
+      if (it->second.size()==0) continue;
+      TdcChannelClusterWrapper refSideClus(refSide[it->first]);
+      for (std::vector<unsigned int>::iterator itb=it->second.begin(); itb!=it->second.end(); ++itb)
+	{
+	  TdcChannelClusterWrapper otherSideClus(otherSide[*itb]);
+	  addGraphPoint(refSideClus,otherSideClus);
+	}
+    }
+}
+
+void ReadoutProcessor::ClusterSideCorrelHistos::addGraphPoint(TdcChannelClusterWrapper& ref,TdcChannelClusterWrapper& second)
+{
+   int index=_StripVsDT->GetN();
+  _StripVsDT->Set(index+1);
+  _StripVsDT->SetPoint(index,second.meanTime()-ref.meanTime(),ref.meanStrip());
+ 
+}

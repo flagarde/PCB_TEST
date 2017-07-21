@@ -165,5 +165,20 @@ private:
   };
   ClusterSideHistos _T1SideClusterHistos;
   ClusterSideHistos _T2SideClusterHistos;
+  class ClusterSideCorrelHistos
+  {
+  public:
+    ClusterSideCorrelHistos() {}
+    ClusterSideCorrelHistos(std::string refSideName, std::string otherSideName) {book(refSideName,otherSideName);}
+    TH1F *_NAssociatedClusters=nullptr;
+    TGraph *_StripVsDT;
+    void book(std::string refSideName, std::string otherSideName);
+    void fill(std::map<unsigned int, std::vector<unsigned int> >& connexionMap, std::vector<Cluster<TdcChannel*> >& refSide, std::vector<Cluster<TdcChannel*> >& otherSide);
+    void write();
+  private:
+    void addGraphPoint(TdcChannelClusterWrapper& ref,TdcChannelClusterWrapper& second);
+  };
+  ClusterSideCorrelHistos _T1toT2ClusterSideCorrelHistos;
+  ClusterSideCorrelHistos _T2toT1ClusterSideCorrelHistos;  
 };
 #endif 
