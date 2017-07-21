@@ -22,6 +22,7 @@ class TdcChannelClusterWrapper
  TdcChannelClusterWrapper(Cluster<TdcChannel*>& cl) : _cl(cl) {}
   double meanStrip();
   double meanTime();
+  Cluster<TdcChannel*>& cluster() {return _cl;}
  private:
   Cluster<TdcChannel*>& _cl;
 };
