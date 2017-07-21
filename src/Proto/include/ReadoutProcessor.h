@@ -144,5 +144,6 @@ private:
   void doClusterize();
   void doTimeAnalyzeClusters(std::vector<std::vector<TdcChannel*>::iterator> &clusterBounds);
   void fillHitMultiplicity();
+  void fillClusterTSideConnectedTOtherSide(std::map<unsigned int, std::vector<unsigned int> >& result, std::vector<Cluster<TdcChannel*> >& side, std::vector<Cluster<TdcChannel*> >& otherSide);
 };
 #endif 

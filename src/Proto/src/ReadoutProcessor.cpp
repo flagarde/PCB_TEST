@@ -908,6 +908,20 @@ double TdcChannelClusterWrapper::meanTime()
 }
 
 
+void ReadoutProcessor::fillClusterTSideConnectedTOtherSide(std::map<unsigned int, std::vector<unsigned int> >& result, std::vector<Cluster<TdcChannel*> >& side, std::vector<Cluster<TdcChannel*> >& otherSide)
+{
+  for (unsigned int j=0; j<side.size(); ++j)
+    {
+      TdcChannelClusterWrapper sideclus(side[j]);
+      double meanStrip=sideclus.meanStrip();
+      for (unsigned k=0; k<otherSide.size(); ++k)
+	{
+	  TdcChannelClusterWrapper otherSideclus(otherSide[k]);
+	  if (abs(meanStrip-otherSideclus.meanStrip()) <=1 ) result[j].push_back(k);
+	}
+    }
+}
+
 void ReadoutProcessor::doClusterize()
 {
   std::vector<Cluster<TdcChannel*> > clustersT1side;
@@ -945,26 +959,8 @@ void ReadoutProcessor::doClusterize()
   }
   std::map<unsigned int, std::vector<unsigned int> > T1indexStripConnectWithT2;
   std::map<unsigned int, std::vector<unsigned int> > T2indexStripConnectWithT1;
-  for (unsigned int j=0; j<clustersT1side.size(); ++j)
-    {
-      TdcChannelClusterWrapper T1clus(clustersT1side[j]);
-      double meanStrip=T1clus.meanStrip();
-      for (unsigned k=0; k<clustersT2side.size(); ++k)
-	{
-	  TdcChannelClusterWrapper T2clus(clustersT2side[k]);
-	  if (abs(meanStrip-T2clus.meanStrip()) <=1 ) T1indexStripConnectWithT2[j].push_back(k);
-	}
-    }
-  for (unsigned int j=0; j<clustersT2side.size(); ++j)
-    {
-      TdcChannelClusterWrapper T2clus(clustersT2side[j]);
-      double meanStrip=T2clus.meanStrip();
-      for (unsigned k=0; k<clustersT1side.size(); ++k)
-	{
-	  TdcChannelClusterWrapper T1clus(clustersT1side[k]);
-	  if (abs(meanStrip-T1clus.meanStrip()) <=1 ) T2indexStripConnectWithT1[j].push_back(k);
-	}
-    }
+  fillClusterTSideConnectedTOtherSide(T1indexStripConnectWithT2,clustersT1side,clustersT2side);
+  fillClusterTSideConnectedTOtherSide(T2indexStripConnectWithT1,clustersT2side,clustersT1side);
   for (std::map<unsigned int, std::vector<unsigned int> >::iterator it=T1indexStripConnectWithT2.begin(); it != T1indexStripConnectWithT2.end(); ++it)
     if (it->second.size() >1)
       {
