@@ -207,6 +207,8 @@ void ReadoutProcessor::init()
   // could try to do something complicated with ChambertoIP or IPtoChamber but keep it simple but not portable for now
   _chamberEfficiency.addChamber(14,15);
   _chamberEfficiency.addChamber(12,13);
+  _T1SideClusterHistos.book("T1_clusters");
+  _T2SideClusterHistos.book("T2_clusters");
 }
 
 
@@ -338,6 +340,8 @@ void ReadoutProcessor::finish()
   for(std::map<int,TH1F*>::iterator it=_MeanT1mimusMeanT2inCluster.begin();it!=_MeanT1mimusMeanT2inCluster.end();++it) {it->second->Write();delete it->second;}
   for(std::map<int,TH1F*>::iterator it=_MeanT1mimusT2inCluster.begin();it!=_MeanT1mimusT2inCluster.end();++it) {it->second->Write();delete it->second;}
   for(std::map<int,TH1F*>::iterator it=_MeanT1mimusT2inCluster3StripMin.begin();it!=_MeanT1mimusT2inCluster3StripMin.end();++it) {it->second->Write();delete it->second;}
+  _T1SideClusterHistos.write();
+  _T2SideClusterHistos.write();
   //NOISE
   _folder->mkdir("Clusters_Noise");
   _folder->cd("Clusters_Noise");
@@ -974,6 +978,8 @@ void ReadoutProcessor::doClusterize()
     if (i==1) Convert(clusters,clustersT2side);
     if (i==2) doTimeAnalyzeClusters(clusters);
   }
+  _T1SideClusterHistos.fill(clustersT1side);
+  _T2SideClusterHistos.fill(clustersT2side);
   std::map<unsigned int, std::vector<unsigned int> > T1indexStripConnectWithT2;
   std::map<unsigned int, std::vector<unsigned int> > T2indexStripConnectWithT1;
   fillClusterTSideConnectedTOtherSide(T1indexStripConnectWithT2,clustersT1side,clustersT2side);
@@ -1025,3 +1031,60 @@ void ReadoutProcessor::doTimeAnalyzeClusters(std::vector<std::vector<TdcChannel*
       if (T1mT2accumulate.first>2) _MeanT1mimusT2inCluster3StripMin[(**(clusterBounds[j])).chamber()]->Fill(T1mT2accumulate.second/T1mT2accumulate.first);
     }
 }
+
+
+void ReadoutProcessor::ClusterSideHistos::book(std::string sideName)
+{
+  _NClusters=new TH1F((sideName+"Nclusters").c_str(),(sideName+" : number of clusters ").c_str(),15,0,15);
+  _ClusterSize=new TH1F((sideName+"ClusterSize").c_str(),(sideName+" : cluster size ").c_str(),20,0,20);
+  _StripVsDT=new TGraph();
+  _StripVsDT->SetNameTitle((sideName+"StripVsDt").c_str(),(sideName+" : strip vs delta T inside a cluster").c_str());
+}
+
+ReadoutProcessor::ClusterSideHistos::~ClusterSideHistos()
+{
+  /*
+  if (nullptr != _NClusters)
+    {
+      delete _NClusters;
+      delete _ClusterSize;
+      delete _StripVsDT;
+    }
+  */
+}
+
+void ReadoutProcessor::ClusterSideHistos::write()
+{
+  if (nullptr==_NClusters) return;
+  _NClusters->Write();
+  _ClusterSize->Write();
+  _StripVsDT->Write();
+}
+
+void ReadoutProcessor::ClusterSideHistos::fill(std::vector<Cluster<TdcChannel*> >& clustersVec)
+{
+  if (nullptr==_NClusters) {std::cout << "WARNING, ask to fill non-booked histograms" << std::endl; return;}
+  _NClusters->Fill(clustersVec.size());
+  for (std::vector<Cluster<TdcChannel*> >::iterator it=clustersVec.begin(); it!=clustersVec.end(); ++it)
+    fillOneCluster(*it);
+}
+
+void ReadoutProcessor::ClusterSideHistos::fillOneCluster(Cluster<TdcChannel*> &cluster)
+{
+  _ClusterSize->Fill(cluster.size());
+  if (cluster.size() <= 1) return;
+  int minStrip=9999999;
+  TdcChannel* minStripChannel = nullptr;
+  for (auto it=cluster.begin(); it!= cluster.end(); ++it)
+    if ((**it)->strip()<minStrip) {minStrip=(**it)->strip(); minStripChannel=**it;}
+  for (auto it=cluster.begin(); it!= cluster.end(); ++it)
+    addGraphPoint(minStripChannel,**it);
+}
+
+void ReadoutProcessor::ClusterSideHistos::addGraphPoint(TdcChannel* ref,TdcChannel* second)
+{
+  int index=_StripVsDT->GetN();
+  _StripVsDT->Set(index+1);
+  _StripVsDT->SetPoint(index,second->getTimeFromTrigger()-ref->getTimeFromTrigger(),second->strip());
+}
+

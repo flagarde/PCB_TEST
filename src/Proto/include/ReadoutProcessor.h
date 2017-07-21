@@ -3,6 +3,7 @@
 #include "TdcChannelBuffer.h"
 #include "TH1F.h"
 #include "TH2F.h"
+#include "TGraph.h"
 #include "GG_counter.h"
 #include "TdcChamberEfficiency.hh"
 #include <cstdint>
@@ -146,5 +147,23 @@ private:
   void fillHitMultiplicity();
   void fillClusterTSideConnectedTOtherSide(std::map<unsigned int, std::vector<unsigned int> >& result, std::vector<Cluster<TdcChannel*> >& side, std::vector<Cluster<TdcChannel*> >& otherSide);
   void reportClusterTSideConnectedTOtherSide(std::map<unsigned int, std::vector<unsigned int> >& connexionMap, std::vector<Cluster<TdcChannel*> >& side, std::string sideName, std::vector<Cluster<TdcChannel*> >& otherSide, std::string otherSideName);
+  class ClusterSideHistos
+  {
+  public:
+    ClusterSideHistos() {}
+    ClusterSideHistos(std::string sideName) {book(sideName);}
+    ~ClusterSideHistos();
+    TH1F *_NClusters=nullptr;
+    TH1F *_ClusterSize=nullptr;
+    TGraph *_StripVsDT=nullptr;
+    void book(std::string sideName);
+    void fill(std::vector<Cluster<TdcChannel*> >& clustersVec);
+    void write();
+  private:
+    void fillOneCluster(Cluster<TdcChannel*> &cluster);
+    void addGraphPoint(TdcChannel* ref,TdcChannel* second);
+  };
+  ClusterSideHistos _T1SideClusterHistos;
+  ClusterSideHistos _T2SideClusterHistos;
 };
 #endif 
