@@ -922,6 +922,23 @@ void ReadoutProcessor::fillClusterTSideConnectedTOtherSide(std::map<unsigned int
     }
 }
 
+void ReadoutProcessor::reportClusterTSideConnectedTOtherSide(std::map<unsigned int, std::vector<unsigned int> >& connexionMap, std::vector<Cluster<TdcChannel*> >& side, std::string sideName, std::vector<Cluster<TdcChannel*> >& otherSide, std::string otherSideName)
+{
+  for (std::map<unsigned int, std::vector<unsigned int> >::iterator it=connexionMap.begin(); it != connexionMap.end(); ++it)
+    if (it->second.size() >1)
+      {
+	TdcChannelClusterWrapper sideClus(side[it->first]);
+	std::cout << "WHAT SHOULD I DO ? cluster on " << sideName <<" side (strip=" << sideClus.meanStrip() << " time=" << sideClus.meanTime()
+		  << ") is strip compatible with " << it->second.size() << " clusters on the "<< otherSideName << " side :" << std::endl;
+	for (std::vector<unsigned int>::iterator itb=it->second.begin(); itb!=it->second.end(); ++itb)
+	  {
+	    TdcChannelClusterWrapper otherSideClus(otherSide[*itb]);
+	    std::cout << "       ---- "<< otherSideName <<" cluster (strip=" << otherSideClus.meanStrip() << " time=" << otherSideClus.meanTime() << ")"<< std::endl;
+	  }
+      }
+}
+
+
 void ReadoutProcessor::doClusterize()
 {
   std::vector<Cluster<TdcChannel*> > clustersT1side;
@@ -961,19 +978,7 @@ void ReadoutProcessor::doClusterize()
   std::map<unsigned int, std::vector<unsigned int> > T2indexStripConnectWithT1;
   fillClusterTSideConnectedTOtherSide(T1indexStripConnectWithT2,clustersT1side,clustersT2side);
   fillClusterTSideConnectedTOtherSide(T2indexStripConnectWithT1,clustersT2side,clustersT1side);
-  for (std::map<unsigned int, std::vector<unsigned int> >::iterator it=T1indexStripConnectWithT2.begin(); it != T1indexStripConnectWithT2.end(); ++it)
-    if (it->second.size() >1)
-      {
-	TdcChannelClusterWrapper T1Clus(clustersT1side[it->first]);
-	std::cout << "WHAT SHOULD I DO ? cluster on T1 side (strip=" << T1Clus.meanStrip() << " time=" << T1Clus.meanTime()
-		  << ") is strip compatible with " << it->second.size() << " clusters on the T2 side :" << std::endl;
-	for (std::vector<unsigned int>::iterator itb=it->second.begin(); itb!=it->second.end(); ++itb)
-	  {
-	    TdcChannelClusterWrapper T2Clus(clustersT2side[*itb]);
-	    std::cout << "       ---- T2 cluster (strip=" << T2Clus.meanStrip() << " time=" << T2Clus.meanTime() << ")"<< std::endl;
-	  }
-      }
-
+  reportClusterTSideConnectedTOtherSide(T1indexStripConnectWithT2,clustersT1side,"T1",clustersT2side,"T2");
 }
 
 void ReadoutProcessor::doTimeAnalyzeClusters(std::vector<std::vector<TdcChannel*>::iterator> &clusterBounds)

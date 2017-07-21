@@ -145,5 +145,6 @@ private:
   void doTimeAnalyzeClusters(std::vector<std::vector<TdcChannel*>::iterator> &clusterBounds);
   void fillHitMultiplicity();
   void fillClusterTSideConnectedTOtherSide(std::map<unsigned int, std::vector<unsigned int> >& result, std::vector<Cluster<TdcChannel*> >& side, std::vector<Cluster<TdcChannel*> >& otherSide);
+  void reportClusterTSideConnectedTOtherSide(std::map<unsigned int, std::vector<unsigned int> >& connexionMap, std::vector<Cluster<TdcChannel*> >& side, std::string sideName, std::vector<Cluster<TdcChannel*> >& otherSide, std::string otherSideName);
 };
 #endif 
