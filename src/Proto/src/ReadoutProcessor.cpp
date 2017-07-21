@@ -979,6 +979,7 @@ void ReadoutProcessor::doClusterize()
   fillClusterTSideConnectedTOtherSide(T1indexStripConnectWithT2,clustersT1side,clustersT2side);
   fillClusterTSideConnectedTOtherSide(T2indexStripConnectWithT1,clustersT2side,clustersT1side);
   reportClusterTSideConnectedTOtherSide(T1indexStripConnectWithT2,clustersT1side,"T1",clustersT2side,"T2");
+  reportClusterTSideConnectedTOtherSide(T2indexStripConnectWithT1,clustersT2side,"T2",clustersT1side,"T1");
 }
 
 void ReadoutProcessor::doTimeAnalyzeClusters(std::vector<std::vector<TdcChannel*>::iterator> &clusterBounds)
