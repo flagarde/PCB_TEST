@@ -1038,9 +1038,9 @@ void ReadoutProcessor::doTimeAnalyzeClusters(std::vector<std::vector<TdcChannel*
     }
 }
 
-
 void ReadoutProcessor::ClusterSideHistos::book(std::string sideName)
 {
+  _sideName=sideName;
   _NClusters=new TH1F((sideName+"Nclusters").c_str(),(sideName+" : number of clusters ").c_str(),15,0,15);
   _ClusterSize=new TH1F((sideName+"ClusterSize").c_str(),(sideName+" : cluster size ").c_str(),20,0,20);
   _StripVsDT=new TGraph();
@@ -1065,6 +1065,8 @@ void ReadoutProcessor::ClusterSideHistos::write()
   _NClusters->Write();
   _ClusterSize->Write();
   _StripVsDT->Write();
+  for (std::map<int,TGraph *>::iterator it=_DStripVsDTByStrip.begin(); it!=_DStripVsDTByStrip.end(); ++it)
+    it->second->Write();
 }
 
 void ReadoutProcessor::ClusterSideHistos::fill(std::vector<Cluster<TdcChannel*> >& clustersVec)
@@ -1085,6 +1087,9 @@ void ReadoutProcessor::ClusterSideHistos::fillOneCluster(Cluster<TdcChannel*> &c
     if ((**it)->strip()<minStrip) {minStrip=(**it)->strip(); minStripChannel=**it;}
   for (auto it=cluster.begin(); it!= cluster.end(); ++it)
     addGraphPoint(minStripChannel,**it);
+  for (auto it=cluster.begin(); it!= cluster.end(); ++it)
+    for (auto itB=it; itB!=cluster.end(); ++itB)
+      addGraphPointByStrip(**it,**itB);
 }
 
 void ReadoutProcessor::ClusterSideHistos::addGraphPoint(TdcChannel* ref,TdcChannel* second)
@@ -1092,6 +1097,19 @@ void ReadoutProcessor::ClusterSideHistos::addGraphPoint(TdcChannel* ref,TdcChann
   int index=_StripVsDT->GetN();
   _StripVsDT->Set(index+1);
   _StripVsDT->SetPoint(index,second->getTimeFromTrigger()-ref->getTimeFromTrigger(),second->strip());
+}
+
+void ReadoutProcessor::ClusterSideHistos::addGraphPointByStrip(TdcChannel* first,TdcChannel* second)
+{
+  if (_DStripVsDTByStrip.count(first->strip())==0)
+    {
+      _DStripVsDTByStrip[first->strip()]=new TGraph();
+      _DStripVsDTByStrip[first->strip()]->SetNameTitle((_sideName+"DStripVsDt_"+std::to_string(first->strip())).c_str(),
+						       (_sideName+" : delta strip vs delta T inside a cluster").c_str());
+    }
+  int index =_DStripVsDTByStrip[first->strip()]->GetN();
+  _DStripVsDTByStrip[first->strip()]->Set(index+1);
+  _DStripVsDTByStrip[first->strip()]->SetPoint(index,second->getTimeFromTrigger()-first->getTimeFromTrigger(),second->strip()-first->strip());
 }
 
 void ReadoutProcessor::ClusterSideCorrelHistos::book(std::string refSideName, std::string otherSideName)

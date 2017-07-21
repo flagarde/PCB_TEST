@@ -157,12 +157,15 @@ private:
     TH1F *_NClusters=nullptr;
     TH1F *_ClusterSize=nullptr;
     TGraph *_StripVsDT=nullptr;
+    std::map<int,TGraph *> _DStripVsDTByStrip;
     void book(std::string sideName);
     void fill(std::vector<Cluster<TdcChannel*> >& clustersVec);
     void write();
   private:
     void fillOneCluster(Cluster<TdcChannel*> &cluster);
     void addGraphPoint(TdcChannel* ref,TdcChannel* second);
+    void addGraphPointByStrip(TdcChannel* first,TdcChannel* second);
+    std::string _sideName;
   };
   ClusterSideHistos _T1SideClusterHistos;
   ClusterSideHistos _T2SideClusterHistos;
