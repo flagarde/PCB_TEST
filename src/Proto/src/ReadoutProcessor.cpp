@@ -1066,7 +1066,10 @@ void ReadoutProcessor::ClusterSideHistos::write()
   _ClusterSize->Write();
   _StripVsDT->Write();
   for (std::map<int,TGraph *>::iterator it=_DStripVsDTByStrip.begin(); it!=_DStripVsDTByStrip.end(); ++it)
-    it->second->Write();
+    {
+      it->second->Write();
+      _DTVsDStripByStrip[it->first]->Write();
+    }
 }
 
 void ReadoutProcessor::ClusterSideHistos::fill(std::vector<Cluster<TdcChannel*> >& clustersVec)
@@ -1106,10 +1109,14 @@ void ReadoutProcessor::ClusterSideHistos::addGraphPointByStrip(TdcChannel* first
       _DStripVsDTByStrip[first->strip()]=new TGraph();
       _DStripVsDTByStrip[first->strip()]->SetNameTitle((_sideName+"DStripVsDt_"+std::to_string(first->strip())).c_str(),
 						       (_sideName+" : delta strip vs delta T inside a cluster").c_str());
+      _DTVsDStripByStrip[first->strip()]=new TProfile((_sideName+"DTVsDStrip_"+std::to_string(first->strip())).c_str(),
+						      (_sideName+" : delta T vs delta strip inside a cluster").c_str(),
+						      33,-16,17);
     }
   int index =_DStripVsDTByStrip[first->strip()]->GetN();
   _DStripVsDTByStrip[first->strip()]->Set(index+1);
   _DStripVsDTByStrip[first->strip()]->SetPoint(index,second->getTimeFromTrigger()-first->getTimeFromTrigger(),second->strip()-first->strip());
+  _DTVsDStripByStrip[first->strip()]->Fill(second->strip()-first->strip(),second->getTimeFromTrigger()-first->getTimeFromTrigger());
 }
 
 void ReadoutProcessor::ClusterSideCorrelHistos::book(std::string refSideName, std::string otherSideName)

@@ -158,6 +158,7 @@ private:
     TH1F *_ClusterSize=nullptr;
     TGraph *_StripVsDT=nullptr;
     std::map<int,TGraph *> _DStripVsDTByStrip;
+    std::map<int,TProfile *> _DTVsDStripByStrip;
     void book(std::string sideName);
     void fill(std::vector<Cluster<TdcChannel*> >& clustersVec);
     void write();
