@@ -81,9 +81,13 @@ int ReadoutProcessor::readstream(int32_t _fdIn,bool firstTime)
 	    }
 	    b.setPayloadSize(bsize-(3*sizeof(uint32_t)+sizeof(uint64_t)));
 	    b.uncompress();
-	    if (b.detectorId() != 110) continue;
+	    if (b.detectorId() != detectorId) continue;
 	    uint32_t* ibuf=(uint32_t*) b.payload();
 	    absbcid=ibuf[3]; absbcid=(absbcid<<32)|ibuf[2];
+         	    //printf("\n event number %d, GTC %d, ABSBCID %lu, mezzanine number %u, ",ibuf[0],ibuf[1]&0xFFFF,absbcid,ibuf[4]);
+ 	   // printf("IP address %u.%u.%u.%u,",ibuf[5]&0xFF,(ibuf[5]>>8)&0xFF,(ibuf[5]>>16)&0xFF,(ibuf[5]>>24)&0xFF);
+ 	   // uint32_t nch=ibuf[6];
+ 	   // printf("\n channels -> %d \n",nch);
 	    if (ibuf[6]>0)
 	    {
 	      ++nDIFwithChannel;
@@ -93,6 +97,7 @@ int ReadoutProcessor::readstream(int32_t _fdIn,bool firstTime)
 		    {
 		      tdcBuf.addChannel(&cbuf[8*i]);
 		      TdcChannel &c=tdcBuf.last();
+              //std::cout<<int(c.channel())<<std::endl;
           if (tdcBuf.nTdcChannel()>maxsize) 
           {
             std::cout << "WARNING TOO BIG EVENT skipping" << std::endl; 
@@ -101,9 +106,11 @@ int ReadoutProcessor::readstream(int32_t _fdIn,bool firstTime)
           }
           if(c.channel()==triggerChannel)
           {
+              
             _lastTriggerAbsBCID=absbcid;
           }
-		      c.setstrip(ibuf[4],(ibuf[5]>>24)&0xFF);
+		    c.setstrip(ibuf[4],(ibuf[5]>>24)&0xFF);
+              
 		    }
 	    }
 	  } // end loop on DIF
@@ -129,6 +136,45 @@ int ReadoutProcessor::readstream(int32_t _fdIn,bool firstTime)
 
 void ReadoutProcessor::init()
 {
+    
+    // could try to do something complicated with ChambertoIP or IPtoChamber but keep it simple but not portable for now
+ for(std::multimap<int,int>::iterator it=ChambertoIP.begin();it!=ChambertoIP.end();)
+ {
+    std::pair <std::multimap<int,int>::iterator, std::multimap<int,int>::iterator> ret;
+    ret=ChambertoIP.equal_range(it->first);
+    int ct1 = std::distance(ret.first, ret.second);
+   // std::cout << it->first << " =>"<<ct1<<std::endl;
+    if(ct1>2)
+    {
+        std::cout<<red<<"More than two mezzanine for one chamber... Check Global.h"<<normal<<std::endl;
+        std::exit(2);
+    }
+    else 
+    {
+           std::vector<int> temp;
+           for (std::multimap<int,int>::iterator itt=ret.first; itt!=ret.second; ++itt) temp.push_back(itt->second);
+           if(temp.size()==1)temp.push_back(temp[0]);
+           if(ct1==1)
+           {
+               std::cout<<yellow<<"Only one mezzanine for chamber "<<it->second<<" it could be on purpose ! but GGCounter will not work well"<<normal<<std::endl;
+               IPtoChamber.insert(std::pair<int,int>(it->second,it->first));
+               ++it;
+           }
+           else if(ct1==2)
+           {
+               IPtoChamber.insert(std::pair<int,int>(temp[0],it->first));
+               IPtoChamber.insert(std::pair<int,int>(temp[1],it->first));
+           }
+           _chamberEfficiency.addChamber(temp[0],temp[1]);
+           
+           //std::cout<<temp[0]<<"  "<<temp[1]<<std::endl;
+           ++it;++it;
+    }
+ }
+ for(std::map<int,int>::iterator it=IPtoChamber.begin();it!=IPtoChamber.end();++it)
+ {
+        std::cout<<it->first<<"  "<<it->second<<std::endl;
+ }
    for(unsigned int i=0;i!=3;++i) _ugly[i].reserve(500);
   _myfile.open("Results_Effi.txt",std::ios::out|std::ios::app);
   _myfilestreamer.open("Results_Streamer.txt",std::ios::out|std::ios::app);
@@ -170,9 +216,9 @@ void ReadoutProcessor::init()
      _hitTimeImpair[it->first]=new TH1F(("triggerTimeImpair_mezz"+std::to_string(it->first)).c_str(),("Time of hits minus triggerTime odd strip mezzanine "+std::to_string(it->first)).c_str(),2000,-2000,0);
     if(_T1mT2.find(it->second)==_T1mT2.end())
     {
-        _tmt0[it->second]=new TH1F(("T-T0_"+std::to_string(it->second)).c_str(),("T-T0_"+std::to_string(it->second)).c_str(),2000,-2000,0);
-        _t1mt0[it->second]=new TH1F(("T1-T0_"+std::to_string(it->second)).c_str(),("T1-T0_"+std::to_string(it->second)).c_str(),2000,-2000,0);
-        _t2mt0[it->second]=new TH1F(("T2-T0_"+std::to_string(it->second)).c_str(),("T2-T0_"+std::to_string(it->second)).c_str(),2000,-2000,0);
+        _tmt0[it->second]=new TH1F(("T-T0_"+std::to_string(it->second)).c_str(),("T-T0_"+std::to_string(it->second)).c_str(),4000,-2000,2000);
+        _t1mt0[it->second]=new TH1F(("T1-T0_"+std::to_string(it->second)).c_str(),("T1-T0_"+std::to_string(it->second)).c_str(),4000,-2000,2000);
+        _t2mt0[it->second]=new TH1F(("T2-T0_"+std::to_string(it->second)).c_str(),("T2-T0_"+std::to_string(it->second)).c_str(),4000,-2000,2000);
        _Correlation[it->second]=new TH2F(("Correlation_"+std::to_string(it->second)).c_str(),("Correlation"+std::to_string(it->second)).c_str(),32,0,32,32,0,30);
       _T1mT2[it->second]=new TH2F(("T1-T2_th2_"+std::to_string(it->second)).c_str(),("T1-T2_th2_"+std::to_string(it->second)).c_str(),32,0,32,10000,-500,500);
       _Position[it->second]=new TH2F(("Position_"+std::to_string(it->second)).c_str(),("Position_"+std::to_string(it->second)).c_str(),32,0,32,20000,-1000,1000); 
@@ -204,9 +250,7 @@ void ReadoutProcessor::init()
     }
   }
   _clusterTimeAnalysisCut=new TH1F("clusterTimeAnalysisCut","Number of clusters kept",15,0,15);
-  // could try to do something complicated with ChambertoIP or IPtoChamber but keep it simple but not portable for now
-  _chamberEfficiency.addChamber(14,15);
-  _chamberEfficiency.addChamber(12,13);
+ 
   _T1SideClusterHistos.book("T1_clusters");
   _T2SideClusterHistos.book("T2_clusters");
   _T1toT2ClusterSideCorrelHistos.book("T1","T2");
@@ -474,11 +518,14 @@ void ReadoutProcessor::fillTriggerBCIDInfo(TdcChannelBuffer &tdcBuf)
 
 void ReadoutProcessor::removeDataForChamberWithMoreThanOneTrigger(TdcChannelBuffer &tdcBuf)
 {
+    //std::cout<<red<<"here"<<std::endl;
   for(std::map<int,std::vector<TdcChannel>>::iterator it=_BCIDwithTriggerPerChamber.begin();it!=_BCIDwithTriggerPerChamber.end();++it)
     {
       std::pair<std::multimap<int,int>::iterator, std::multimap<int,int>::iterator> ret;
       ret=ChambertoIP.equal_range(it->first);
-      if(it->second.size()>2)
+      int ct1 = std::distance(ret.first, ret.second);
+      
+      if(it->second.size()>ct1)
 	{
 	  TdcChannel* iter=tdcBuf.end();
 	  for(unsigned int i=0;i!=it->second.size();++i)
@@ -524,7 +571,7 @@ void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf,bool firstTime)
   _MinTimeFromTriggerInEvent.clear();
   fillTriggerBCIDInfo(tdcBuf);
   //eventually here put a filter on the  BCIDwithTrigger set (like remove first ones, last ones, close ones)
-  removeDataForChamberWithMoreThanOneTrigger(tdcBuf);
+  if(SupressEventWithMoreThanOneTriggerByMezzanine==true) removeDataForChamberWithMoreThanOneTrigger(tdcBuf);
 #ifdef LAURENT_STYLE
   removeDataForMezzanineWithMoreThanOneTrigger(tdcBuf);
 #endif
@@ -535,7 +582,7 @@ void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf,bool firstTime)
   //std::cout << "Nombre de triggers = " << BCIDwithTrigger.size() << std::endl;
   for (std::set<std::pair<uint16_t,double>>::iterator it=_BCIDwithTrigger.begin(); it !=_BCIDwithTrigger.end(); ++it)
   {
-    eventEnd=std::partition(eventStart,tdcBuf.end(),TdcChannelBcidpredicate((*it).first,(*it).second,-6,-3));
+    eventEnd=std::partition(eventStart,tdcBuf.end(),TdcChannelBcidpredicate((*it).first,(*it).second,-1,1));
     processTrigger(eventStart,eventEnd,firstTime);
     eventStart=eventEnd;
   }
@@ -672,12 +719,18 @@ void ReadoutProcessor::finishFirst()
     std::set<double>a=findPeaks(oo->second);
     std::set<double>::iterator yy=a.begin();
     double b=*(yy);
-    yy++;
-    double c=*(yy);
+    double c=0;
+    if(a.size()>1)
+    {
+        yy++;
+       c=*(yy);
+    }
+    else c=10;
     TF1 *gauss = new TF1("gauss", "gaus");
     std::cout<<yellow<<b<<"  "<<c<<normal<<std::endl;
     gauss->SetParameter(1,b);
-    gauss->SetParameter(2,(c+b)/2.0);
+    if(a.size()>1)gauss->SetParameter(2,(c+b)/2.0);
+    else gauss->SetParameter(2,c);
     std::cout<<blue<<(c-b)/2.0+b<<"  "<<(b-c)/2.0+b<<normal<<std::endl;
     oo->second->Fit("gauss","Q","",(b-c)/2.0+b,(c-b)/2.0+b);
     TF1 *fit1 = (TF1*)oo->second->GetFunction("gaus");

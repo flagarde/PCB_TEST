@@ -8,6 +8,7 @@
 #include <set>
 #include "buffer.h"
 #include "TdcChannels.hh"
+#include "Global.h"
 
 int main(int argc, char *argv[])
 {

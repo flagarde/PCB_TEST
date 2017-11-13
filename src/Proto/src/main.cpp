@@ -33,6 +33,25 @@ int getdir (std::string dir, std::vector<std::string> &files,std::string nbrRunT
 
 int main(int argc, char *argv[])
 {
+    
+  #ifndef MayData
+  for(unsigned int ii=0;ii!=LEMO2STRIP.size();++ii)
+    {
+        std::vector<int> temp;
+        for(unsigned int j=0;j!=LEMO2STRIP[ii].size();++j)
+        {
+            if(TDC2PR[ii][j]!=-1)
+            {
+                temp.push_back(LEMO2STRIP[ii][PR2LEMO[ii][TDC2PR[ii][j]]]);
+                std::cout<<"    *TDCChannel : "<<j<<" Strip : "<<LEMO2STRIP[ii][PR2LEMO[ii][TDC2PR[ii][j]]]<<std::endl;
+            }
+        }
+        TDCchannelToStrip.push_back(temp);
+    }
+    #else
+    #endif 
+    
+  std::cout<<yellow<<"Program Compiled for "<<dataType<<normal<<std::endl;
   gROOT->ProcessLine("#include<vector>");
   if(argc<2)
   {

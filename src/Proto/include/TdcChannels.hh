@@ -16,15 +16,24 @@ public:
   inline uint8_t fine(){return _fr[7];}
   inline int side()
   {
-    if(_mezzanine%2==0)
-    {
-     return (_fr[0]&0XFF)%2;
-    }
-    else
-    {
-      if((_fr[0]&0XFF)%2==1) return 0;
-      else return 1;
-    }
+#ifndef MayData
+      if(channel()%2==0)
+      {
+       return 1;
+      }
+      else return 0;
+#else
+      if(_mezzanine%2==0)
+      {
+       return (_fr[0]&0XFF)%2;
+      }
+      else
+      {
+        if((_fr[0]&0XFF)%2==1) return 0;
+        else return 1;
+      }
+#endif
+
   }
   inline void settdcTrigger(double i)
   {
@@ -42,11 +51,16 @@ public:
   inline int strip(){return _strip;};
   inline void  setstrip(uint8_t mezzanine,uint8_t IP)
   {
-    _strip=TDCchannelToStrip[mezzanine-1][channel()]+100*IPtoChamber[IP];
+    //std::cout<<"tttt "<<int(channel())<<"  "<<IPtoChamber[IP]<<"  "<<TDCchannelToStrip[0][channel()]+100*IPtoChamber[IP]<<std::endl;
+    #ifndef MayData
+        _strip=TDCchannelToStrip[0][channel()]+100*IPtoChamber[IP];
+    #else
+        _strip=TDCchannelToStrip[mezzanine-1][channel()]+100*IPtoChamber[IP];
+    #endif
     _mezzanine=IP;
   }
   inline int mezzanine() {return _mezzanine;}
-  inline int chamber() {return _strip/100;}
+  inline int chamber() {return int(_strip/100);}
   #ifdef BCIDFROMCOARSE
   inline uint16_t bcid(){return (uint16_t) (coarse()*2.5/200);}
   #else
@@ -73,4 +87,4 @@ static std::ostream& operator<<(std::ostream& flux, TdcChannel& c)
        << ", TDCtime " << std::setprecision (std::numeric_limits<double>::digits10+1) << c.tdcTime();
   return flux;
 }
-#endif 
+#endif

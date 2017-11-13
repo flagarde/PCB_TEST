@@ -1,6 +1,14 @@
 # project name
 project(proto)
 
+
+option(MayData "Option description" OFF)
+
+if(MayData)
+  add_definitions(-DMayData)
+endif()
+
+
 # project version
 SET( ${PROJECT_NAME}_VERSION_MAJOR 0 )
 SET( ${PROJECT_NAME}_VERSION_MINOR 1 )
