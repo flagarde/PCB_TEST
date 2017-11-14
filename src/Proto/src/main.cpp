@@ -65,7 +65,11 @@ int main(int argc, char *argv[])
   std::size_t found = filename.rfind(".");
   std::string filena=filename;
   filena=filena.erase(found);
-  TFile file((filena+".root").c_str(),"RECREATE",filena.c_str(),2);
+  #ifndef MayData
+     TFile file((filena+"_FL.root").c_str(),"RECREATE",filena.c_str(),2);
+  #else
+     TFile file((filena+".root").c_str(),"RECREATE",filena.c_str(),2);
+  #endif
   found = filena.rfind("_");
   std::string nbrRun = filena.substr(found+1);  
   found = filena.rfind("/");
