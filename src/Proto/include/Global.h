@@ -43,8 +43,11 @@ static std::multimap<int,int>ChambertoIP{{1,15},{1,14},{2,13},{2,12}};
 static unsigned int const detectorId=110;
 #endif
 
-
-
+//////////////Window Selection [Ttrigger+NumberOfClockTickBefore,Ttrigger-NumberOfClockTickAfter]
+///// I'm adding +1 for clock problem sometimes
+static int NumberOfClockTickBefore=-2;
+static int NumberOfClockTickAfter=+1;
+/////////////////////////////////////////////////////////////////////////////////////////////////
 static unsigned int const triggerChannel=16;
 static double const vitesse=2.0/3*29.979245800; //2/3 de la vitesse de la lumiere
 static double const longueur=137;

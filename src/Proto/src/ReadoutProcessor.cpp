@@ -586,7 +586,7 @@ void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf,bool firstTime)
   //std::cout << "Nombre de triggers = " << BCIDwithTrigger.size() << std::endl;
   for (std::set<std::pair<uint16_t,double>>::iterator it=_BCIDwithTrigger.begin(); it !=_BCIDwithTrigger.end(); ++it)
   {
-    eventEnd=std::partition(eventStart,tdcBuf.end(),TdcChannelBcidpredicate((*it).first,(*it).second,-1,1));
+    eventEnd=std::partition(eventStart,tdcBuf.end(),TdcChannelBcidpredicate((*it).first,(*it).second,NumberOfClockTickBefore,NumberOfClockTickAfter));
     processTrigger(eventStart,eventEnd,firstTime);
     eventStart=eventEnd;
   }
@@ -801,7 +801,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   _OnlyOne.clear();
   _data.Reset();
   int trigCount=std::count_if(begin,end,isTrigger);
-  std::cout<<green<<trigCount<<normal<<std::endl;
+  //std::cout<<green<<trigCount<<normal<<std::endl;
   if (trigCount != 1) return;
   TdcChannel trigger(*(std::find_if(begin,end,isTrigger)));
   unsigned int valeur[2]={(unsigned int)trigger.chamber(),(unsigned int)trigger.mezzanine()};
