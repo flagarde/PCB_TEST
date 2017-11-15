@@ -873,7 +873,9 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 	         else if(it->side()==1&&itt->side()==1)_TimeWithRespectToFirstOneCh2d1[it->strip()]->Fill((itt->strip()%100)-(it->strip()%100),itt->getTimeFromTrigger()-it->getTimeFromTrigger());
 	        if(itt>beginpp)
 	        {
-	          _Correlation[it->chamber()]->Fill(double(it->strip()%100),double(itt->strip()%100));
+              Float_t a=it->strip()%100;
+              Float_t b=itt->strip()%100;
+	          _Correlation[it->chamber()]->Fill(a,b);
 	        }
 	      }
 	      if(it->strip()==itt->strip())
