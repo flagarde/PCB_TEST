@@ -892,7 +892,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 		      if((it->side()+1)==itt->side())
 		      {
 		        _T1mT2[it->chamber()]->Fill(it->strip()%100,diff);
-		        _Position[it->chamber()]->Fill(double(it->strip()%100),double(diff*vitesse+longueur)*1.0/2),1);
+		        _Position[it->chamber()]->Fill(double(it->strip()%100),double((diff*vitesse+longueur)*1.0/2),1);
 		        _Longueur[it->chamber()]->Fill(double(it->strip()%100),double(sum*vitesse),1);
 		        _T1mT2Ch[it->strip()]->Fill(diff);
 		        _T1mT2Chamber[it->chamber()]->Fill(diff);
