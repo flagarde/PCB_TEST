@@ -873,7 +873,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 	         else if(it->side()==1&&itt->side()==1)_TimeWithRespectToFirstOneCh2d1[it->strip()]->Fill((itt->strip()%100)-(it->strip()%100),itt->getTimeFromTrigger()-it->getTimeFromTrigger());
 	        if(itt>beginpp)
 	        {
-	          _Correlation[it->chamber()]->Fill(it->strip()%100,itt->strip()%100);
+	          _Correlation[it->chamber()]->Fill(double(it->strip()%100),double(itt->strip()%100));
 	        }
 	      }
 	      if(it->strip()==itt->strip())
@@ -890,8 +890,8 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 		      if((it->side()+1)==itt->side())
 		      {
 		        _T1mT2[it->chamber()]->Fill(it->strip()%100,diff);
-		        _Position[it->chamber()]->Fill(it->strip()%100,(diff*vitesse+longueur)/2);
-		        _Longueur[it->chamber()]->Fill(it->strip()%100,sum*vitesse);
+		        _Position[it->chamber()]->Fill(double(it->strip()%100),double(diff*vitesse+longueur)*1.0/2),1);
+		        _Longueur[it->chamber()]->Fill(double(it->strip()%100),double(sum*vitesse),1);
 		        _T1mT2Ch[it->strip()]->Fill(diff);
 		        _T1mT2Chamber[it->chamber()]->Fill(diff);
 		      } 
@@ -900,8 +900,8 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 		        _T1mT2[it->chamber()]->Fill(it->strip()%100,-diff);
 		        _T1mT2Ch[it->strip()]->Fill(-diff);
 		        _T1mT2Chamber[it->strip()/100]->Fill(-diff);
-		        _Position[it->chamber()]->Fill(it->strip()%100,float((-diff*vitesse+longueur)/2));
-		        _Longueur[it->chamber()]->Fill(it->strip()%100,sum*vitesse);
+		        _Position[it->chamber()]->Fill(double(it->strip()%100),double((-diff*vitesse+longueur)/2),1);
+		        _Longueur[it->chamber()]->Fill(double(it->strip()%100),double(sum*vitesse));
 		      }
 		    }
 	    }
