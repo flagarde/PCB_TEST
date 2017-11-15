@@ -153,7 +153,7 @@ void ReadoutProcessor::init()
     {
            std::vector<int> temp;
            for (std::multimap<int,int>::iterator itt=ret.first; itt!=ret.second; ++itt) temp.push_back(itt->second);
-           if(temp.size()==1)temp.push_back(temp[0]);
+           if(temp.size()==1)temp.push_back(0);
            if(ct1==1)
            {
                std::cout<<yellow<<"Only one mezzanine for chamber "<<it->second<<" it could be on purpose ! but GGCounter will not work well"<<normal<<std::endl;
@@ -571,7 +571,7 @@ void ReadoutProcessor::processReadout(TdcChannelBuffer &tdcBuf,bool firstTime)
   _MinTimeFromTriggerInEvent.clear();
   fillTriggerBCIDInfo(tdcBuf);
   //eventually here put a filter on the  BCIDwithTrigger set (like remove first ones, last ones, close ones)
-  if(SupressEventWithMoreThanOneTriggerByMezzanine==true) removeDataForChamberWithMoreThanOneTrigger(tdcBuf);
+  if(SupressEventWithMoreThanOneTriggerByChamber==true) removeDataForChamberWithMoreThanOneTrigger(tdcBuf);
 #ifdef LAURENT_STYLE
   removeDataForMezzanineWithMoreThanOneTrigger(tdcBuf);
 #endif
@@ -797,6 +797,7 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
   _OnlyOne.clear();
   _data.Reset();
   int trigCount=std::count_if(begin,end,isTrigger);
+  std::cout<<green<<trigCount<<normal<<std::endl;
   if (trigCount != 1) return;
   TdcChannel trigger(*(std::find_if(begin,end,isTrigger)));
   unsigned int valeur[2]={(unsigned int)trigger.chamber(),(unsigned int)trigger.mezzanine()};

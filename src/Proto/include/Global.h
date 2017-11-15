@@ -25,7 +25,7 @@ static std::array<std::array<int,32>,1>TDC2PR
           -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,}
 };
 
-static bool SupressEventWithMoreThanOneTriggerByMezzanine=false;
+static bool SupressEventWithMoreThanOneTriggerByChamber=false;
 extern std::vector<std::vector<int>>TDCchannelToStrip;
 extern std::map<int,int>IPtoChamber;
 static std::multimap<int,int>ChambertoIP{{1,5}};
@@ -33,7 +33,7 @@ static unsigned int const detectorId=65656;
 #else
 static std::string dataType="May Data";
 extern std::map<int,int>IPtoChamber;
-static bool SupressEventWithMoreThanOneTriggerByMezzanine=true;
+static bool SupressEventWithMoreThanOneTriggerByChamber=false;
 static std::array<std::array<int,32>,2>TDCchannelToStrip
 {{
   {15,15,14,14,13,13,12,12,11,11,10,10, 9, 9, 8, 8, 7, 7, 6, 6, 5, 5, 4, 4, 3, 3, 2, 2, 1, 1, 0, 0},
