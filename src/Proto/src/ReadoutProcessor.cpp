@@ -223,10 +223,10 @@ void ReadoutProcessor::init()
         _tmt0[it->second]=new TH1F(("T-T0_"+std::to_string(it->second)).c_str(),("T-T0_"+std::to_string(it->second)).c_str(),4000,-2000,2000);
         _t1mt0[it->second]=new TH1F(("T1-T0_"+std::to_string(it->second)).c_str(),("T1-T0_"+std::to_string(it->second)).c_str(),4000,-2000,2000);
         _t2mt0[it->second]=new TH1F(("T2-T0_"+std::to_string(it->second)).c_str(),("T2-T0_"+std::to_string(it->second)).c_str(),4000,-2000,2000);
-       _Correlation[it->second]=new TH2F(("Correlation_"+std::to_string(it->second)).c_str(),("Correlation"+std::to_string(it->second)).c_str(),32,0,32,32,0,30);
+       _Correlation[it->second]=new TH2F(("Correlation_"+std::to_string(it->second)).c_str(),("Correlation"+std::to_string(it->second)).c_str(),32,0,32,32,0,32);
       _T1mT2[it->second]=new TH2F(("T1-T2_th2_"+std::to_string(it->second)).c_str(),("T1-T2_th2_"+std::to_string(it->second)).c_str(),32,0,32,10000,-500,500);
-      _Position[it->second]=new TH2F(("Position_"+std::to_string(it->second)).c_str(),("Position_"+std::to_string(it->second)).c_str(),32,0,32,20000,-1000,1000); 
-      _Longueur[it->second]=new TH2F(("Longueur_"+std::to_string(it->second)).c_str(),("Longueur_"+std::to_string(it->second)).c_str(),32,0,32,20000,-1000,1000);
+      _Position[it->second]=new TH2F(("Position_"+std::to_string(it->second)).c_str(),("Position_"+std::to_string(it->second)).c_str(),32,0,32,2000,-1000,1000); 
+      _Longueur[it->second]=new TH2F(("Longueur_"+std::to_string(it->second)).c_str(),("Longueur_"+std::to_string(it->second)).c_str(),32,0,32,2000,-1000,1000);
       _T1mT2Chamber[it->second]=new TH1F(("T1-T2_"+std::to_string(it->second)).c_str(),("T1-T2_"+std::to_string(it->second)).c_str(),10000,-500,500);
       _MultiplicitySide0[it->second]=new TH1F(("Hit_Multiplicity_Side0_"+std::to_string(it->second)).c_str(),("Hit_Multiplicity_Side0_"+std::to_string(it->second)).c_str(),60,0,60);
       _MultiplicitySide1[it->second]=new TH1F(("Hit_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),("Hit_Multiplicity_Side1_"+std::to_string(it->second)).c_str(),60,0,60);
