@@ -10,7 +10,8 @@
 #include "RawHit_standard_merge_predicate.h"
 #include <fstream>
 #include "TSpectrum.h"
-
+#include "TFile.h"
+#include "TTree.h"
 
 //estimate linear background using a fitting method
 std::set<double> findPeaks(TH1* obj)
@@ -34,6 +35,7 @@ std::set<double> findPeaks(TH1* obj)
 //#define LAURENT_STYLE
 int ReadoutProcessor::readstream(int32_t _fdIn,bool firstTime)
 {
+
   if (_fdIn<=0) return 0;
   uint32_t _event=0;
   uint32_t maxsize=0x100000;
@@ -81,6 +83,7 @@ int ReadoutProcessor::readstream(int32_t _fdIn,bool firstTime)
 	    }
 	    b.setPayloadSize(bsize-(3*sizeof(uint32_t)+sizeof(uint64_t)));
 	    b.uncompress();
+        //std::cout<<b.detectorId()<<std::endl;
 	    if (b.detectorId() != detectorId) continue;
 	    uint32_t* ibuf=(uint32_t*) b.payload();
 	    absbcid=ibuf[3]; absbcid=(absbcid<<32)|ibuf[2];
@@ -131,6 +134,7 @@ int ReadoutProcessor::readstream(int32_t _fdIn,bool firstTime)
       processReadout(tdcBuf,firstTime);
     }
   }
+
 } 
 
 

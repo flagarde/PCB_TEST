@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
   for(unsigned int i=0;i!=FilesTopProcess.size();++i)
   {
     if(retour==2)continue;
-    int32_t _fdIn= ::open((path+FilesTopProcess[i]).c_str(), O_RDONLY | O_NONBLOCK,S_IRWXU);
+    int32_t _fdIn=::open((path+FilesTopProcess[i]).c_str(), O_RDONLY | O_NONBLOCK,S_IRWXU);
     if (_fdIn<0)
     {
       perror("Can't open file :");
@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
   for(unsigned int i=0;i!=FilesTopProcess.size();++i)
   {
     if(retour==2)continue;
-    int32_t _fdIn= ::open((path+FilesTopProcess[i]).c_str(), O_RDONLY | O_NONBLOCK,S_IRWXU);
+    int32_t _fdIn=::open((path+FilesTopProcess[i]).c_str(), O_RDONLY | O_NONBLOCK,S_IRWXU);
     if (_fdIn<0)
     {
       perror("Can't open file :");

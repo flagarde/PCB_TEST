@@ -29,7 +29,7 @@ static bool SupressEventWithMoreThanOneTriggerByChamber=false;
 extern std::vector<std::vector<int>>TDCchannelToStrip;
 extern std::map<int,int>IPtoChamber;
 static std::multimap<int,int>ChambertoIP{{1,5}};
-static unsigned int const detectorId=65656;
+static unsigned int const detectorId=120;
 #else
 static std::string dataType="May Data";
 extern std::map<int,int>IPtoChamber;
@@ -45,7 +45,7 @@ static unsigned int const detectorId=110;
 
 
 
-static unsigned int const triggerChannel=14;
+static unsigned int const triggerChannel=16;
 static double const vitesse=2.0/3*29.979245800; //2/3 de la vitesse de la lumiere
 static double const longueur=137;
 static int const nbrTotalHitsMax=1000;
