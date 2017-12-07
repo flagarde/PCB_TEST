@@ -92,6 +92,7 @@ private:
   std::map<int,TH2F*> _T1mT2;
   std::map<int,TH2F*> _Correlation;
   std::map<int,TH1F*> _T1mT2Ch;
+  std::map<int,TH1F*> _T1pT2Ch;
   std::map<int,TH1F*> _T1mT2ChOneHit;
   std::map<int,TH1F*> _T1mT0Ch;
   std::map<int,TH1F*> _T2mT0Ch;

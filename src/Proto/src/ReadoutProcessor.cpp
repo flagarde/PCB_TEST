@@ -453,6 +453,24 @@ void ReadoutProcessor::finish()
     }
     a.add(it->second);
     it->second->Write();
+    delete it->second;
+  }
+    for(std::map<int,TH1F*>::iterator it=_T1pT2Ch.begin();it!=_T1pT2Ch.end();++it)
+  { 
+    if(it->second->GetEntries()!=0)
+    {
+      gauss->SetParameters(it->second->GetMean(),it->second->GetRMS());
+      it->second->Fit("gauss","Q");
+      TF1 *fit1 = (TF1*)it->second->GetFunction("gaus");
+      if(fit1!=nullptr)
+      {
+        fit1->SetLineColor(kRed);
+        fit1->Draw("same");
+      }
+    }
+    a.add(it->second);
+    it->second->Write();
+    delete it->second;
   }
   a.write(_folder);
   for(std::map<int,TH1F*>::iterator it=_T1mT2Chamber.begin();it!=_T1mT2Chamber.end();++it)
@@ -886,21 +904,27 @@ void ReadoutProcessor::processMezzanine(TdcChannel* begin,TdcChannel* end)
 		      {
 		        _T1mT2Ch[it->strip()]=new TH1F(("T1-T2_"+std::to_string(it->strip())).c_str(),("T1-T2_"+std::to_string(it->strip())).c_str(),10000,-500,500);
 		        _T1mT2ChOneHit[it->strip()]=new TH1F(("T1-T2_onehit_"+std::to_string(it->strip())).c_str(),("T1-T2_onehit_"+std::to_string(it->strip())).c_str(),200,-20,20);
+                _T1pT2Ch[it->strip()]=new TH1F(("T1+T2_"+std::to_string(it->strip())).c_str(),("T1+T2_"+std::to_string(it->strip())).c_str(),100000,-5000,5000);
 		      }
 		      double diff=it->getTimeFromTrigger()-itt->getTimeFromTrigger();
+              double summ=it->getTimeFromTrigger()+itt->getTimeFromTrigger();
 		      double sum=std::fabs(it->getTimeFromTrigger())+std::fabs(itt->getTimeFromTrigger())+means[it->chamber()]+means[itt->chamber()];
+
+              std::cout<<it->getTimeFromTrigger()<<"  "<<itt->getTimeFromTrigger()<<"  "<<means[it->chamber()]<<"  "<<sum<<std::endl;
 		      if((it->side()+1)==itt->side())
 		      {
 		        _T1mT2[it->chamber()]->Fill(it->strip()%100,diff);
 		        _Position[it->chamber()]->Fill(double(it->strip()%100),double((diff*vitesse+longueur)*1.0/2),1);
 		        _Longueur[it->chamber()]->Fill(double(it->strip()%100),double(sum*vitesse),1);
 		        _T1mT2Ch[it->strip()]->Fill(diff);
+                _T1pT2Ch[it->strip()]->Fill(summ);
 		        _T1mT2Chamber[it->chamber()]->Fill(diff);
 		      } 
 		      else if (it->side()==(itt->side()+1))
 		      {
 		        _T1mT2[it->chamber()]->Fill(it->strip()%100,-diff);
 		        _T1mT2Ch[it->strip()]->Fill(-diff);
+                _T1pT2Ch[it->strip()]->Fill(summ);
 		        _T1mT2Chamber[it->strip()/100]->Fill(-diff);
 		        _Position[it->chamber()]->Fill(double(it->strip()%100),double((-diff*vitesse+longueur)/2),1);
 		        _Longueur[it->chamber()]->Fill(double(it->strip()%100),double(sum*vitesse));

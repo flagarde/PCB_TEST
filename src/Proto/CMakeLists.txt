@@ -1,12 +1,13 @@
 # project name
 project(proto)
 
+option(IS_MAY_DATA "May Data" OFF)
 
-option(MayData "Option description" OFF)
-
-if(MayData)
+if(IS_MAY_DATA)
   add_definitions(-DMayData)
 endif()
+
+
 
 
 # project version
